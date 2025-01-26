@@ -23,6 +23,22 @@ app.get('/', (req, res) => {
     res.render('index', { title: 'Welcome to High Elevation Web' });
 });
 
+// Route for Product Page
+app.get('/product', (req, res) => {
+  res.render('product', { title: 'Products' });
+});
+
+// Route for Product Page
+app.get('/menu', (req, res) => {
+  res.render('menu', { title: 'Products' });
+});
+
+// Route for Product Page
+app.get('/about', (req, res) => {
+  res.render('product', { title: 'Products' });
+});
+
+
 // Server setup
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {

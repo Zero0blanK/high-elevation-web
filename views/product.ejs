@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="/css/pages/product.css">
+    <link rel="stylesheet" href="/css/components/navbar.css">
+    <script src="/javaScript/navToggle.js" defer></script>
+</head>
+<body>
+    <nav aria-label="Main Navigation">
+        <div class="navbar">
+            <div class="mobile-toggle">
+                <button class="burger-icon" aria-label="Toggle navigation menu" aria-expanded="false"
+                    aria-controls="nav-menu">
+                    <img src="assets/icons/hamburger-menu.svg" alt="">
+                </button>
+            </div>
+            <div class="desktop-nav-menu">
+                <div class="left-nav">
+                    <a href="/menu">Menu</a>
+                    <a href="/product">Product</a>
+                    <a href="">About us</a>
+                </div>
+            </div>
+            <div class="logo mobile-logo">
+                <a href="/">HIGH ELEVATION</a>
+            </div>
+            <div class="desktop-nav-menu">
+                <div class="right-nav">
+                    <div class="search-bar-container">
+                        <input type="search" name="product_search" id="search-bar">
+                    </div>
+                    <div class="icon"><img src="assets/icons/profile.svg" alt="profile"></div>
+                    <div class="icon"><img src="assets/icons/cart.svg" alt="shopping-cart"></div>
+                </div>
+            </div>
+            <div id="nav-menu" class="nav-menu">
+                <div class="menu-overlay"></div>
+                <div class="menu-content">
+                    <div class="menu-header">
+                        <div class="logo">
+                            <a href="" aria-label="Home">HIGH ELEVATION</a>
+                        </div>
+                        <button class="close-menu" aria-label="Close menu">
+                            <span>&times;</span>
+                        </button>
+                    </div>
+
+                    <div class="menu-navigation">
+                        <div class="nav-section">
+                            <h3>Navigation</h3>
+                            <div class="left-nav">
+                                <a href="/menu" class="nav-link">Menu</a>
+                                <a href="/product" class="nav-link">Product</a>
+                                <a href="" class="nav-link">About us</a>
+                            </div>
+                        </div>
+
+                        <div class="nav-section">
+                            <h3>Account</h3>
+                            <div class="right-nav">
+                                <div class="search-bar">
+                                    <input type="search" name="product_search" placeholder="Search products"
+                                        aria-label="Search products">
+                                </div>
+                                <a href="#" class="nav-link icon-link">
+                                    <img src="assets/icons/profile.svg" alt="Profile">
+                                    <span>Profile</span>
+                                </a>
+                                <a href="#" class="nav-link icon-link">
+                                    <img src="assets/icons/cart.svg" alt="Shopping Cart">
+                                    <span>Shopping Cart</span>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+</body>
+</html>

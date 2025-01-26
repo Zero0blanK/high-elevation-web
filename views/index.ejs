@@ -4,23 +4,80 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
-    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/pages/home.css">
+    <link rel="stylesheet" href="/css/components/navbar.css">
+    <link rel="stylesheet" href="/css/components/card.css">
+    <script src="javaScript/navToggle.js" defer></script>
 </head>
 <body>
-    <nav>
+    <nav aria-label="Main Navigation">
         <div class="navbar">
-            <div class="left-nav">
-                <a href="">Menu</a>
-                <a href="">Product</a>
-                <a href="">About us</a>
+            <div class="mobile-toggle">
+                <button class="burger-icon" aria-label="Toggle navigation menu" aria-expanded="false"
+                    aria-controls="nav-menu">
+                    <img src="assets/icons/hamburger-menu.svg" alt="">
+                </button>
             </div>
-            <div class="logo"><a href="">HIGH ELEVATION</a></div>
-            <div class="right-nav">
-                <div class="search-bar">
-                    <input type="search" name="product_search" id="">
+            <div class="desktop-nav-menu">
+                <div class="left-nav">
+                    <a href="/menu">Menu</a>
+                    <a href="/product">Product</a>
+                    <a href="">About us</a>
                 </div>
-                <div class="icon"><img src="assets/icons/profile.svg" alt="profile"></div>
-                <div class="icon"><img src="assets/icons/cart.svg" alt="shopping-cart"></div>
+            </div>
+            <div class="logo mobile-logo">
+                <a href="/">HIGH ELEVATION</a>
+            </div>
+            <div class="desktop-nav-menu">
+                <div class="right-nav">
+                    <div class="search-bar-container">
+                        <input type="search" name="product_search" id="search-bar">
+                    </div>
+                    <div class="icon"><img src="assets/icons/profile.svg" alt="profile"></div>
+                    <div class="icon"><img src="assets/icons/cart.svg" alt="shopping-cart"></div>
+                </div>
+            </div>
+            <div id="nav-menu" class="nav-menu">
+                <div class="menu-overlay"></div>
+                <div class="menu-content">
+                    <div class="menu-header">
+                        <div class="logo">
+                            <a href="" aria-label="Home">HIGH ELEVATION</a>
+                        </div>
+                        <button class="close-menu" aria-label="Close menu">
+                            <span>&times;</span>
+                        </button>
+                    </div>
+
+                    <div class="menu-navigation">
+                        <div class="nav-section">
+                            <h3>Navigation</h3>
+                            <div class="left-nav">
+                                <a href="/menu" class="nav-link">Menu</a>
+                                <a href="/product" class="nav-link">Product</a>
+                                <a href="" class="nav-link">About us</a>
+                            </div>
+                        </div>
+
+                        <div class="nav-section">
+                            <h3>Account</h3>
+                            <div class="right-nav">
+                                <div class="search-bar">
+                                    <input type="search" name="product_search" placeholder="Search products"
+                                        aria-label="Search products">
+                                </div>
+                                <a href="#" class="nav-link icon-link">
+                                    <img src="assets/icons/profile.svg" alt="Profile">
+                                    <span>Profile</span>
+                                </a>
+                                <a href="#" class="nav-link icon-link">
+                                    <img src="assets/icons/cart.svg" alt="Shopping Cart">
+                                    <span>Shopping Cart</span>
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
     </nav>
@@ -29,12 +86,12 @@
         <div class="container">
             <h1>Start A Day With Coffee</h1>
             <h3>COFFEE REDUCES THE RISK OF HEART DISEASE</h3>
-            <div class="btn">SHOP NOW</div>
+            <button type="button" class="btn">SHOP NOW</button>
         </div>
     </section>
     <section class="page-2">
         <div class="container">
-            <div class="title">HIGH ELEVATION PRODUCT</div>
+            <div class="title">HIGH ELEVATION PRODUCTS</div>
             <div class="card-container">
                 <div class="card">
                     <div class="product-image"><img src="assets/product-image/product_sample.png" alt=""></div>
@@ -85,8 +142,18 @@
                     </div>
                 </div>
             </div>
+            <button type="button" class="btn btn-wide product">VIEW ALL PRODUCT</button>
         </div>
     </section>
-
+    <section class="page-3">
+        <div class="container">
+            <div class="title">POPULAR MENU</div>
+            <div class="menu-wrapper">
+                <div class="menu">
+                    <div class="menu-image"><img src="" alt=""></div>
+                </div>
+            </div>
+        </div>
+    </section>
 </body>
 </html>
