@@ -1,0 +1,101 @@
+.card {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    background-color: var(--card-bg-color);
+    cursor: pointer;
+    height: 22.5rem;
+    border: 0.4px solid rgba(255, 255, 255, 0.36);
+    transition: transform 0.3s ease;
+}
+
+.card:hover {
+    transform: scale(1.06);
+}
+
+.card-hover-icons {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 265px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 90px;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+}
+
+.card:hover .card-hover-icons {
+    opacity: 1;
+    visibility: visible;
+}
+
+.icon-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 36px;
+    background-color: black;
+    width: 140px;
+    height: 50px;
+    border-radius: 15px;
+    cursor: default;
+    transform: scale(0);
+    transition: transform 0.3s ease, opacity 0.5s ease;
+    opacity: 0;
+}
+
+.card:hover .icon-container {
+    transform: scale(1);
+    opacity: 1;
+}
+
+.available-size-container {
+    background-color: black;
+    padding: 5px 35px;
+    color: var(--text-color);
+    margin-bottom: 20px;
+    transform: translateY(30px);
+    opacity: 0;
+    transition: transform 0.8s ease, opacity 0.5s ease;
+}
+
+.card:hover .available-size-container {
+    transform: translateY(5px);
+    opacity: 1;
+}
+
+.product-image {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 265px;
+    background-color: white;
+}
+
+.product-image img {
+    width: 175px;
+    height: auto;
+    padding: 20px 30px;
+}
+
+.product-title,
+.product-price {
+    font-weight: 700;
+}
+
+.product-title {
+    font-size: 1.4rem;
+    color: var(--text-color);
+    margin: .8rem 1rem .3rem;
+}
+
+.product-price {
+    font-size: 1.2rem;
+    color: var(--price-color);
+    margin: 0 1rem;
+}
