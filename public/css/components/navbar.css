@@ -2,13 +2,16 @@
     --bg-color: #1F2226;
     --text-color: #F8F4E1;
     --accent-color: #AF8F6F;
+    --menu-accent-color: #845d3b;
     --overlay-bg: rgba(31, 34, 38, 0.95);
+    --hover-color: rgba(175, 143, 111, 0.1);
 }
 
  * {
     box-sizing: border-box;
     margin: 0;
     padding: 0;
+    font-family: 'Poppins', sans-serif;
 }
 
 a{
@@ -211,3 +214,101 @@ a{
          font-size: 16px;
      }
  }
+
+/* Profile Dropdown */
+.profile-dropdown {
+    position: fixed;
+    width: 300px;
+    background-color: var(--bg-color);
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    opacity: 0;
+    visibility: hidden;
+    transform: translate(20px, -20px);
+    transition: all 0.3s ease;
+    z-index: 1100;
+    overflow: hidden;
+    border: 1px solid rgba(248, 244, 225, 0.1);
+}
+
+.profile-dropdown.show {
+    opacity: 1;
+    visibility: visible;
+    transform: translate(20px, 5px);
+}
+
+.dropdown-content {
+    color: var(--text-color);
+}
+
+.dropdown-header {
+    padding: 20px;
+    background-color: rgba(175, 143, 111, 0.1);
+    border-bottom: 1px solid rgba(248, 244, 225, 0.1);
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.user-avatar {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    border: 2px solid var(--accent-color);
+}
+
+.user-details {
+    display: flex;
+    flex-direction: column;
+}
+
+.user-name {
+    font-weight: bold;
+    font-size: 16px;
+}
+
+.user-email {
+    font-size: 14px;
+    opacity: 0.7;
+}
+
+.dropdown-menu {
+    padding: 10px 0;
+}
+
+.dropdown-item {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 12px 20px;
+    color: var(--text-color);
+    text-decoration: none;
+    transition: background-color 0.3s ease;
+}
+
+.dropdown-item:hover {
+    background-color: var(--hover-color);
+}
+
+.dropdown-item svg {
+    width: 20px;
+    height: 20px;
+    stroke: var(--accent-color);
+}
+
+.dropdown-divider {
+    height: 1px;
+    background-color: rgba(248, 244, 225, 0.1);
+    margin: 10px 0;
+}
+
+.dropdown-item.logout {
+    color: #ff6b6b;
+}
+
+.dropdown-item.logout svg {
+    stroke: #ff6b6b;
+}

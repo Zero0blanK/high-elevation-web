@@ -3,10 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-    <link rel="stylesheet" href="/css/pages/product.css">
+    <title>Overview</title>
     <link rel="stylesheet" href="/css/components/navbar.css">
-    <link rel="stylesheet" href="/css/components/card.css">
+    <link rel="stylesheet" href="/css/pages/overview.css">
     <script src="/javaScript/navbar/navToggle.js" defer></script>
     <script src="/javaScript/navbar/profile-icon-dropdown.js" defer></script>
 </head>
@@ -156,125 +155,47 @@
         </div>
     </div>
 
-        <div class="main-container">
-            <section class="products-section">
-            <aside>
-                <div class="aside-container">
-                    <div class="search">
-                        <p>Search</p>
-                        <input class="search-bar" type="search" name="product_search" id="">
+    <section class="product-overview">
+        <div class="container">
+            <div class="product-content">
+                <div class="product-thumbnail"><img src="/assets/product-image/product_sample.png" alt=""></div>
+                <div class="product-information">
+                    <div class="product-title">
+                        <h1>Premium Arabica Coffee Bean</h1>
                     </div>
-                    <div class="categories">
-                        <p>Categories</p>
-                            <input type="checkbox" id="" name="" value="">
-                            <label for=""> Coffee</label><br>
-    
-                            <input type="checkbox" id="" name="" value="">
-                            <label for=""> Coffee</label><br>
-    
-                            <input type="checkbox" id="" name="" value="">
-                            <label for=""> Coffee</label><br>
-    
-                            <input type="checkbox" id="" name="" value="">
-                            <label for=""> Coffee</label><br>
+                    <div class="product-review">
+                        5 review
                     </div>
-                    <div class="sizes">
-                        <p>Sizes</p>
-                        <input type="checkbox" id="" name="" value="">
-                        <label for=""> 100g</label><br>
-
-                        <input type="checkbox" id="" name="" value="">
-                        <label for=""> 500g</label><br>
-
-                        <input type="checkbox" id="" name="" value="">
-                        <label for=""> 1kg</label><br>
+                    <div class="product-price">$20.00</div>
+                    <div class="product-description">
+                        <p>Lorem ipsum dolor sit amet consectetur adipisicing elit. Ab laborum dolore dolorum.</p>
                     </div>
-                </div>
-
-            </aside>
-            <!--////////////-->
-            <!--PRODUCT CARD-->
-            <!--////////////-->
-            <!-- WRAPPED WITH "a" aron clickable sya -->
-        <div class="product-cards-container">
-            <div class="card -m">
-                <div class="product-image"><img src="assets/product-image/product_sample.png" alt=""></div>
-                <div class="product-title">Product Title</div>
-                <div class="product-price">80php</div>
-                <div class="card-hover-icons">
-                    <div class="icon-container">
-                        <div class="icon"><img src="assets/icons/overview.svg" alt=""></div>
-                        <div class="icon"><img src="assets/icons/addtocart.svg" alt=""></div>
+                    <div class="product-variant-container">
+                        <div class="product-weight-select">
+                            <label for="weight">Weight</label>
+                            <div class="weight-select" id="weight">100g</div>
                         </div>
-                    <div class="available-size-container">100g | 500g | 1000g</div>
-                </div>
-            </div>
-            <div class="card -m">
-                <div class="product-image"><img src="assets/product-image/product_sample.png" alt=""></div>
-                <div class="product-title">Product Title</div>
-                <div class="product-price">80php</div>
-                <div class="card-hover-icons">
-                    <div class="icon-container">
-                        <div class="icon"><img src="assets/icons/overview.svg" alt=""></div>
-                        <div class="icon"><img src="assets/icons/addtocart.svg" alt=""></div>
+                        <div class="product-quantity">
+                            <label for="">Quantity</label>
+                            <div class="quantity-btn-container">
+                                <button class="quantity-btn" aria-label="Decrease quantity">-</button>
+                                <input type="number" value="1" aria-label="Product quantity">
+                                <button class="quantity-btn" aria-label="Increase quantity">+</button>
+                            </div>
                         </div>
-                    <div class="available-size-container">100g | 500g | 1000g</div>
-                </div>
-            </div>
-            <div class="card -m">
-                <div class="product-image"><img src="assets/product-image/product_sample.png" alt=""></div>
-                <div class="product-title">Product Title</div>
-                <div class="product-price">80php</div>
-                <div class="card-hover-icons">
-                    <div class="icon-container">
-                        <div class="icon"><img src="assets/icons/overview.svg" alt=""></div>
-                        <div class="icon"><img src="assets/icons/addtocart.svg" alt=""></div>
-                        </div>
-                    <div class="available-size-container">100g | 500g | 1000g</div>
-                </div>
-            </div>
-            <div class="card -m">
-                <div class="product-image"><img src="assets/product-image/product_sample.png" alt=""></div>
-                <div class="product-title">Product Title</div>
-                <div class="product-price">80php</div>
-                <div class="card-hover-icons">
-                    <div class="icon-container">
-                        <div class="icon"><img src="assets/icons/overview.svg" alt=""></div>
-                        <div class="icon"><img src="assets/icons/addtocart.svg" alt=""></div>
-                        </div>
-                    <div class="available-size-container">100g | 500g | 1000g</div>
-                </div>
-            </div>
-            <div class="card -m">
-                <div class="product-image"><img src="assets/product-image/product_sample.png" alt=""></div>
-                <div class="product-title">Product Title</div>
-                <div class="product-price">80php</div>
-                <div class="card-hover-icons">
-                    <div class="icon-container">
-                        <div class="icon"><img src="assets/icons/overview.svg" alt=""></div>
-                        <div class="icon"><img src="assets/icons/addtocart.svg" alt=""></div>
-                        </div>
-                    <div class="available-size-container">100g | 500g | 1000g</div>
-                </div>
-            </div>
-            <div class="card -m">
-                <div class="product-image"><img src="assets/product-image/product_sample.png" alt=""></div>
-                <div class="product-title">Product Title</div>
-                <div class="product-price">80php</div>
-                <div class="card-hover-icons">
-                    <div class="icon-container">
-                        <div class="icon"><img src="assets/icons/overview.svg" alt=""></div>
-                        <div class="icon"><img src="assets/icons/addtocart.svg" alt=""></div>
-                        </div>
-                    <div class="available-size-container">100g | 500g | 1000g</div>
+                    </div>
+                    <div class="form-container">
+                        <form action="" method="post" class="form">
+                            <div class="product-form-btn">
+                                <button type="button">Add to cart</button>
+                                <button type="button">Buy it now</button>
+                            </div>
+                        </form>
+                    </div>
+                    <div class="product-availability">Availability: 26 left in stock</div>
                 </div>
             </div>
         </div>
-
     </section>
-        </div>
-
-
-
 </body>
 </html>

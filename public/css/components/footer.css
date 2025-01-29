@@ -1,0 +1,56 @@
+footer{
+    background-color: rgb(23, 18, 18);
+    color: var(--text-color);
+}
+
+.footer-container{
+    padding: 30px 80px 14px;
+}
+
+.footer-content{
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 30px;
+    text-align: center;
+}
+
+.footer-content h3{
+    font-size: 22px;
+    font-weight: 600;
+    margin-bottom: 20px;
+}
+
+.footer-content h4{
+    font-size: 18px;
+    font-weight: 500;
+    margin-bottom: 20px;
+}
+
+.footer-content h5 {
+    font-size: 14px;
+    font-weight: 500;
+    margin-top: 80px;
+}
+
+.footer-content h2 {
+    font-size: 24px;
+    font-weight: 600;
+    margin-top: 72px;
+}
+
+.contact-section, .location-section, .about-section{
+    display: flex;
+    flex-direction: column;
+}
+
+.socmed-container{
+    display: flex;
+    justify-content: center;
+    gap: 20px;
+}
+
+
+.socmed-container img{
+    width: 38px;
+    height: auto;
+}

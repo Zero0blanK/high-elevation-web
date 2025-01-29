@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - High Elevation</title>
+    <link rel="stylesheet" href="/css/pages/login.css">
+</head>
+<body>
+    <div class="container">
+        <div class="steam">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+        <div class="title">
+            <div class="coffee-icon">☕</div>
+            <h2>Welcome Back!</h2>
+            <p>Time for your daily brew</p>
+        </div>
+        <form action="/login" method="POST">
+            <div class="form-group">
+                <label for="email">Email:</label>
+                <input type="email" id="email" name="email" placeholder="Email" required>
+            </div>
+            <div class="form-group">
+                <label for="password">Password:</label>
+                <input type="password" id="password" name="password" placeholder="Password" required>
+            </div>
+            <div class="form-group">
+                <button type="submit" class="btn">Login</button>
+            </div>
+        </form>
+        <div class="register-link">
+            New here? <a href="/register">Join us for coffee</a>
+        </div>
+    </div>
+</body>
+</html>

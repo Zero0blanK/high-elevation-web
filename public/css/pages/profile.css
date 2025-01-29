@@ -1,0 +1,180 @@
+:root {
+    --text-color: #F8F4E1;
+    --background-color: #191919;
+    --card-description-background-color: #292726;
+    --card-price-color: #AF8F6F;
+    --card-font-size: 11px;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Poppins', sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: var(--background-color);
+    color: var(--text-color);
+}
+
+/* ============ */
+/* MAIN CONTENT */
+/* ============ */
+.main-container {
+    display: flex;
+    padding: 200px 0px 100px;
+    justify-content: space-evenly;
+    max-width: 82%;
+    gap: 80px;
+}
+
+.main-container ul,
+.main-container a {
+    list-style: none;
+    color: var(--text-color);
+    font-size: 24px;
+}
+
+
+.setting-section {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 50px;
+
+}
+
+.setting-section h1{
+    font-size: 32px;
+    font-weight: 600;
+}
+
+.user-settings-menu > ul{
+    display: flex;
+    flex-direction: column;
+    gap: 20px   ;
+}
+
+.user-setting-menu ul li:hover {
+    text-decoration: underline;
+}
+
+
+.profile-header {
+    margin-bottom: 50px;
+}
+
+.profile-header p{
+    font-size: 18px;
+    font-weight: 500;
+}
+
+.profile-header h3{
+    font-size: 32px;
+    font-weight: 600;
+    margin-bottom: 20px;
+}
+
+.profile-content{
+    max-width: 500px;
+    min-width: 500px;
+}
+
+.profile-picture {
+    width: 200px;
+    height: 200px;
+    border-radius: 50%;
+    border: 1px solid var(--text-color);
+}
+
+.profile-picture img {
+    position: relative;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -.5%);
+    width: 200px;
+    height: 200px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #fff;
+    /* Optional: Add a border */
+    cursor: pointer;
+}
+
+.profile-picture img:hover {
+    border-color: #ffffff;
+}
+
+.profile-details {
+    display: flex;
+    align-items: center;
+    margin-bottom: 50px;
+}
+
+.profile-info {
+    margin-left: 40px;
+}
+
+.profile-info h4{
+    font-size: 26px;
+    font-weight: 600;
+    margin-bottom: 10px;
+}
+
+
+
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    margin-bottom: 5px;
+}
+
+form {
+    max-width: 500px;
+    margin: 0 auto;
+}
+
+label {
+    display: block;
+    margin-bottom: 10px;
+    font-size: 20px;
+    font-weight: semi-bold;
+}
+
+input {
+    width: 100%;
+    padding: 10px;
+    font-size: 18px;
+    border: 1px solid #ffffff;
+    border-radius: 4px;
+    background-color: #191919;
+    color: white;
+}
+
+input:focus {
+    outline: none;
+    border-color: #ffffff;
+}
+
+.save-button {
+    width: 120px;
+    height: 45px;
+    padding: 10px 5px;
+    font-size: 20px;
+    font-weight: 600;
+    background-color: var(--accent-color);
+    color: var(--text-color);
+    cursor: pointer;
+    margin-top: 15px;
+    border: none;
+    border-radius: 5px;
+}
+
+
+.save-button:hover {
+    background-color: #af8f6fa1;
+}

@@ -1,41 +1,67 @@
 const express = require('express');
+const session = require('express-session');
+const bodyParser = require('body-parser');
 const app = express();
-// const productRoutes = require('./routes/products');
-// const orderRoutes = require('./routes/orders');
+const UserMiddleware = require('./middleware/UserMiddleware');
 
-// Set EJS as the templating engine
-app.set('view engine', 'ejs');
-app.set('views', './views'); // Specify the views folder
+// Session setup
+app.use(session({
+  secret: 'your_secret_key',
+  resave: false,
+  saveUninitialized: true,
+  cookie: { secure: false }
+}));
 
 // Middleware
+app.use(bodyParser.json());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+app.use(UserMiddleware.addUserToLocals);
+
+// EJS Setup
+app.set('view engine', 'ejs');
+app.set('views', './views'); // 
 
 // Serve static files (CSS, JS, images)
 app.use(express.static('public'));
 
-// Route files
-// app.use('/products', productRoutes);
-// app.use('/orders', orderRoutes);
+// Routes Files
+const userRoutes = require('./routes/userRoutes');
+app.use('/', userRoutes);
+
+const productRoutes = require('./routes/productRoutes');
+app.use('/products', productRoutes);
+
+
 
 // ✅ Home route (renders index.ejs)
 app.get('/', (req, res) => {
-    res.render('index', { title: 'Welcome to High Elevation Web' });
+    res.render('index', { 
+      title: 'Welcome to High Elevation Web' });
 });
 
-// Route for Product Page
-app.get('/product', (req, res) => {
-  res.render('product', { title: 'Products' });
-});
-
-// Route for Product Page
+// Route for Menu Page
 app.get('/menu', (req, res) => {
-  res.render('menu', { title: 'Products' });
+  res.render('menu', { title: 'Menu' });
+});
+
+// Route for About Page
+app.get('/about', (req, res) => {
+  res.render('about', { title: 'About' });
 });
 
 // Route for Product Page
-app.get('/about', (req, res) => {
-  res.render('product', { title: 'Products' });
+app.get('/cart', (req, res) => {
+  res.render('cart', { title: 'Your Shopping Cart' });
+});
+// Route for Product Page
+app.get('/overview', (req, res) => {
+  res.render('overview', { title: 'Overview' });
+});
+// Route for Product Page
+app.get('/profile', (req, res) => {
+  res.render('profile', { title: 'Overview' });
 });
 
 

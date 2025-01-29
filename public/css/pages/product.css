@@ -1,0 +1,93 @@
+:root {
+    --text-color: #F8F4E1;
+    --background-color: #191919;
+    --card-description-background-color: #292726;
+    --card-price-color: #AF8F6F;
+    --card-font-size: 11px;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Roboto', sans-serif;
+    margin: 0;
+    padding: 0;
+    background-color: var(--background-color);
+    color: var(--text-color);
+}
+
+/*===================*/
+/*=== MAIN CONTENT===*/
+/*===================*/
+
+
+/* MAIN CONTAINER */
+.main-container {
+
+}
+
+
+/* PRODUCTS SECTION */
+.products-section {
+    display: flex;
+    justify-content: start;
+    margin-top: 180px;
+
+}
+
+aside {
+    padding: 0 20px 20px 20px;
+    height: 100%;
+}
+
+aside .search-bar {
+    border: 2px solid green;
+    width: 225px;
+    height: 40px;
+    margin: 10px 0 20px 0;
+    border: white;
+}
+
+.search p {
+    margin: 0;
+    font-size: 20px;
+}
+
+.categories p {
+    font-size: 20px;
+}
+
+.sizes p {
+    font-size: 20px;
+}
+
+.aside-container {
+    margin: 34px 0 0 100px;
+}
+
+.product-cards-container {
+
+    max-height: 1000px;
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: start;
+}
+
+.product-cards-container::-webkit-scrollbar {
+    height: 8px;
+    /* Adjust the height of the horizontal scrollbar */
+}
+
+.product-cards-container::-webkit-scrollbar-thumb {
+    background: #888;
+    /* Color of the scrollbar thumb */
+    border-radius: 4px;
+    /* Rounded edges */
+}
+
+.product-cards-container::-webkit-scrollbar-thumb:hover {
+    background: #555;
+    /* Darker color on hover */
+}

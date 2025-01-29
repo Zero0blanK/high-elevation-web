@@ -2,13 +2,8 @@ body {
     padding: 0;
     margin: 0;
     box-sizing: border-box;
-}
-
-:root {
-    --bg-color: #1F2226;
-    --text-color: #F8F4E1;
-    --hero-bg-color: #292726;
-    --accent-color: #a85b0f;
+    background-color: var(--bg-color);
+    font-family: 'Poppins', sans-serif;
 }
 
 h1 {
@@ -37,7 +32,7 @@ p {
     text-align: center;
     padding: 50px;
     border-radius: 15px;
-    background-color: var(--hero-bg-color);
+    background-color: var(--accent-color);
     color: var(--text-color);
 }
 
@@ -56,11 +51,11 @@ p {
 .menu-list-title{
     font-size: 2.8rem;
     text-align: center;
-    color: var(--accent-color);
+    color: var(--text-color);
 }
 
 .menu-list-wrap{
-    grid-column-gap: 50px;
+    grid-column-gap: 120px;
     grid-row-gap: 30px;
     grid-template-rows: auto;
     grid-template-columns: 1fr 1fr;
@@ -113,7 +108,7 @@ p {
 }
 
 .menu-divider{
-    background-color: var(--hero-bg-color);
+    background-color: var(--text-color);
     flex: 1;
     min-width: 30px;
     min-height: 1px;
@@ -130,7 +125,7 @@ p {
     margin-bottom: 0;
     font-size: 16px;
     line-height: 1.4em;
-    color: #744921;
+    color: var(--menu-accent-color);
 }
 
 /* Responsive Design */
