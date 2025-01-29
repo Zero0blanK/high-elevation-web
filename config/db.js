@@ -1,15 +1,15 @@
 const mysql = require('mysql2');
+require('dotenv').config();
 
 const db = mysql.createConnection({
-  host: 'localhost',
-  port: 3306,
-  user: 'root',
-  password: 'bords09182252580',
-  database: 'high_elevation'
+  host: process.env.DB_HOST,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
+  database: process.env.DB_NAME
 }).promise();
 
 db.execute('SELECT 1') // A simple test query
-  .then(() => console.log('✅ MySQL is connected in Promise mode'))
-  .catch((err) => console.error('❌ MySQL connection failed:', err));
+  .then(() => console.log('Connected to the database as ID ' + connection.threadId))
+  .catch((err) => console.error('Error connecting to the database:', err.stack));
 
 module.exports = db;
