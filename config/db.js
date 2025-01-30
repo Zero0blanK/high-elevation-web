@@ -9,7 +9,8 @@ const db = mysql.createConnection({
 }).promise();
 
 db.execute('SELECT 1') // A simple test query
-  .then(() => console.log('Connected to the database as ID ' + connection.threadId))
+  .then(() => console.log('Connected to the database'))
   .catch((err) => console.error('Error connecting to the database:', err.stack));
+
 
 module.exports = db;

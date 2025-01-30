@@ -6,16 +6,12 @@
     --card-font-size: 11px;
 }
 
-* {
-    box-sizing: border-box;
-}
-
 body {
-    font-family: 'Poppins', sans-serif;
-    margin: 0;
     padding: 0;
-    background-color: var(--background-color);
+    margin: 0;
+    box-sizing: border-box;
     color: var(--text-color);
+    background-color: var(--background-color);
 }
 
 /* ============ */
@@ -77,6 +73,8 @@ body {
 }
 
 .profile-content{
+    position: relative;
+    z-index: 10;
     max-width: 500px;
     min-width: 500px;
 }
@@ -133,19 +131,19 @@ body {
     margin-bottom: 5px;
 }
 
-form {
+.main-container form {
     max-width: 500px;
     margin: 0 auto;
 }
 
-label {
+.main-container label {
     display: block;
     margin-bottom: 10px;
     font-size: 20px;
     font-weight: semi-bold;
 }
 
-input {
+.main-container input {
     width: 100%;
     padding: 10px;
     font-size: 18px;
@@ -155,7 +153,7 @@ input {
     color: white;
 }
 
-input:focus {
+.main-container input:focus {
     outline: none;
     border-color: #ffffff;
 }

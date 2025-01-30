@@ -105,6 +105,7 @@
                 </div>
             </div>
             <div class="dropdown-menu">
+                <% if (locals.user) {%>
                 <a href="/profile" class="dropdown-item">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -113,7 +114,7 @@
                     </svg>
                     <span>Profile</span>
                 </a>
-                <a href="#" class="dropdown-item">
+                <a href="/profile/address" class="dropdown-item">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <path d="M15 7h2a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2h-2"></path>
@@ -122,7 +123,7 @@
                     </svg>
                     <span>Address</span>
                 </a>
-                <a href="#" class="dropdown-item">
+                <a href="/profile/settings" class="dropdown-item">
                     <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
                         stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                         <circle cx="12" cy="12" r="3"></circle>
@@ -133,6 +134,7 @@
                     <span>Settings</span>
                 </a>
                 <div class="dropdown-divider"></div>
+                <%} %>
                 <% if (locals.user) {%>
                     <a href="/logout" class="dropdown-item logout">
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"

@@ -2,7 +2,6 @@ const express = require('express');
 const session = require('express-session');
 const bodyParser = require('body-parser');
 const app = express();
-const UserMiddleware = require('./middleware/UserMiddleware');
 
 // Session setup
 app.use(session({
@@ -17,8 +16,6 @@ app.use(bodyParser.json());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.use(UserMiddleware.addUserToLocals);
-
 // EJS Setup
 app.set('view engine', 'ejs');
 app.set('views', './views'); // 
@@ -26,12 +23,13 @@ app.set('views', './views'); //
 // Serve static files (CSS, JS, images)
 app.use(express.static('public'));
 
+
 // Routes Files
 const userRoutes = require('./routes/userRoutes');
 app.use('/', userRoutes);
 
 const productRoutes = require('./routes/productRoutes');
-app.use('/products', productRoutes);
+app.use('/product', productRoutes);
 
 
 

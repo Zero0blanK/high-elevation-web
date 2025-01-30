@@ -3,6 +3,9 @@ const express = require('express');
 const router = express.Router();
 const UserController = require('../controllers/userController');
 
+// locals.user
+router.use(UserController.getUserDataById);
+
 function isAdmin(req, res, next) {
   if (req.session.role !== 'admin') {
     return res.redirect('/');
