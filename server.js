@@ -1,6 +1,7 @@
 const express = require('express');
 const session = require('express-session');
 const bodyParser = require('body-parser');
+const path = require('path');
 const app = express();
 
 // Session setup
@@ -18,10 +19,10 @@ app.use(express.urlencoded({ extended: true }));
 
 // EJS Setup
 app.set('view engine', 'ejs');
-app.set('views', './views'); // 
+app.set('views', './views'); //
 
 // Serve static files (CSS, JS, images)
-app.use(express.static('public'));
+app.use(express.static(path.join(__dirname, 'public')));
 
 
 // Routes Files
@@ -29,7 +30,7 @@ const userRoutes = require('./routes/userRoutes');
 app.use('/', userRoutes);
 
 const productRoutes = require('./routes/productRoutes');
-app.use('/product', productRoutes);
+app.use('/', productRoutes);
 
 
 

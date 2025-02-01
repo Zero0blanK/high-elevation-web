@@ -43,7 +43,6 @@ aside {
 }
 
 aside .search-bar {
-    border: 2px solid green;
     width: 225px;
     height: 40px;
     margin: 10px 0 20px 0;
@@ -73,6 +72,10 @@ aside .search-bar {
     display: flex;
     flex-wrap: wrap;
     justify-content: start;
+}
+
+.product-title{
+    margin-bottom: 2px;
 }
 
 .product-cards-container::-webkit-scrollbar {

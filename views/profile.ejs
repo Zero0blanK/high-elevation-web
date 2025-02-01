@@ -6,6 +6,7 @@
     <title>Document</title>
     <link rel="stylesheet" href="/css/pages/profile.css">
     <link rel="stylesheet" href="/css/components/navbar.css">
+    <link rel="stylesheet" href="/css/components/footer.css">
     <script src="/javaScript/navbar/navToggle.js" defer></script>
     <script src="/javaScript/navbar/profile-icon-dropdown.js" defer></script>
 </head>
@@ -15,7 +16,7 @@
             <div class="mobile-toggle">
                 <button class="burger-icon" aria-label="Toggle navigation menu" aria-expanded="false"
                     aria-controls="nav-menu">
-                    <img src="assets/icons/hamburger-menu.svg" alt="">
+                    <img src="/assets/icons/hamburger-menu.svg" alt="">
                 </button>
             </div>
             <div class="desktop-nav-menu">
@@ -33,8 +34,8 @@
                     <div class="search-bar-container">
                         <input type="search" name="product_search" id="search-bar">
                     </div>
-                    <div class="icon" id="profile-icon"><img src="assets/icons/profile.svg" alt="profile"></div>
-                    <div class="icon"><a href="/cart"><img src="assets/icons/cart.svg" alt="shopping-cart"></a></div>
+                    <div class="icon" id="profile-icon"><img src="/assets/icons/profile.svg" alt="profile"></div>
+                    <div class="icon"><a href="/cart"><img src="/assets/icons/cart.svg" alt="shopping-cart"></a></div>
                 </div>
             </div>
             <div id="nav-menu" class="nav-menu">
@@ -67,11 +68,11 @@
                                         aria-label="Search products">
                                 </div>
                                 <a href="/profile" class="nav-link icon-link">
-                                    <img src="assets/icons/profile.svg" alt="Profile">
+                                    <img src="/assets/icons/profile.svg" alt="Profile">
                                     <span>Profile</span>
                                 </a>
                                 <a href="/cart" class="nav-link icon-link">
-                                    <img src="assets/icons/cart.svg" alt="Shopping Cart">
+                                    <img src="/assets/icons/cart.svg" alt="Shopping Cart">
                                     <span>Shopping Cart</span>
                                 </a>
                             </div>
@@ -87,7 +88,7 @@
         <div class="dropdown-content">
             <div class="dropdown-header">
                 <div class="user-info">
-                    <img src="assets/icons/profile.svg" alt="Profile" class="user-avatar">
+                    <img src="/assets/icons/profile.svg" alt="Profile" class="user-avatar">
                     <div class="user-details">
                         <% if (locals.user) {%>
                             <span class="user-name">
@@ -103,7 +104,7 @@
                 </div>
             </div>
             <div class="dropdown-menu">
-                <% if (locals.user) %>
+                <% if (locals.user) {%>
                     <a href="/profile" class="dropdown-item">
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
                             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -112,7 +113,7 @@
                         </svg>
                         <span>Profile</span>
                     </a>
-                    <a href="#" class="dropdown-item">
+                    <a href="/profile/address" class="dropdown-item">
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
                             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M15 7h2a2 2 0 0 1 2 2v6a2 2 0 0 1-2 2h-2"></path>
@@ -121,7 +122,7 @@
                         </svg>
                         <span>Address</span>
                     </a>
-                    <a href="#" class="dropdown-item">
+                    <a href="/profile/settings" class="dropdown-item">
                         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
                             stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                             <circle cx="12" cy="12" r="3"></circle>
@@ -132,27 +133,29 @@
                         <span>Settings</span>
                     </a>
                     <div class="dropdown-divider"></div>
-                    <% if (locals.user) {%>
-                        <a href="/logout" class="dropdown-item logout">
-                            <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
-                                stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                                <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-                                <polyline points="16 17 21 12 16 7"></polyline>
-                                <line x1="21" y1="12" x2="9" y2="12"></line>
-                            </svg>
-                            <span>Logout</span>
-                        </a>
-                        <% } else {%>
-                            <a href="/login" class="dropdown-item">
+                    <%} %>
+                        <% if (locals.user) {%>
+                            <a href="/logout" class="dropdown-item logout">
                                 <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
                                     fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
                                     stroke-linejoin="round">
-                                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
-                                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                                    <polyline points="16 17 21 12 16 7"></polyline>
+                                    <line x1="21" y1="12" x2="9" y2="12"></line>
                                 </svg>
-                                <span>Login</span>
+                                <span>Logout</span>
                             </a>
-                            <% } %>
+                            <% } else {%>
+                                <a href="/login" class="dropdown-item">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"
+                                        fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"
+                                        stroke-linejoin="round">
+                                        <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                                        <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                                    </svg>
+                                    <span>Login</span>
+                                </a>
+                                <% } %>
             </div>
         </div>
     </div>
@@ -234,8 +237,32 @@
                 </form>
             </div>
         </div>
-
     </div>
+
+    <footer>
+        <div class="footer-container">
+            <div class="footer-content">
+                <div class="about-section">
+                    <h3>About</h3>
+                    <h4>High Elevation</h4>
+                    <h5>&copy; 2025 HIGH ELEVATION. ALL RIGHTS RESERVED.</h5>
+                </div>
+                <div class="location-section">
+                    <h3>Location</h3>
+                    <h4>Bukidnon</h4>
+                    <h2>High Elevation</h2>
+                </div>
+                <div class="contact-section">
+                    <h3>Follow Along</h3>
+                    <div class="socmed-container">
+                        <a href=""><img src="assets/icons/fb-icon.svg" alt=""></a>
+                        <a href=""><img src="assets/icons/ig-icon.svg" alt=""></a>
+                    </div>
+                    <h5>BECAUSE WE LOVE COFFEE</h5>
+                </div>
+            </div>
+        </div>
+    </footer>
 
 </body>
 
