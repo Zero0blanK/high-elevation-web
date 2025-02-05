@@ -32,7 +32,8 @@ app.use('/', userRoutes);
 const productRoutes = require('./routes/productRoutes');
 app.use('/', productRoutes);
 
-
+const dashboardRoutes = require('./routes/dashboardRoutes');
+app.use('/', dashboardRoutes);
 
 // ✅ Home route (renders index.ejs)
 app.get('/', (req, res) => {
