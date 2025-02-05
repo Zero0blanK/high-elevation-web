@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="/css/components/dashboard.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.0/chart.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <%- include('./partials/sidebar'); %>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Stats Grid -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <span class="stat-title">Total Sales</span>
+                        <i class="fas fa-dollar-sign stat-icon" style="color: #10b981;"></i>
+                    </div>
+                    <div class="stat-value">₱45,289</div>
+                    <div class="stat-trend trend-up">+12.5% from last month</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <span class="stat-title">Total Orders</span>
+                        <i class="fas fa-shopping-bag stat-icon" style="color: #3b82f6;"></i>
+                    </div>
+                    <div class="stat-value">386</div>
+                    <div class="stat-trend trend-up">+8.2% from last month</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <span class="stat-title">New Customers</span>
+                        <i class="fas fa-users stat-icon" style="color: #8b5cf6;"></i>
+                    </div>
+                    <div class="stat-value">45</div>
+                    <div class="stat-trend trend-up">+15.7% from last month</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-header">
+                        <span class="stat-title">Stock Level</span>
+                        <i class="fas fa-box stat-icon" style="color: #f59e0b;"></i>
+                    </div>
+                    <div class="stat-value">78%</div>
+                    <div class="stat-trend trend-down">-5.3% from last month</div>
+                </div>
+            </div>
+
+            <!-- Charts Grid -->
+            <div class="charts-grid">
+                <div class="chart-card">
+                    <h3 class="chart-title">Sales Overview</h3>
+                    <div class="chart-container">
+                        <canvas id="salesChart"></canvas>
+                    </div>
+                </div>
+                <div class="chart-card">
+                    <h3 class="chart-title">Sales by Category</h3>
+                    <div class="chart-container">
+                        <canvas id="categoryChart"></canvas>
+                    </div>
+                </div>
+                <div class="chart-card">
+                    <h3 class="chart-title">Top Products</h3>
+                    <ul class="product-list">
+                        <li class="product-item">
+                            <span class="product-dot" style="background-color: #4f46e5;"></span>
+                            <div class="product-info">
+                                <div class="product-name">Arabica Premium</div>
+                                <div class="product-sales">1,245 sales</div>
+                            </div>
+                        </li>
+                        <li class="product-item">
+                            <span class="product-dot" style="background-color: #3b82f6;"></span>
+                            <div class="product-info">
+                                <div class="product-name">Robusta Gold</div>
+                                <div class="product-sales">946 sales</div>
+                            </div>
+                        </li>
+                        <li class="product-item">
+                            <span class="product-dot" style="background-color: #8b5cf6;"></span>
+                            <div class="product-info">
+                                <div class="product-name">Blend Master</div>
+                                <div class="product-sales">857 sales</div>
+                            </div>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Orders Table -->
+            <div class="orders-card">
+                <div class="orders-header">
+                    <h3 class="orders-title">Recent Orders</h3>
+                    <a href="#" class="view-all">View All</a>
+                </div>
+                <table class="orders-table">
+                    <thead>
+                        <tr>
+                            <th>Order ID</th>
+                            <th>Customer</th>
+                            <th>Products</th>
+                            <th>Total</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>#ORD-001</td>
+                            <td>John Doe</td>
+                            <td>Arabica Coffee Beans (2kg)</td>
+                            <td>₱1,200</td>
+                            <td><span class="status-badge status-delivered">Delivered</span></td>
+                        </tr>
+                        <tr>
+                            <td>#ORD-002</td>
+                            <td>Jane Smith</td>
+                            <td>Robusta Coffee Beans (1kg)</td>
+                            <td>₱850</td>
+                            <td><span class="status-badge status-processing">Processing</span></td>
+                        </tr>
+                        <tr>
+                            <td>#ORD-003</td>
+                            <td>Mike Johnson</td>
+                            <td>Mixed Coffee Pack (3kg)</td>
+                            <td>₱2,100</td>
+                            <td><span class="status-badge status-shipped">Shipped</span></td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </main>
+    </div>
+
+
+    <script>
+        // Sales Chart
+        const salesCtx = document.getElementById('salesChart').getContext('2d');
+        new Chart(salesCtx, {
+            type: 'line',
+            data: {
+                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                datasets: [{
+                    label: 'Sales (₱)',
+                    data: [30000, 35000, 32000, 40000, 45000, 42000],
+                    borderColor: '#4f46e5',
+                    tension: 0.3,
+                    fill: false
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        display: false
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            font: {
+                                size: 10
+                            }
+                        }
+                    },
+                    x: {
+                        ticks: {
+                            font: {
+                                size: 10
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // Category Chart
+        const categoryCtx = document.getElementById('categoryChart').getContext('2d');
+        new Chart(categoryCtx, {
+            type: 'doughnut',
+            data: {
+                labels: ['Arabica', 'Robusta', 'Mixed', 'Other'],
+                datasets: [{
+                    data: [45, 25, 20, 10],
+                    backgroundColor: [
+                        '#4f46e5',
+                        '#3b82f6',
+                        '#8b5cf6',
+                        '#ef4444'
+                    ]
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                        labels: {
+                            font: {
+                                size: 10
+                            },
+                            padding: 10
+                        }
+                    }
+                },
+                cutout: '70%'
+            }
+        });
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,58 @@
+<!-- Sidebar -->
+<aside class="sidebar">
+    <div class="sidebar-logo">
+        <i class="fas fa-mountain fa-2x"></i>
+        <span class="logo-text">High Elevation</span>
+    </div>
+    <ul class="nav-menu">
+        <li class="nav-item">
+            <a href="/dashboard" class="nav-link active">
+                <i class="fas fa-home"></i>
+                <span>Dashboard</span>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="/dashboard/orders" class="nav-link">
+                <i class="fas fa-shopping-cart"></i>
+                <span>Orders</span>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="/dashboard/products" class="nav-link">
+                <i class="fas fa-box"></i>
+                <span>Products</span>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="/dashboard/customers" class="nav-link">
+                <i class="fas fa-users"></i>
+                <span>Customers</span>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="/dashboard/analytics" class="nav-link">
+                <i class="fas fa-chart-line"></i>
+                <span>Analytics</span>
+            </a>
+        </li>
+        <li class="nav-item">
+            <a href="/dashboard/settings" class="nav-link">
+                <i class="fas fa-cog"></i>
+                <span>Settings</span>
+            </a>
+        </li>
+    </ul>
+    <div class="sidebar-profile">
+        <div class="profile-card">
+            <img src="/api/placeholder/48/48" alt="Admin" class="profile-image">
+            <div class="profile-info">
+                <div class="profile-name"><%= locals.user.first_name %></div>
+                <div class="profile-email"><%= locals.user.email %></div>
+            </div>
+        </div>
+        <a href="" class="logout-btn">
+            <i class="fas fa-sign-out-alt"></i>
+            <span>Logout</span>
+        </a>
+    </div>
+</aside>

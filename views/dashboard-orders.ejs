@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <link rel="stylesheet" href="/css/components/dashboard.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.0/chart.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar -->
+        <%- include('./partials/sidebar'); %>
+    
+        <main class="main-content">
+            <div class="orders-filters">
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" placeholder="Search orders...">
+                </div>
+                <select class="filter-select">
+                    <option value="all">All Orders</option>
+                    <option value="pending">Pending</option>
+                    <option value="processing">Processing</option>
+                    <option value="shipped">Shipped</option>
+                    <option value="delivered">Delivered</option>
+                </select>
+                <select class="filter-select">
+                    <option value="newest">Newest First</option>
+                    <option value="oldest">Oldest First</option>
+                    <option value="highest">Highest Amount</option>
+                    <option value="lowest">Lowest Amount</option>
+                </select>
+                <button class="add-order-btn">
+                    <i class="fas fa-plus"></i>
+                    New Order
+                </button>
+            </div>
+    
+            <div class="orders-card">
+                <table class="orders-table">
+                    <thead>
+                        <tr>
+                            <th>Order ID</th>
+                            <th>Customer</th>
+                            <th>Products</th>
+                            <th>Date</th>
+                            <th>Total</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>#ORD-001</td>
+                            <td>John Doe</td>
+                            <td>Arabica Coffee Beans (2kg)</td>
+                            <td>2024-02-01</td>
+                            <td>₱1,200</td>
+                            <td><span class="status-badge status-delivered">Delivered</span></td>
+                            <td>
+                                <div class="order-actions">
+                                    <button class="action-btn edit-btn">Edit</button>
+                                    <button class="action-btn delete-btn">Delete</button>
+                                </div>
+                            </td>
+                        </tr>
+                        <!-- More order rows... -->
+                    </tbody>
+                </table>
+            </div>
+    
+            <div class="pagination">
+                <span class="page-info">Showing 1 to 10 of 45 entries</span>
+                <div class="page-buttons">
+                    <button class="page-btn">Previous</button>
+                    <button class="page-btn active">1</button>
+                    <button class="page-btn">2</button>
+                    <button class="page-btn">3</button>
+                    <button class="page-btn">Next</button>
+                </div>
+            </div>
+        </main>
+    </div>
+</body>
+</html>
