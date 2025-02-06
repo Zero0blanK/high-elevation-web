@@ -23,7 +23,6 @@
                     <option value="all">All Categories</option>
                     <option value="arabica">Arabica</option>
                     <option value="robusta">Robusta</option>
-                    <option value="mixed">Mixed Blends</option>
                 </select>
                 <button class="add-order-btn">
                     <i class="fas fa-plus"></i>
@@ -40,14 +39,14 @@
                         </div>
                         <div class="product-details">
                             <h3 class="product-title"><%= product.name %></h3>
-                            <div class="product-category">Category: Arabica</div>
+                            <div class="product-category">Category: <%= product.category_name %></div>
                             <div class="product-stats">
-                                <span class="product-price">₱<%= product.price %></span>
+                                <span class="product-price">₱<%= product.lowest_price %></span>
                                 <span class="product-stock">In Stock: <%= product.stock %></span>
                             </div>
                             <div class="product-actions">
                                 <button class="product-btn edit-product">Edit</button>
-                                <button class="product-btn delete-product">Delete</button>
+                                <button class="product-btn delete-product" data-id="<%= product.id %>">Delete</button>
                             </div>
                         </div>
                     </div>
@@ -64,7 +63,7 @@
                 <h2>Add New Product</h2>
                 <button class="close-btn">&times;</button>
             </div>
-            <form class="product-form">
+            <form action="/dashboard/products" method="POST" enctype="multipart/form-data" class="product-form">
                 <div class="form-group">
                     <label for="productName">Product Name</label>
                     <input type="text" id="productName" name="name" placeholder="Enter product name" required>
@@ -80,7 +79,6 @@
                         <option value="">Select Category</option>
                         <option value="arabica">Arabica</option>
                         <option value="robusta">Robusta</option>
-                        <option value="mixed">Mixed Blends</option>
                     </select>
                 </div>
 
@@ -123,34 +121,34 @@
 
                         <div class="variant-card">
                             <div class="variant-header">
-                                <input type="checkbox" id="weight1kg" name="weights" value="1kg">
+                                <input type="checkbox" id="weight1kg" name="weights" value="1000g">
                                 <label for="weight1kg">1kg</label>
                             </div>
                             <div class="variant-inputs">
                                 <div class="input-group">
                                     <label>Price (₱)</label>
-                                    <input type="number" name="price_1kg" placeholder="0.00" step="0.01" disabled>
+                                    <input type="number" name="price_1000g" placeholder="0.00" step="0.01" disabled>
                                 </div>
                                 <div class="input-group">
                                     <label>Stock</label>
-                                    <input type="number" name="stock_1kg" placeholder="0" disabled>
+                                    <input type="number" name="stock_1000g" placeholder="0" disabled>
                                 </div>
                             </div>
                         </div>
 
                         <div class="variant-card">
                             <div class="variant-header">
-                                <input type="checkbox" id="weight2kg" name="weights" value="2kg">
+                                <input type="checkbox" id="weight2kg" name="weights" value="2000g">
                                 <label for="weight2kg">2kg</label>
                             </div>
                             <div class="variant-inputs">
                                 <div class="input-group">
                                     <label>Price (₱)</label>
-                                    <input type="number" name="price_2kg" placeholder="0.00" step="0.01" disabled>
+                                    <input type="number" name="price_2000g" placeholder="0.00" step="0.01" disabled>
                                 </div>
                                 <div class="input-group">
                                     <label>Stock</label>
-                                    <input type="number" name="stock_2kg" placeholder="0" disabled>
+                                    <input type="number" name="stock_2000g" placeholder="0" disabled>
                                 </div>
                             </div>
                         </div>
@@ -159,8 +157,12 @@
 
                 <div class="form-group">
                     <label for="productImage">Product Image</label>
+                    <!-- This will show the image preview -->
+                    <div id="imagePreviewContainer" style="display: none; margin-top: 10px; text-align:center;">
+                        <img id="imagePreview" src="" alt="Image Preview" style="max-width: 200px; max-height: 200px; border: 1px solid var(--gray-500);">
+                    </div>
                     <div class="image-upload-container">
-                        <input type="file" id="productImage" name="image" accept="image/*" required>
+                        <input type="file" id="productImage" name="image" accept="image/*" required onchange="previewImage(event)">
                         <label for="productImage" class="upload-label">
                             <i class="fas fa-cloud-upload-alt"></i>
                             <span>Click to upload image</span>
@@ -198,7 +200,6 @@
                         <option value="">Select Category</option>
                         <option value="arabica">Arabica</option>
                         <option value="robusta">Robusta</option>
-                        <option value="mixed">Mixed Blends</option>
                     </select>
                 </div>
                 <div class="weight-variants">
@@ -356,12 +357,6 @@
             });
         });
 
-        // Delete confirmation
-        document.querySelectorAll('.delete-product').forEach(button => {
-            button.addEventListener('click', () => {
-                showModal('deleteModal');
-            });
-        });
 
         // Add product button
         document.querySelector('.add-order-btn').addEventListener('click', () => {
@@ -380,6 +375,75 @@
             hideModal('deleteModal');
             showNotification();
         });
+
+        // Function to show the preview of the selected image
+        function previewImage(event) {
+            const file = event.target.files[0];
+            const previewContainer = document.getElementById('imagePreviewContainer');
+            const imagePreview = document.getElementById('imagePreview');
+
+            // Only proceed if a file is selected and it is an image
+            if (file && file.type.startsWith('image/')) {
+                const reader = new FileReader();
+
+                reader.onload = function (e) {
+                    imagePreview.src = e.target.result; // Set the source of the image preview
+                    previewContainer.style.display = 'block'; // Show the preview container
+                };
+
+                reader.readAsDataURL(file); // Read the selected file as a data URL
+            } else {
+                // Hide the preview container if the file is not an image
+                previewContainer.style.display = 'none';
+            }
+        }
+
+        // Delete confirmation
+        document.querySelectorAll('.delete-product').forEach(button => {
+            button.addEventListener('click', function () {
+                // Get the product ID from the data-id attribute
+                const productId = this.dataset.id;
+
+                // Show the modal
+                showModal('deleteModal');
+
+                // Attach event listener to confirm delete button
+                const confirmDeleteButton = document.querySelector('.delete-btn');
+                confirmDeleteButton.addEventListener('click', function () {
+                    // Send DELETE request to the server
+                    fetch(`/dashboard/products/${productId}`, {
+                        method: 'DELETE',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                    })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                // If successful, remove the product card from the UI
+                                const productCard = button.closest('.product-card');
+                                productCard.remove();
+
+                                // Show success notification
+                                showNotification();
+                            } else {
+                                // Handle failure case
+                                alert('Failed to delete product. Please try again.');
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error:', error);
+                            alert('Failed to delete product. Please try again.');
+                        });
+
+                    // Close the modal
+                    hideModal('deleteModal');
+                });
+            });
+        });
+
+
+
     </script>
 </body>
 </html>

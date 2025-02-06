@@ -1,8 +1,10 @@
 const express = require('express');
 const db = require('../config/db')
 const router = express.Router();
+const upload = require("../middleware/upload");
 
 // Import controller
+const userController = require('../controllers/userController')
 const dashboardController = require('../controllers/dashboardController')
 
 router.get('/dashboard/products', async (req, res) => {
@@ -38,6 +40,12 @@ router.get('/dashboard/analytics', (req, res) => {
 router.get('/dashboard/settings', (req, res) => {
     res.render('dashboard-settings', { title: 'Dashboard' });
 });
+
+router.post('/logout',)
+
+router.post('/dashboard/products', upload.single("image"), dashboardController.addProduct);
+
+router.delete('/dashboard/products/:productId', dashboardController.deleteProductById);
 
 
 module.exports = router;
