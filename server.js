@@ -35,6 +35,9 @@ app.use('/', productRoutes);
 const dashboardRoutes = require('./routes/dashboardRoutes');
 app.use('/', dashboardRoutes);
 
+const cartRoutes = require('./routes/cartRoutes');
+app.use('/', cartRoutes);
+
 // ✅ Home route (renders index.ejs)
 app.get('/', (req, res) => {
     res.render('index', { 
@@ -49,15 +52,6 @@ app.get('/menu', (req, res) => {
 // Route for About Page
 app.get('/about', (req, res) => {
   res.render('about', { title: 'About' });
-});
-
-// Route for Product Page
-app.get('/cart', (req, res) => {
-  res.render('cart', { title: 'Your Shopping Cart' });
-});
-// Route for Product Page
-app.get('/overview', (req, res) => {
-  res.render('overview', { title: 'Overview' });
 });
 // Route for Product Page
 app.get('/profile', (req, res) => {

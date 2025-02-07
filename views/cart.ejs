@@ -6,6 +6,7 @@
     <title>Your Shopping Cart</title>
     <link rel="stylesheet" href="/css/components/navbar.css">
     <link rel="stylesheet" href="/css/pages/cart.css">
+    <link rel="stylesheet" href="/css/components/footer.css">
     <script src="/javaScript/navbar/navToggle.js" defer></script>
     <script src="/javaScript/navbar/profile-icon-dropdown.js" defer></script>
 </head>
@@ -16,62 +17,141 @@
         <div class="container">
             <div class="cart-container">
                 <div class="title-wrapper"><h1>Your Cart</h1></div>
+                <% if (cartItems && cartItems.length > 0) { %>
                 <form action="/cart" method="post">
                     <div class="cart-items">
                         <table>
                             <thead>
                                 <tr>
-                                    <th class="product-header">Product</th>
+                                    <th class="product-header" colspan="2" scope="col">Product</th>
                                     <th class="quantity-header">Quantity</th>
                                     <th class="total-header">Total</th>
                                 </tr>
                             </thead>
                             <tbody>
+                                <% cartItems.forEach(item=> { %>
                                 <tr>
                                     <td>
-                                        <a href="">
-                                            <div class="product-thumbnail">
-                                                <img src="assets/product-image/product_sample.png" alt="">
-                                            </div>
-                                        </a>
+                                        <div class="product-thumbnail">
+                                            <a href="">
+                                                <img src="<%= item.image_url %>" alt="">
+                                            </a>
+                                        </div>
                                     </td>
                                     <td>
                                         <div class="product-details">
-                                            <div class="product-title"><h3>Arabica Coffee Beans</h3></div>
-                                            <div class="product-price"><h4>90php</h5></div>
-                                            <div class="product-weight"><h4>Weight:</h4> 1 kg</div>
+                                            <div class="product-title"><h3><%= item.name %></h3></div>
+                                            <div class="product-price"><h4><%= item.price %></h5></div>
+                                            <div class="product-weight"><h4>Weight: </h4> <%= item.weight %><%= item.unit %></div>
+                                            <div class="product-flavor"><h4>Flavor: </h4> <%= item.category_name %></div>
                                             <div class="product-roast-lvl"><h4>Roast Level:</h4> Medium-Dark</div>
                                         </div>
                                     </td>
                                     <td>
                                         <div class="quantity-wrapper">
                                             <div class="quantity-btn-container">
-                                                <button class="quantity-btn" aria-label="Decrease quantity">-</button>
-                                                <input type="number" value="1" aria-label="Product quantity">
-                                                <button class="quantity-btn" aria-label="Increase quantity">+</button>
+                                                <button type="button" class="quantity-btn" aria-label="Decrease quantity">-</button>
+                                                <input type="number" class="quantity-input" value="<%= item.quantity %>" min="1">
+                                                <button type="button" class="quantity-btn" aria-label="Increase quantity">+</button>
                                             </div>
-                                            <button type="button"><img src="/assets/icons/delete.svg" alt=""></button>
+                                            <button class="del-btn removeButton" type="button" ><img src="/assets/icons/delete.svg" alt=""></button>
                                         </div>
                                     </td>
                                     <td>
                                         <div class="total-wrapper">
-                                            <div class="total-amount">90php</div>
+                                            <div class="total-amount">₱<%= (item.quantity * item.price).toFixed(2) %></div>
                                         </div>
                                     </td>
                                 </tr>
+                                <% }) %>
                             </tbody>
                         </table>
+                        <script>
+                            document.querySelectorAll('.removeButton').forEach(button => {
+                                button.addEventListener('click', async function (e) {
+                                    const row = e.target.closest('tr');
+                                    const product_id = row.getAttribute('data-product-id');
+                                    const weight_id = row.getAttribute('data-weight-id');
+
+                                    const response = await fetch('/cart/remove', {
+                                        method: 'POST',
+                                        headers: { 'Content-Type': 'application/json' },
+                                        body: JSON.stringify({ product_id, weight_id })
+                                    });
+
+                                    const result = await response.json();
+                                    if (result.success) {
+                                        row.remove(); // Remove the row from the cart view
+                                    } else {
+                                        alert('Error removing item');
+                                    }
+                                });
+                            });
+
+                            document.querySelectorAll('.quantityInput').forEach(input => {
+                                input.addEventListener('change', async function (e) {
+                                    const row = e.target.closest('tr');
+                                    const product_id = row.getAttribute('data-product-id');
+                                    const weight_id = row.getAttribute('data-weight-id');
+                                    const quantity = e.target.value;
+
+                                    const response = await fetch('/cart/update', {
+                                        method: 'POST',
+                                        headers: { 'Content-Type': 'application/json' },
+                                        body: JSON.stringify({ product_id, weight_id, quantity })
+                                    });
+
+                                    const result = await response.json();
+                                    if (result.success) {
+                                        row.querySelector('td:nth-child(5)').innerText = '₱' + (quantity * row.querySelector('td:nth-child(3)').innerText.replace('₱', '')).toFixed(2);
+                                    } else {
+                                        alert('Error updating quantity');
+                                    }
+                                });
+                            });
+
+                            // Handle quantity increase and decrease
+                            const increaseBtn = document.querySelector('.quantity-btn-container button:nth-child(3)');
+                            const decreaseBtn = document.querySelector('.quantity-btn-container button:nth-child(1)');
+                            let quantityInput = document.querySelector('.quantity-input');
+                            const quantityField = document.querySelector('#quantity');
+
+                            increaseBtn.addEventListener('click', () => {
+                                let quantity = quantityInput.value;
+                                if (quantity < 20) {
+                                    quantity++;
+                                    quantityInput.value = quantity;
+                                } else {
+                                    console.log('err')
+                                }
+                            });
+
+                            decreaseBtn.addEventListener('click', () => {
+                                let quantity = quantityInput.value;
+                                if (quantity > 1) {
+                                    quantity--;
+                                    quantityInput.value = quantity;
+                                }
+                            });
+
+
+                        </script>
                     </div>
                 </form>
+                <% } else { %>
+                    <p>Your cart is empty.</p>
+                <% } %>
             </div>
             <div class="cart-footer">
                 <div class="cart-content">
-                    <div class="subtotal"><h3>Subtotal</h3><h2>90php</h2></div>
+                    <div class="subtotal"><h4>Subtotal</h4><h2>90.00 php</h2></div>
                     <p>Taxes and shipping calculated at checkout</p>
-                    <button type="submit">Check out</button>
+                    <button class="checkout-btn" type="submit">Check out</button>
                 </div>
             </div>
         </div>
     </main>
+
+    <%- include('./partials/footer') %>
 </body>
 </html>

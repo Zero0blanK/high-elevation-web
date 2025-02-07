@@ -24,7 +24,7 @@
                     <div class="product-review">
                         5 review
                     </div>
-                    <div class="product-price"><%= product.price %> php</div>
+                    <div class="product-price"><%= product.lowest_price %> php</div>
                     <div class="product-description">
                         <p><%= product.description %></p>
                     </div>
@@ -37,16 +37,22 @@
                             <label for="">Quantity</label>
                             <div class="quantity-btn-container">
                                 <button class="quantity-btn" aria-label="Decrease quantity">-</button>
-                                <input type="number" value="1" aria-label="Product quantity">
+                                <input class="quantity-input" type="number" value="1" aria-label="Product quantity">
                                 <button class="quantity-btn" aria-label="Increase quantity">+</button>
                             </div>
                         </div>
                     </div>
                     <div class="form-container">
-                        <form action="" method="post" class="form">
+                        <form action="/cart/add" method="post" class="form">
+                            <input type="hidden" name="product_id" value="<%= product.id %>">
+                            <input type="hidden" name="weight_id" value="<%=  %>">
+                            <% if (locals.user) { %>
+                            <input type="hidden" name="user_id" value="<%= userId %>">
+                            <% } %>
+                            <input type="hidden" name="quantity" id="quantity" value="1">
                             <div class="product-form-btn">
-                                <button type="button">Add to cart</button>
-                                <button type="button">Buy it now</button>
+                                <button type="submit">Add to Cart</button>
+                                <button type="button">Buy it Now</button>
                             </div>
                         </form>
                     </div>
@@ -57,6 +63,36 @@
     </section>
 
     <%- include('./partials/footer'); %>
+
+    <script>
+
+        const productStock = parseInt(`<%= product.stock %>`);
+        // Handle quantity increase and decrease
+        const increaseBtn = document.querySelector('.quantity-btn-container button:nth-child(3)');
+        const decreaseBtn = document.querySelector('.quantity-btn-container button:nth-child(1)');
+        let quantityInput = document.querySelector('.quantity-input');
+        const quantityField = document.querySelector('#quantity');
+
+        increaseBtn.addEventListener('click', () => {
+            let quantity = quantityInput.value;
+            if (quantity < productStock) {
+                quantity++;
+                quantityInput.value = quantity;
+                quantityField.value = quantity; // Update the hidden input to reflect the value
+            }else{
+                console.log('err')
+            }
+            });
+
+        decreaseBtn.addEventListener('click', () => {
+            let quantity = quantityInput.value;
+            if (quantity > 1) {
+                quantity--;
+                quantityInput.value = quantity;
+                quantityField.value = quantity; // Update the hidden input to reflect the value
+            }
+        });
+    </script>
 
 </body>
 </html>
