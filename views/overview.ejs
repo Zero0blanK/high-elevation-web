@@ -24,15 +24,26 @@
                     <div class="product-review">
                         5 review
                     </div>
-                    <div class="product-price"><%= product.lowest_price %> php</div>
+                    <div class="product-price" id="product-price">₱<%= product.lowest_price %> PHP</div>
                     <div class="product-description">
                         <p><%= product.description %></p>
                     </div>
                     <div class="product-variant-container">
                         <div class="product-weight-select">
                             <label for="weight">Weight</label>
-                            <div class="weight-select" id="weight">100g</div>
+                            <!-- Custom Dropdown -->
+                            <div class="custom-select">
+                                <div class="custom-select-trigger"><%= product.weight_variants[0].weight %><%= product.weight_variants[0].unit %></div>
+                                <div class="custom-options">
+                                    <% product.weight_variants.forEach(weight => { %>
+                                        <div class="option" data-value="<%= weight.weight_id %>" data-price="<%= weight.price.toFixed(2) %>">
+                                            <%= weight.weight %><%= weight.unit %>
+                                        </div>
+                                    <% }); %>
+                                </div>
+                            </div>
                         </div>
+
                         <div class="product-quantity">
                             <label for="">Quantity</label>
                             <div class="quantity-btn-container">
@@ -45,7 +56,8 @@
                     <div class="form-container">
                         <form action="/cart/add" method="post" class="form">
                             <input type="hidden" name="product_id" value="<%= product.id %>">
-                            <input type="hidden" name="weight_id" value="<%=  %>">
+                            <input type="hidden" name="weight_id" id="selected-weight-id">
+                            <input type="hidden" name="price" id="selected-price">
                             <% if (locals.user) { %>
                             <input type="hidden" name="user_id" value="<%= userId %>">
                             <% } %>
@@ -65,6 +77,39 @@
     <%- include('./partials/footer'); %>
 
     <script>
+        const customSelect = document.querySelector('.custom-select');
+        const trigger = customSelect.querySelector('.custom-select-trigger');
+        const options = customSelect.querySelectorAll('.option');
+        const selectedWeightIdInput = document.querySelector('#selected-weight-id');
+        const selectedPriceInput = document.querySelector('#selected-price');
+        const productPriceElement = document.querySelector('#product-price');
+        
+        const defaultWeightId = "<%= product.weight_variants[0].weight_id %>";
+        const defaultPrice = "<%= product.weight_variants[0].price.toFixed(2) %>";
+
+        selectedWeightIdInput.value = defaultWeightId;
+        selectedPriceInput.value = defaultPrice;
+
+        trigger.addEventListener('click', () => {
+          customSelect.classList.toggle('open');
+        });
+        
+        options.forEach(option => {
+            option.addEventListener('click', () => {
+                trigger.textContent = option.textContent;
+                
+                const weightId = option.getAttribute('data-value');
+                const price = option.getAttribute('data-price');
+
+                selectedWeightIdInput.value = weightId;
+                selectedPriceInput.value = price;
+
+                productPriceElement.textContent = `₱${price} PHP`;
+
+                customSelect.classList.remove('open');
+            });
+        });
+        
 
         const productStock = parseInt(`<%= product.stock %>`);
         // Handle quantity increase and decrease

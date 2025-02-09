@@ -33,8 +33,8 @@ class CartController {
           [user_id, product_id, weight_id, quantity]
         );
       }
+      res.redirect('/cart')
 
-      res.json({ success: true, message: 'Product added to cart' });
     } catch (err) {
       console.error('Error adding to cart:', err.message);
       res.status(500).json({ error: 'Error adding product to cart' });
@@ -70,7 +70,12 @@ class CartController {
 
       const [cartItems] = await db.query(query, [user_id]);
 
-      res.render('cart', { cartItems: cartItems || [] });
+      let subtotal = 0;
+      cartItems.forEach(item => {
+        subtotal += item.quantity * item.price;
+      });
+
+      res.render('cart', { cartItems: cartItems || [], subtotal });
     } catch (err) {
       console.error('Error fetching cart items:', err.message);
     }
@@ -89,7 +94,7 @@ class CartController {
         user_id, product_id, weight_id
       ]);
 
-      res.json({ success: true, message: 'Item removed from cart' });
+      res.redirect('/cart')
     } catch (err) {
       console.error('Error removing from cart:', err.message);
       res.status(500).json({ error: 'Error removing item from cart' });
@@ -110,12 +115,13 @@ class CartController {
         [quantity, user_id, product_id, weight_id]
       );
 
-      res.json({ success: true, message: 'Quantity updated' });
     } catch (err) {
       console.error('Error updating quantity:', err.message);
       res.status(500).json({ error: 'Error updating quantity' });
     }
   }
+  
+
 }
 
 module.exports = new CartController();

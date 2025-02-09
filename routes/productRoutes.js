@@ -39,7 +39,8 @@ router.get('/product/overview/:product_name', async (req, res) => {
                     'weight', w.value, 
                     'unit', w.unit, 
                     'price', pw.price, 
-                    'stock', pw.stock
+                    'stock', pw.stock,
+                    'weight_id', pw.weight_id
                 )) AS weight_variants
             FROM product p
             JOIN product_category pc ON p.category_id = pc.id

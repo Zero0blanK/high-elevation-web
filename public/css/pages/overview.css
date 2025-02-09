@@ -70,16 +70,63 @@ body{
     font-size: 1.1rem;
 }
 
-.weight-select{
+select {
+    display: none;
+}
+
+.custom-select {
     position: relative;
-    display: flex;
-    align-items: center;
-    justify-content: center;
     width: 130px;
     height: 41.6px;
+    font-family: Arial, sans-serif;
     border: 1px solid var(--text-color);
     border-radius: 10px;
 }
+
+.custom-select-trigger {
+    background-color: transparent;
+    padding: 10px;
+    cursor: pointer;
+    color: var(--text-color);
+    font-size: 1rem;
+    text-align: center;
+}
+
+/* Hide the dropdown options by default */
+.custom-options {
+    display: none;
+    position: absolute;
+    background-color: var(--bg-color);
+    width: 100%;
+    border: 1px solid var(--text-color);
+    max-height: 200px;
+    overflow: hidden;
+    top: 100%;
+    left: 0;
+    right: 0;
+    z-index: 10;
+}
+
+/* Style individual options */
+.option {
+    font-size: 15px;
+    padding: 10px;
+    cursor: pointer;
+    transition: background-color 0.4s ease;
+}
+
+/* Option hover effect */
+.option:hover {
+background-color: rgba(255, 255, 255, 0.151);
+}
+
+/* When the dropdown is open */
+.custom-select.open .custom-options {
+display: block;
+max-height: 300px; /* Adjust based on the number of options */
+opacity: 1;
+}
+
 
 .product-quantity{
     display: flex;
