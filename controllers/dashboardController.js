@@ -1,10 +1,13 @@
 const Product = require('../models/Product');
+const User_Order = require('../models/User_Order');
+
 const db = require('../config/db');
 
 
 class DashboardController {
   constructor() {
     this.productModel = new Product(db);
+    this.userOrderModel = new User_Order(db);
     this.addProduct = this.addProduct.bind(this);
   }
 
@@ -125,7 +128,26 @@ class DashboardController {
     }
   }
 
+  async getDashboardData() {
+    const query =`
+      SELECT 
+          COALESCE(SUM(uo.total_amount), 0) AS totalSales,
+          COALESCE(COUNT(uo.id), 0) AS totalOrders,
+          COALESCE((SELECT COUNT(id) FROM user WHERE created_at >= DATE_SUB(NOW(), INTERVAL 1 MONTH)), 0) AS newCustomers,
+          COALESCE((SELECT (SUM(stock) / COUNT(id)) * 100 FROM product), 0) AS stockLevel
+      FROM user_order uo
+      WHERE uo.shipping_status = 'delivered';
+    `;
+    try {
+      const [rows] = await db.query(query);
+      console.log("Dashboard Data:", rows);
+      return rows[0];
 
+    } catch (error) {
+        console.error("Error fetching dashboard data:", error);
+        throw error;
+    }
+  };
 
 }
 

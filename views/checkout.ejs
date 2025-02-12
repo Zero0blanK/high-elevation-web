@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your Shopping Cart</title>
+    <link rel="stylesheet" href="/css/components/navbar.css">
+    <link rel="stylesheet" href="/css/pages/checkout.css">
+    <link rel="stylesheet" href="/css/components/footer.css">
+    <script src="/javaScript/navbar/navToggle.js" defer></script>
+    <script src="/javaScript/navbar/profile-icon-dropdown.js" defer></script>
+</head>
+<body>
+    <%- include('./partials/navbar'); %>
+    
+    <!-- Main content -->
+    <main>
+        <div class="container">
+            <div class="left-container">
+                <h2>Delivery Addresses</h2>
+                
+                <!-- Existing Addresses -->
+                <div class="address-list">
+                    <% addresses.forEach(function(address) { %>
+                        <div class="address-item">
+                            <input type="radio" name="selected_address" id="address_<%= address.id %>" value="<%= address.id %>" <%= address.default ? 'checked' : '' %>>
+                            <label for="address_<%= address.id %>">
+                                <%= address.full_address %>
+                            </label>
+                        </div>
+                    <% }); %>
+                </div>
+
+                <!-- Add New Address Button -->
+                <button class="d-align-right btn btn-primary" id="showNewAddressForm">Add New Address</button>
+
+                <!-- New Address Form -->
+                <div class="new-address-form">
+                    <form action="/add-address" method="POST">
+                        <div class="form-group">
+                            <input type="text" name="street_address" placeholder="Street address" required>
+                        </div>
+                        <div class="form-group">
+                            <input type="text" name="apartment" placeholder="Apartment, suite, etc. (optional)">
+                        </div>
+                        <div class="d-flex form-group">
+                            <input type="text" name="city" placeholder="City" required>
+                            <input type="text" name="zip_code" placeholder="ZIP code" required>
+                        </div>
+                        <div class="form-group">
+                            <button type="submit" class="btn btn-primary">Save Address</button>
+                            <button type="button" class="btn btn-secondary" id="cancelNewAddress">Cancel</button>
+                        </div>
+                    </form>
+                </div>
+                
+                <!-- New Shipping Method Section -->
+                <h2 class="title">Shipping method</h2>
+                <div class="shipping-notice">
+                    Enter your shipping address to view available shipping methods.
+                </div>
+                <div class="payment-options">
+                    <div class="payment-option">
+                        <input type="radio" id="cod" name="payment_method" value="cod" checked>
+                        <label for="cod">
+                            Cash on Delivery
+                        </label>
+                    </div>
+                    <div class="payment-option disabled">
+                        <input type="radio" id="credit-card" name="payment_method" value="credit-card" disabled>
+                        <label for="credit-card">
+                            Credit Card
+                        </label>
+                    </div>
+                </div>
+
+                <form action="/paynow" method="post">
+                    <div class="form-group">
+                        <button type="submit" class="wide-btn btn btn-primary">Pay Now</button>
+                    </div>
+                </form>
+
+            </div>
+
+            <div class="right-container">
+                <% cartItems.forEach(item => { %>
+                    <div class="cart-item">
+                        <div class="thumbnail-wrap">
+                            <div class="quantity-badge"><%= item.quantity %></div>
+                            <img src="<%= item.image %>" alt="<%= item.name %>" class="item-image">
+                        </div>
+                        <div class="item-details">
+                            <div class="item-name"><%= item.name %></div>
+                            <div class="item-description"><%= item.description %></div>
+                        </div>
+                        <div class="item-price">$<%= item.price.toFixed(2) %></div>
+                    </div>
+                <% }); %>
+        
+                <div class="cart-summary">
+                    <div class="subtotal-row">
+                        <div>Subtotal : <%= totalItems %> items</div>
+                        <div>$<%= subtotal.toFixed(2) %></div>
+                    </div>
+                    <div class="subtotal-row">
+                        <div>Shipping : </div>
+                        <div>$<%= subtotal.toFixed(2) %></div>
+                    </div>
+        
+                    <div class="subtotal-row total-row">
+                        <div>Total</div>
+                        <div>USD $<%= total.toFixed(2) %></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const showNewAddressForm = document.getElementById('showNewAddressForm');
+            const newAddressForm = document.querySelector('.new-address-form');
+            const cancelNewAddress = document.getElementById('cancelNewAddress');
+
+            // Show new address form
+            showNewAddressForm.addEventListener('click', function() {
+                newAddressForm.classList.add('active');
+                showNewAddressForm.style.display = 'none';
+            });
+
+            // Cancel new address
+            cancelNewAddress.addEventListener('click', function() {
+                newAddressForm.classList.remove('active');
+                showNewAddressForm.style.display = 'block';
+            });
+
+        });
+    </script>
+
+    <%- include('./partials/footer') %>
+</body>
+</html>

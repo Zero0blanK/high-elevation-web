@@ -49,18 +49,26 @@ router.get('/product/overview/:product_name', async (req, res) => {
             WHERE p.name = ?
             GROUP BY p.id
         `;
-
         const [rows] = await db.query(query, [productName]);
+
+        const productDetails = await productController.getProductDetails(rows[0].id);
+
+        const averageRating = await productController.calculateAverageRating(productDetails);
+        const distribution = await productController.getRatingDistribution(productDetails);
 
         if (rows.length > 0) {
             const product = rows[0];
 
             // Convert JSON string to array for rendering
             product.weight_variants = product.weight_variants ? JSON.parse(`[${product.weight_variants}]`) : [];
-
+            console.log(productDetails);
             res.render('overview', {
                 product,
-                userId: req.session.userId
+                distribution,
+                userId: req.session.userId,
+                average: averageRating,
+                reviews: productDetails,
+                totalReviews: productDetails.length
             });
         } else {
             res.status(404).send('Product not found');
@@ -69,6 +77,7 @@ router.get('/product/overview/:product_name', async (req, res) => {
         console.error('Error fetching product:', err.message);
         res.status(500).send('Error fetching product');
     }
+    
 });
 
 

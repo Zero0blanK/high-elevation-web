@@ -29,9 +29,6 @@ router.post('/login', UserController.login);
 // Register route
 router.post('/register', UserController.register);
 
-// Dashboard route (protected page)
-router.get('/dashboard', isAdmin, UserController.dashboard);
-
 // Logout route
 router.post('/logout', UserController.logout);
 

@@ -222,6 +222,265 @@ opacity: 1;
     color: var(--text-color);
 }
 
+
+/* Add to your overview.css file */
+
+.product-details {
+    padding: 40px 0;
+    background-color: #fff;
+}
+
+.tabs {
+    display: flex;
+    gap: 20px;
+    margin-bottom: 30px;
+    border-bottom: 1px solid #e5e5e5;
+}
+
+.tab-btn {
+    padding: 12px 24px;
+    border: none;
+    background: none;
+    font-size: 16px;
+    cursor: pointer;
+    color: #666;
+    position: relative;
+}
+
+.tab-btn.active {
+    color: #000;
+    font-weight: 600;
+}
+
+.tab-btn.active::after {
+    content: '';
+    position: absolute;
+    bottom: -1px;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background-color: #000;
+}
+
+.tab-content {
+    padding: 20px 0;
+}
+
+.tab-pane {
+    display: none;
+}
+
+.tab-pane.active {
+    display: block;
+}
+
+/* Stars styling */
+.stars {
+    display: inline-flex;
+    gap: 2px;
+}
+
+.star {
+    color: #ddd;
+    font-size: 20px;
+}
+
+.star.filled {
+    color: #ffd700;
+}
+
+/* Review form styling */
+.review-form {
+    background: #f9f9f9;
+    padding: 20px;
+    border-radius: 8px;
+    margin: 20px 0;
+}
+
+.form-group {
+    margin-bottom: 15px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 500;
+}
+
+.form-group input,
+.form-group textarea {
+    width: 100%;
+    padding: 8px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+}
+
+.form-group textarea {
+    height: 100px;
+    resize: vertical;
+}
+
+/* Rating input styling */
+.rating-input {
+    margin-bottom: 15px;
+}
+
+.rating-input .stars {
+    display: flex;
+    flex-direction: row-reverse;
+    gap: 5px;
+}
+
+.rating-input input {
+    display: none;
+}
+
+.rating-input label {
+    cursor: pointer;
+    font-size: 24px;
+    color: #ddd;
+}
+
+.rating-input input:checked ~ label,
+.rating-input label:hover,
+.rating-input label:hover ~ label {
+    color: #ffd700;
+}
+
+/* Reviews list styling */
+.review-item {
+    padding: 20px 0;
+    border-bottom: 1px solid #e5e5e5;
+}
+
+.review-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.review-date {
+    color: #666;
+    font-size: 14px;
+}
+
+.review-title {
+    margin: 10px 0;
+    font-size: 16px;
+    font-weight: 600;
+}
+
+.reviewer-name {
+    margin-top: 10px;
+    color: #666;
+    font-style: italic;
+}
+
+.write-review-btn {
+    padding: 10px 20px;
+    background-color: #000;
+    color: #fff;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.write-review-btn:hover {
+    background-color: #333;
+}
+
+/* Modify your existing product-review styling */
+.product-details .product-review {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin: 10px 0;
+}
+
+.review-count {
+    color: #666;
+}
+
+/* Reviews summary specific styling */
+.reviews-summary {
+    display: flex;
+    gap: 40px;
+    padding: 20px;
+    background: #f9f9f9;
+    border-radius: 8px;
+    margin: 20px 0;
+}
+
+/* Star styling specific to reviews summary */
+.reviews-summary .stars {
+    display: inline-flex;
+    gap: 2px;
+}
+
+.reviews-summary .star {
+    color: #ddd;
+    font-size: 20px;
+    position: relative;
+}
+
+.reviews-summary .star.filled {
+    color: #ffd700;
+}
+
+.star.half-filled {
+    position: relative;
+}
+
+.star.half-filled::before {
+    content: '★';
+    position: absolute;
+    left: 0;
+    width: 50%;
+    overflow: hidden;
+    color: #ffd700;
+}
+
+/* Average rating section within reviews summary */
+.reviews-summary .average-rating {
+    text-align: center;
+}
+
+.reviews-summary .average-rating h3 {
+    font-size: 48px;
+    margin: 0;
+    color: #333;
+}
+
+/* Rating bars section */
+.reviews-summary .rating-bars {
+    flex-grow: 1;
+}
+
+.reviews-summary .rating-bar {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 5px 0;
+}
+
+.reviews-summary .bar-container {
+    flex-grow: 1;
+    height: 8px;
+    background: #eee;
+    border-radius: 4px;
+    overflow: hidden;
+}
+
+.reviews-summary .bar {
+    height: 100%;
+    background: #ffd700;
+    transition: width 0.3s ease;
+}
+
+
+
+
 @media screen and (max-width: 868px) {
     .container {
         padding: 120px 7rem 50px;

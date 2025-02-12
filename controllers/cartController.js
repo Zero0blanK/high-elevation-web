@@ -120,7 +120,7 @@ class CartController {
       res.status(500).json({ error: 'Error updating quantity' });
     }
   }
-  
+
 
 }
 

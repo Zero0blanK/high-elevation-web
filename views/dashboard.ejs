@@ -21,7 +21,7 @@
                         <span class="stat-title">Total Sales</span>
                         <i class="fas fa-dollar-sign stat-icon" style="color: #10b981;"></i>
                     </div>
-                    <div class="stat-value">₱45,289</div>
+                    <div class="stat-value">₱<%= dashboardData.totalSales %></div>
                     <div class="stat-trend trend-up">+12.5% from last month</div>
                 </div>
                 <div class="stat-card">
@@ -29,7 +29,7 @@
                         <span class="stat-title">Total Orders</span>
                         <i class="fas fa-shopping-bag stat-icon" style="color: #3b82f6;"></i>
                     </div>
-                    <div class="stat-value">386</div>
+                    <div class="stat-value"><%= dashboardData.totalOrders %></div>
                     <div class="stat-trend trend-up">+8.2% from last month</div>
                 </div>
                 <div class="stat-card">
@@ -37,7 +37,7 @@
                         <span class="stat-title">New Customers</span>
                         <i class="fas fa-users stat-icon" style="color: #8b5cf6;"></i>
                     </div>
-                    <div class="stat-value">45</div>
+                    <div class="stat-value"><%= dashboardData.newCustomers %></div>
                     <div class="stat-trend trend-up">+15.7% from last month</div>
                 </div>
                 <div class="stat-card">
@@ -45,7 +45,7 @@
                         <span class="stat-title">Stock Level</span>
                         <i class="fas fa-box stat-icon" style="color: #f59e0b;"></i>
                     </div>
-                    <div class="stat-value">78%</div>
+                    <div class="stat-value"><%= dashboardData.stockLevel%>%</div>
                     <div class="stat-trend trend-down">-5.3% from last month</div>
                 </div>
             </div>
@@ -67,27 +67,15 @@
                 <div class="chart-card">
                     <h3 class="chart-title">Top Products</h3>
                     <ul class="product-list">
-                        <li class="product-item">
-                            <span class="product-dot" style="background-color: #4f46e5;"></span>
-                            <div class="product-info">
-                                <div class="product-name">Arabica Premium</div>
-                                <div class="product-sales">1,245 sales</div>
-                            </div>
-                        </li>
-                        <li class="product-item">
-                            <span class="product-dot" style="background-color: #3b82f6;"></span>
-                            <div class="product-info">
-                                <div class="product-name">Robusta Gold</div>
-                                <div class="product-sales">946 sales</div>
-                            </div>
-                        </li>
-                        <li class="product-item">
-                            <span class="product-dot" style="background-color: #8b5cf6;"></span>
-                            <div class="product-info">
-                                <div class="product-name">Blend Master</div>
-                                <div class="product-sales">857 sales</div>
-                            </div>
-                        </li>
+                        <% topProducts.forEach(product => { %>
+                            <li class="product-item">
+                                <span class="product-dot" style="background-color: #4f46e5;"></span>
+                                <div class="product-info">
+                                    <div class="product-name"><%= product.name %></div>
+                                    <div class="product-sales"><%= product.sales %> sales</div>
+                                </div>
+                            </li>
+                        <% }); %>
                     </ul>
                 </div>
             </div>
