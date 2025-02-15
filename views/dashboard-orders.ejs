@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
+    <title>Orders Dashboard</title>
     <link rel="stylesheet" href="/css/components/dashboard.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.0/chart.min.js"></script>
@@ -14,29 +14,25 @@
         <%- include('./partials/sidebar'); %>
     
         <main class="main-content">
-            <div class="orders-filters">
+            <form class="orders-filters" method="GET" action="/dashboard/orders">
                 <div class="search-box">
                     <i class="fas fa-search"></i>
-                    <input type="text" placeholder="Search orders...">
+                    <input type="text" name="search" placeholder="Search orders..." >
                 </div>
-                <select class="filter-select">
-                    <option value="all">All Orders</option>
-                    <option value="pending">Pending</option>
-                    <option value="processing">Processing</option>
-                    <option value="shipped">Shipped</option>
-                    <option value="delivered">Delivered</option>
+                <select class="filter-select" name="status" onchange="this.form.submit()">
+                    <option value="all" <%= statusFilter === 'all' ? 'selected' : '' %>>All Orders</option>
+                    <option value="pending" <%= statusFilter === 'pending' ? 'selected' : '' %>>Pending</option>
+                    <option value="processing" <%= statusFilter === 'processing' ? 'selected' : '' %>>Processing</option>
+                    <option value="shipped" <%= statusFilter === 'shipped' ? 'selected' : '' %>>Shipped</option>
+                    <option value="delivered" <%= statusFilter === 'delivered' ? 'selected' : '' %>>Delivered</option>
                 </select>
-                <select class="filter-select">
-                    <option value="newest">Newest First</option>
-                    <option value="oldest">Oldest First</option>
-                    <option value="highest">Highest Amount</option>
-                    <option value="lowest">Lowest Amount</option>
+                <select class="filter-select" name="sort" onchange="this.form.submit()">
+                    <option value="newest" <%= sortOption === 'newest' ? 'selected' : '' %>>Newest First</option>
+                    <option value="oldest" <%= sortOption === 'oldest' ? 'selected' : '' %>>Oldest First</option>
+                    <option value="highest" <%= sortOption === 'highest' ? 'selected' : '' %>>Highest Amount</option>
+                    <option value="lowest" <%= sortOption === 'lowest' ? 'selected' : '' %>>Lowest Amount</option>
                 </select>
-                <button class="add-order-btn">
-                    <i class="fas fa-plus"></i>
-                    New Order
-                </button>
-            </div>
+            </form>
     
             <div class="orders-card">
                 <table class="orders-table">
@@ -52,33 +48,44 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr>
-                            <td>#ORD-001</td>
-                            <td>John Doe</td>
-                            <td>Arabica Coffee Beans (2kg)</td>
-                            <td>2024-02-01</td>
-                            <td>₱1,200</td>
-                            <td><span class="status-badge status-delivered">Delivered</span></td>
-                            <td>
-                                <div class="order-actions">
-                                    <button class="action-btn edit-btn">Edit</button>
-                                    <button class="action-btn delete-btn">Delete</button>
-                                </div>
-                            </td>
-                        </tr>
-                        <!-- More order rows... -->
+                        <% if (orders.length > 0) { %>
+                            <% orders.forEach(order => { %>
+                                <tr>
+                                    <td>#<%= order.order_id %></td>
+                                    <td><%= order.customer_name %></td>
+                                    <td><%= order.products %></td>
+                                    <td><%= order.order_date %></td>
+                                    <td>₱<%= order.total_amount %></td>
+                                    <td><span class="status-badge status-<%= order.shipping_status %>"><%= order.shipping_status %></span></td>
+                                    <td>
+                                        <div class="order-actions">
+                                            <button class="action-btn accept-btn" onclick="updateOrderStatus('<%= order.order_id %>')">Accept</button>
+                                            <button class="action-btn delete-btn" onclick="deleteOrder('<%= order.order_id %>')">Delete</button>
+                                        </div>
+                                    </td>
+                                </tr>
+                            <% }); %>
+                        <% } else { %>
+                            <tr>
+                                <td colspan="7" class="no-orders">No orders found</td>
+                            </tr>
+                        <% } %>
                     </tbody>
                 </table>
             </div>
     
             <div class="pagination">
-                <span class="page-info">Showing 1 to 10 of 45 entries</span>
+                <span class="page-info">Showing <%= currentPage %> to <%= totalPages %> of <%= totalOrders %> entries</span>
                 <div class="page-buttons">
-                    <button class="page-btn">Previous</button>
-                    <button class="page-btn active">1</button>
-                    <button class="page-btn">2</button>
-                    <button class="page-btn">3</button>
-                    <button class="page-btn">Next</button>
+                    <% if (currentPage > 1) { %>
+                        <button class="page-btn"><a href="/dashboard/orders?page=<%= currentPage - 1 %>&status=<%= statusFilter %>&sort=<%= sortOption %>" class="page-btn">Previous</a></button>
+                    <% } %>
+                    <% for (let i = 1; i <= totalPages; i++) { %>
+                        <button class="page-btn"><a href="/dashboard/orders?page=<%= i %>&status=<%= statusFilter %>&sort=<%= sortOption %>" class="page-btn <%= currentPage === i ? 'active' : '' %>"><%= i %></a></button>
+                    <% } %>
+                    <% if (currentPage < totalPages) { %>
+                        <button class="page-btn"><a href="/dashboard/orders?page=<%= currentPage + 1 %>&status=<%= statusFilter %>&sort=<%= sortOption %>" class="page-btn">Next</a></button>
+                    <% } %>
                 </div>
             </div>
         </main>

@@ -1,71 +1,57 @@
 const express = require('express');
 const router = express.Router();
-const cartController = require('../controllers/cartController');
+const CartController = require('../controllers/cartController');
 const UserController = require('../controllers/userController');
 
 // locals.user
 router.use(UserController.getUserDataById);
 
 // Add product to cart
-router.post('/cart/add', cartController.addToCart);
+router.post('/cart/add', CartController.addToCart);
 
 // View cart
-router.get('/cart', cartController.viewCart);
+router.get('/cart', CartController.viewCart);
 
-router.get('/checkout', (req, res) => {
-    // Sample addresses data - replace with your database query
-    const addresses = [
-        {
-            id: 1,
-            full_address: 'Seda Hotel, 3rd floor 301B Davao City',
-            default: true
-        },
-        // Add more addresses as needed
-    ];
+router.get('/cart/checkout', async (req, res) => {
 
-    // States data
-    const states = [
-        { code: 'AL', name: 'Alabama' },
-        { code: 'AK', name: 'Alaska' },
-        // ... other states
-    ];
-    // Sample data - replace with your actual data source
-    const cartItems = [
-        {
-            name: "PREMIUM FILTER COFFEE BEAN",
-            description: "1 kg / Arabica / Low",
-            price: 24.00,
-            quantity: 2,
-            image: "/path/to/coffee-image-1.jpg"
-        },
-        {
-            name: "DARK ROASTED COFFEE BEAN",
-            description: "1 kg / Rich Aroma / High",
-            price: 26.00,
-            quantity: 2,
-            image: "/path/to/coffee-image-2.jpg"
-        }
-    ];
+    try {
+        const cartItems = await CartController.viewCart(req, res);
 
-    const totalItems = cartItems.reduce((sum, item) => sum + item.quantity, 0);
-    const subtotal = cartItems.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-    const total = subtotal; // Add shipping cost calculation if needed
+        let totalItems = 0;
+        cartItems.forEach(item => {
+          totalItems += item.quantity;
+        });
 
-    res.render('checkout', {
-        addresses, 
-        states,
-        cartItems, 
-        totalItems, 
-        subtotal, 
-        total
-    });
+        let subtotal = 0;
+        cartItems.forEach(item => {
+          subtotal += item.quantity * item.price;
+        });
+        const shippingRates = 5 / 100;
+        const shipping = subtotal * shippingRates;
+
+        const total = subtotal + shipping; // Add shipping cost calculation if needed
+
+        res.render('checkout', {
+          addresses: res.locals.addresses,
+          cartItems,
+          totalItems,
+          subtotal,
+          shipping,
+          total
+        });
+    } catch (err) {
+        console.error('Error fetching checkout data:', err.message);
+        res.status(500).json({ error: 'Error fetching checkout data' });
+    }
 });
 
 // Remove item from cart
-router.post('/cart/remove', cartController.removeFromCart);
+router.post('/cart/remove', CartController.removeFromCart);
 
 // Update cart quantity
-router.post('/cart/update', cartController.updateQuantity);
+router.post('/cart/update', CartController.updateQuantity);
 
+// Payment from cart item
+router.post('/cart/paynow', CartController.cartItemPayment);
 
 module.exports = router;

@@ -77,7 +77,9 @@
                 <div class="cart-content">
                     <div class="subtotal"><h4>Subtotal</h4><h2>₱<%= subtotal.toFixed(2) %> php</h2></div>
                     <p>Taxes and shipping calculated at checkout</p>
-                    <button class="checkout-btn" type="submit">Check out</button>
+                    <form action="/cart/checkout" method="get" class="checkout-form">
+                        <button class="checkout-btn" href="/checkout" type="submit">Check out</button>
+                    </form>
                 </div>
             </div>
             <%} else { %>

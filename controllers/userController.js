@@ -61,8 +61,31 @@ class UserController {
   static async getUserDataById(req, res, next) {
     if (req.session.userId) {
       try {
-        const query = 'SELECT CONCAT(first_name, " ", last_name) AS full_name, email, first_name, last_name, password, contact_number, profile_pic_url FROM user WHERE id = ?';
+        const query = `
+        SELECT CONCAT(u.first_name, " ", u.last_name) AS full_name, 
+        u.email, 
+        u.first_name, 
+        u.last_name, 
+        u.password, 
+        u.contact_number, 
+        u.profile_pic_url
+        FROM user u
+        WHERE id = ?
+        `;
         const [user] = await db.query(query, [req.session.userId]);
+
+        // Fetch all addresses for the user
+        const addressQuery = `
+        SELECT id,
+        CONCAT(street_address, ", ", city, ", ", zip_code) AS full_address,
+        street_address,
+        apartment,
+        city,
+        zip_code,
+        is_default
+        FROM user_address
+        WHERE user_id = ?`;
+        const [addresses] = await db.query(addressQuery, [req.session.userId]);
 
         if (user.length > 0) {
           res.locals.user = {
@@ -75,6 +98,8 @@ class UserController {
             profile_pic_url: user[0].profile_pic_url
           };
         }
+
+        res.locals.addresses = addresses.length > 0 ? addresses : [];
       } catch (err) {
         console.error('Error fetching user data:', err);
       }

@@ -52,8 +52,25 @@ router.get('/dashboard', async (req, res) => {
 
 });
 
-router.get('/dashboard/orders', (req, res) => {
-    res.render('dashboard-orders', { title: 'Dashboard' });
+router.get('/dashboard/orders', async (req, res) => {
+    try {
+        const { orders, total, totalPages, page, limit, searchQuery, statusFilter, sortFilter } = await dashboardController.getOrders(req);
+
+        res.render('dashboard-orders', {
+            title: 'Dashboard',
+            orders,
+            totalOrders: total,
+            totalPages,
+            currentPage: page,
+            limit,
+            searchQuery,
+            statusFilter,
+            sortOption: sortFilter
+        });
+    } catch (error) {
+        console.error("Error rendering orders:", error);
+        res.status(500).send("Internal server error");
+    }
 });
 
 router.get('/dashboard/products', (req, res) => {

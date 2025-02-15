@@ -18,18 +18,19 @@
         <div class="container">
             <div class="left-container">
                 <h2>Delivery Addresses</h2>
-                
                 <!-- Existing Addresses -->
-                <div class="address-list">
-                    <% addresses.forEach(function(address) { %>
-                        <div class="address-item">
-                            <input type="radio" name="selected_address" id="address_<%= address.id %>" value="<%= address.id %>" <%= address.default ? 'checked' : '' %>>
-                            <label for="address_<%= address.id %>">
-                                <%= address.full_address %>
-                            </label>
-                        </div>
-                    <% }); %>
-                </div>
+                <% if (addresses && addresses.length > 0) { %>
+                    <div class="address-list">
+                        <% addresses.forEach(address => { %>
+                            <div class="address-item">
+                                <input type="radio" name="address_id" id="address<%= address.id %>" value="<%= address.id %>" <%= address.is_default ? 'checked' : '' %>>
+                                <label for="address<%= address.id %>">
+                                    <%= address.apartment !== null ? address.street_address + ', ' + address.apartment + ', ' + address.city + ', ' + address.zip_code : address.full_address %>
+                                </label>
+                            </div>
+                        <% }); %>
+                    </div>
+                <% } %>
 
                 <!-- Add New Address Button -->
                 <button class="d-align-right btn btn-primary" id="showNewAddressForm">Add New Address</button>
@@ -56,25 +57,30 @@
                 
                 <!-- New Shipping Method Section -->
                 <h2 class="title">Shipping method</h2>
-                <div class="shipping-notice">
-                    Enter your shipping address to view available shipping methods.
-                </div>
-                <div class="payment-options">
-                    <div class="payment-option">
-                        <input type="radio" id="cod" name="payment_method" value="cod" checked>
-                        <label for="cod">
-                            Cash on Delivery
-                        </label>
+                <% if (addresses.length > 0) { %>
+                    <div class="payment-options">
+                        <div class="payment-option">
+                            <input type="radio" id="cod" name="payment_method" value="cash_on_delivery" checked>
+                            <label for="cod">
+                                Cash on Delivery
+                            </label>
+                        </div>
+                        <div class="payment-option disabled">
+                            <input type="radio" id="credit-card" name="payment_method" value="credit-card" disabled>
+                            <label for="credit-card">
+                                Credit Card
+                            </label>
+                        </div>
                     </div>
-                    <div class="payment-option disabled">
-                        <input type="radio" id="credit-card" name="payment_method" value="credit-card" disabled>
-                        <label for="credit-card">
-                            Credit Card
-                        </label>
+                <% } else { %>
+                    <div class="shipping-notice">
+                        Enter your shipping address to view available shipping methods.
                     </div>
-                </div>
+                <% } %>
 
-                <form action="/paynow" method="post">
+                <form id="payment-form" action="/cart/paynow" method="post">
+                    <input type="hidden" name="address_id" id="selected_address">
+                    <input type="hidden" name="payment_method" id="selected_payment">
                     <div class="form-group">
                         <button type="submit" class="wide-btn btn btn-primary">Pay Now</button>
                     </div>
@@ -87,29 +93,29 @@
                     <div class="cart-item">
                         <div class="thumbnail-wrap">
                             <div class="quantity-badge"><%= item.quantity %></div>
-                            <img src="<%= item.image %>" alt="<%= item.name %>" class="item-image">
+                            <img src="<%= item.image_url %>" alt="<%= item.name %>" class="item-image">
                         </div>
                         <div class="item-details">
                             <div class="item-name"><%= item.name %></div>
-                            <div class="item-description"><%= item.description %></div>
+                            <div class="item-description"><%= item.category_name.charAt(0).toUpperCase() + item.category_name.slice(1) %> | <%= item.weight %><%= item.unit %></div>
                         </div>
-                        <div class="item-price">$<%= item.price.toFixed(2) %></div>
+                        <div class="item-price">₱<%= item.price.toFixed(2) %></div>
                     </div>
                 <% }); %>
         
                 <div class="cart-summary">
                     <div class="subtotal-row">
                         <div>Subtotal : <%= totalItems %> items</div>
-                        <div>$<%= subtotal.toFixed(2) %></div>
+                        <div>₱<%= subtotal.toFixed(2) %></div>
                     </div>
                     <div class="subtotal-row">
                         <div>Shipping : </div>
-                        <div>$<%= subtotal.toFixed(2) %></div>
+                        <div>₱<%= shipping.toFixed(2) %></div>
                     </div>
         
-                    <div class="subtotal-row total-row">
+                    <div class="total-row">
                         <div>Total</div>
-                        <div>USD $<%= total.toFixed(2) %></div>
+                        <div>₱<%= total.toFixed(2) %> PHP</div>
                     </div>
                 </div>
             </div>
@@ -122,6 +128,10 @@
             const newAddressForm = document.querySelector('.new-address-form');
             const cancelNewAddress = document.getElementById('cancelNewAddress');
 
+            const paymentForm = document.getElementById('payment-form');
+            const selectedAddressInput = document.getElementById('selected_address');
+            const selectedPaymentInput = document.getElementById('selected_payment');
+
             // Show new address form
             showNewAddressForm.addEventListener('click', function() {
                 newAddressForm.classList.add('active');
@@ -132,6 +142,26 @@
             cancelNewAddress.addEventListener('click', function() {
                 newAddressForm.classList.remove('active');
                 showNewAddressForm.style.display = 'block';
+            });
+
+            paymentForm.addEventListener('submit', function(event) {
+                const selectedAddress = document.querySelector('input[name="address_id"]:checked');
+                const selectedPayment = document.querySelector('input[name="payment_method"]:checked');
+
+                if (!selectedAddress) {
+                    alert("Please select a delivery address.");
+                    event.preventDefault();
+                    return;
+                }
+
+                if (!selectedPayment) {
+                    alert("Please select a payment method.");
+                    event.preventDefault();
+                    return;
+                }
+
+                selectedAddressInput.value = selectedAddress.value;
+                selectedPaymentInput.value = selectedPayment.value;
             });
 
         });

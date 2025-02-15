@@ -16,6 +16,7 @@ body {
     border-radius: 8px;
     padding: 24px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    min-height: 600px;
 }
 
 .left-container {
@@ -159,7 +160,6 @@ input[type="text"]:focus, select:focus {
 .payment-options {
     display: flex;
     flex-direction: column;
-    gap: 12px;
 }
 
 .payment-option {
@@ -171,7 +171,7 @@ input[type="text"]:focus, select:focus {
     cursor: pointer;
     transition: all 0.2s;
     border: 1px solid black;
-    margin-bottom: 16px;
+    margin-bottom: 12px;
 }
 
 .payment-option:hover:not(.disabled) {
@@ -252,14 +252,15 @@ input[type="text"]:focus, select:focus {
     position: absolute;
     background: #eee;
     border-radius: 50%;
-    width: 24px;
-    height: 24px;
+    width: 28px;
+    height: 28px;
     display: flex;
     align-items: center;
     justify-content: center;
-    margin-right: 12px;
     top: 6px;
     left: 66px;
+    font-size: large;
+    font-weight: 600;
 }
 
 .cart-summary {
@@ -271,9 +272,12 @@ input[type="text"]:focus, select:focus {
 .subtotal-row{
     display: flex;
     justify-content: space-between;
+    margin-bottom: 8px;
 }
 
 .total-row {
+    display: flex;
+    justify-content: space-between;
     font-size: 1.2rem;
     font-weight: 600;
     margin-top: 20px;

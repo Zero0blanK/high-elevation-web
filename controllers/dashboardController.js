@@ -13,7 +13,7 @@ class DashboardController {
 
   async getAllProducts() {
     const query = `
-        SELECT p.id, p.name, p.image_url, p.description, p.category_id, p.stock, pc.name AS category_name,
+        SELECT p.id, p.name, p.image_url, p.description, p.category_id, p.total_stock, pc.name AS category_name,
                (SELECT pw.price 
                 FROM product_weight pw 
                 JOIN weight w ON pw.weight_id = w.id
@@ -83,7 +83,7 @@ class DashboardController {
 
         // Insert product into `product` table, using the total stock
         const [productResult] = await db.query(
-            "INSERT INTO product (name, image_url, description, category_id, stock) VALUES (?, ?, ?, ?, ?)",
+            "INSERT INTO product (name, image_url, description, category_id, total_stock) VALUES (?, ?, ?, ?, ?)",
             [name, image_url, description, category_id, totalStock]
         );
 
@@ -130,13 +130,44 @@ class DashboardController {
 
   async getDashboardData() {
     const query =`
-      SELECT 
-          COALESCE(SUM(uo.total_amount), 0) AS totalSales,
-          COALESCE(COUNT(uo.id), 0) AS totalOrders,
-          COALESCE((SELECT COUNT(id) FROM user WHERE created_at >= DATE_SUB(NOW(), INTERVAL 1 MONTH)), 0) AS newCustomers,
-          COALESCE((SELECT (SUM(stock) / COUNT(id)) * 100 FROM product), 0) AS stockLevel
-      FROM user_order uo
-      WHERE uo.shipping_status = 'delivered';
+      SELECT
+        -- Total sales only for delivered or paid orders
+        COALESCE(
+          SUM(
+            CASE
+              WHEN uo.shipping_status = 'delivered'
+              OR uo.order_status = 'paid' THEN uo.total_amount
+              ELSE 0
+            END
+          ),
+          0
+        ) AS totalSales,
+        -- Count all orders regardless of status
+        COALESCE(COUNT(uo.id), 0) AS totalOrders,
+        -- Count new customers in the last month
+        COALESCE(
+          (
+            SELECT
+              COUNT(id)
+            FROM
+              user
+            WHERE
+              created_at >= DATE_SUB(NOW(), INTERVAL 1 MONTH)
+          ),
+          0
+        ) AS newCustomers,
+        -- Stock level as a percentage
+        COALESCE(
+          (
+            SELECT
+              ROUND((SUM(total_stock) / 100) * 100, 2)
+            FROM
+              product
+          ),
+          0
+        ) AS stockLevel
+      FROM
+        user_order uo;
     `;
     try {
       const [rows] = await db.query(query);
@@ -148,6 +179,102 @@ class DashboardController {
         throw error;
     }
   };
+
+  // 📌 Fetch Orders with Filters
+  async getOrders(req, res) {
+    let { search, status, sort, page } = req.query;
+    let limit = 10;
+    let offset = (page - 1) * limit || 0;
+
+    let whereClauses = [];
+    let params = [];
+
+    if (search) {
+        whereClauses.push("(CONCAT(u.first_name, ' ', u.last_name) AS customer_name LIKE ? OR uo.id LIKE ?)");
+        params.push(`%${search}%`, `%${search}%`);
+    }
+    if (status && status !== 'all') {
+        whereClauses.push("uo.shipping_status = ?");
+        params.push(status);
+    }
+
+    let orderBy = "uo.order_date DESC"; // Default sorting: Newest first
+    if (sort === "oldest") orderBy = "uo.order_date ASC";
+    if (sort === "highest") orderBy = "uo.total_amount DESC";
+    if (sort === "lowest") orderBy = "uo.total_amount ASC";
+
+    let whereSQL = whereClauses.length ? `WHERE ${whereClauses.join(" AND ")}` : "";
+
+    const query = `
+        SELECT uo.id AS order_id, CONCAT(u.first_name, " ", u.last_name) AS customer_name, 
+                GROUP_CONCAT(p.name SEPARATOR ', ') AS products, 
+                DATE_FORMAT(uo.order_date, '%M %d, %Y') AS order_date, uo.total_amount, uo.shipping_status
+        FROM user_order uo
+        JOIN user u ON uo.user_id = u.id
+        JOIN order_detail od ON uo.id = od.user_order_id
+        JOIN product p ON od.product_id = p.id
+        ${whereSQL}
+        GROUP BY uo.id
+        ORDER BY ${orderBy}
+        LIMIT ? OFFSET ?;
+    `;
+
+    try {
+        const [orders] = await db.query(query, [...params, limit, offset]);
+
+        const countQuery = `SELECT COUNT(*) AS total FROM user_order uo ${whereSQL}`;
+        const [[{ total }]] = await db.query(countQuery, params);
+        const totalPages = Math.ceil(total / limit);
+
+        return {
+          orders, 
+          total,
+          totalPages,
+          page: page || 1, 
+          limit, 
+          searchQuery: search || '', 
+          statusFilter: status || 'all', 
+          sortFilter: sort || 'newest' 
+          };
+    } catch (error) {
+        console.error("Error fetching orders:", error);
+        res.status(500).json({ error: "Internal server error" });
+    }
+};
+
+  // 📌 Edit Order Status
+  async updateOrderStatus(req, res) {
+      const { orderId } = req.params;
+      const { status } = req.body;
+
+      if (!["pending", "processing", "shipped", "delivered"].includes(status)) {
+          return res.status(400).json({ error: "Invalid status" });
+      }
+
+      const query = `UPDATE user_order SET shipping_status = ? WHERE id = ?`;
+      try {
+          await db.query(query, [status, orderId]);
+          res.json({ message: "Order status updated successfully" });
+      } catch (error) {
+          console.error("Error updating order status:", error);
+          res.status(500).json({ error: "Internal server error" });
+      }
+  };
+
+  // 📌 Delete Order
+  async deleteOrder(req, res) {
+      const { orderId } = req.params;
+
+      try {
+          await db.query(`DELETE FROM order_detail WHERE order_id = ?`, [orderId]);
+          await db.query(`DELETE FROM user_order WHERE id = ?`, [orderId]);
+
+          res.json({ message: "Order deleted successfully" });
+      } catch (error) {
+          console.error("Error deleting order:", error);
+          res.status(500).json({ error: "Internal server error" });
+      }
+  }
 
 }
 

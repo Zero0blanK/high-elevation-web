@@ -11,7 +11,6 @@ class User_Address {
             id INT PRIMARY KEY AUTO_INCREMENT,
             user_id INT NOT NULL,
             address VARCHAR(255) NOT NULL,
-            is_default BOOLEAN DEFAULT FALSE,
             FOREIGN KEY (user_id) REFERENCES user(id) ON DELETE CASCADE
         )
         `;

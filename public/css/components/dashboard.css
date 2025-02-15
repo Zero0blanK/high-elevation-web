@@ -441,6 +441,11 @@ body {
     color: #065f46;
 }
 
+.status-pending {
+    background: hsla(0, 0%, 73%, 0.3);
+    color: #2b2b2b;
+}
+
 .status-processing {
     background: #fef3c7;
     color: #92400e;
@@ -568,15 +573,15 @@ body {
 }
 
 .action-btn {
-    padding: 4px 8px;
+    padding: 4px 12px;
     border: none;
     border-radius: 4px;
     cursor: pointer;
     font-size: 0.8rem;
 }
 
-.edit-btn {
-    background-color: #eef2ff;
+.accept-btn {
+    background-color: #d7dfff;
     color: #4f46e5;
 }
 
@@ -585,7 +590,7 @@ body {
     color: #ef4444;
 }
 
-.edit-btn:hover {
+.accept-btn:hover {
     background-color: #e0e7ff;
 }
 
@@ -929,7 +934,7 @@ input[type="file"] {
     background-color: var(--primary-color);
     color: white;
     border: none;
-    padding: 0.75rem 1.5rem;
+    padding: 0.75rem .9rem;
     border-radius: var(--radius-md);
     font-weight: 500;
     cursor: pointer;
