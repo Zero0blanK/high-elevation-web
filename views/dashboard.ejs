@@ -84,7 +84,7 @@
             <div class="orders-card">
                 <div class="orders-header">
                     <h3 class="orders-title">Recent Orders</h3>
-                    <a href="#" class="view-all">View All</a>
+                    <a href="/dashboard/orders" class="view-all">View All</a>
                 </div>
                 <table class="orders-table">
                     <thead>
@@ -92,32 +92,32 @@
                             <th>Order ID</th>
                             <th>Customer</th>
                             <th>Products</th>
+                            <th>Date</th>
                             <th>Total</th>
                             <th>Status</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <tr>
-                            <td>#ORD-001</td>
-                            <td>John Doe</td>
-                            <td>Arabica Coffee Beans (2kg)</td>
-                            <td>₱1,200</td>
-                            <td><span class="status-badge status-delivered">Delivered</span></td>
-                        </tr>
-                        <tr>
-                            <td>#ORD-002</td>
-                            <td>Jane Smith</td>
-                            <td>Robusta Coffee Beans (1kg)</td>
-                            <td>₱850</td>
-                            <td><span class="status-badge status-processing">Processing</span></td>
-                        </tr>
-                        <tr>
-                            <td>#ORD-003</td>
-                            <td>Mike Johnson</td>
-                            <td>Mixed Coffee Pack (3kg)</td>
-                            <td>₱2,100</td>
-                            <td><span class="status-badge status-shipped">Shipped</span></td>
-                        </tr>
+                        <% if (orders.length > 0) { %>
+                            <% orders.slice(0, 5).forEach(order => { %>
+                                <tr>
+                                    <td><%= order.order_id %></td>
+                                    <td><%= order.customer_name %></td>
+                                    <td><%= order.products %></td>
+                                    <td><%= order.order_date %></td>
+                                    <td>₱<%= parseFloat(order.total_amount).toFixed(2) %></td>
+                                    <td>
+                                        <span class="status-badge status-<%= order.shipping_status.toLowerCase() %>">
+                                            <%= order.shipping_status %>
+                                        </span>
+                                    </td>
+                                </tr>
+                            <% }); %>
+                        <% } else { %>
+                            <tr>
+                                <td colspan="6" style="text-align:center;">No recent orders available.</td>
+                            </tr>
+                        <% } %>
                     </tbody>
                 </table>
             </div>
@@ -126,79 +126,45 @@
 
 
     <script>
-        // Sales Chart
-        const salesCtx = document.getElementById('salesChart').getContext('2d');
-        new Chart(salesCtx, {
+        // Sales Overview Chart
+        const salesOverviewCtx = document.getElementById('salesChart').getContext('2d');
+        const salesOverviewChart = new Chart(salesOverviewCtx, {
             type: 'line',
             data: {
-                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                labels: <%- JSON.stringify(salesOverview.map(s => s.MONTH)) %>,
                 datasets: [{
-                    label: 'Sales (₱)',
-                    data: [30000, 35000, 32000, 40000, 45000, 42000],
-                    borderColor: '#4f46e5',
-                    tension: 0.3,
-                    fill: false
+                    label: 'Total Sales',
+                    data: <%- JSON.stringify(salesOverview.map(s => parseFloat(s.total_sales).toFixed(2))) %>,
+                    backgroundColor: 'rgba(54, 162, 235, 0.5)',
+                    borderColor: 'rgba(54, 162, 235, 1)',
+                    borderWidth: 1
                 }]
             },
             options: {
                 responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        display: false
-                    }
-                },
                 scales: {
                     y: {
-                        beginAtZero: true,
-                        ticks: {
-                            font: {
-                                size: 10
-                            }
-                        }
-                    },
-                    x: {
-                        ticks: {
-                            font: {
-                                size: 10
-                            }
-                        }
+                        beginAtZero: true
                     }
                 }
             }
         });
 
-        // Category Chart
-        const categoryCtx = document.getElementById('categoryChart').getContext('2d');
-        new Chart(categoryCtx, {
+        // Sales by Category Chart
+        const categoryChartCtx = document.getElementById('categoryChart').getContext('2d');
+        const categoryChart = new Chart(categoryChartCtx, {
             type: 'doughnut',
             data: {
-                labels: ['Arabica', 'Robusta', 'Mixed', 'Other'],
+                labels: <%- JSON.stringify(categorySales.map(c => c.category)) %>,
                 datasets: [{
-                    data: [45, 25, 20, 10],
-                    backgroundColor: [
-                        '#4f46e5',
-                        '#3b82f6',
-                        '#8b5cf6',
-                        '#ef4444'
-                    ]
+                    label: 'Total Sales',
+                    data: <%- JSON.stringify(categorySales.map(c => c.total_sales)) %>,
+                    backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#4CAF50', '#9966FF'],
+                    borderWidth: 1
                 }]
             },
             options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'bottom',
-                        labels: {
-                            font: {
-                                size: 10
-                            },
-                            padding: 10
-                        }
-                    }
-                },
-                cutout: '70%'
+                responsive: true
             }
         });
     </script>

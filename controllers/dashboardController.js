@@ -276,6 +276,111 @@ class DashboardController {
       }
   }
 
+  async getSalesData(req, res) {
+    try {
+        // Get total sales per month (for Sales Overview chart)
+        const salesOverviewQuery = `
+          SELECT
+            m.month_name AS MONTH,
+            COALESCE(SUM(uo.total_amount), 0) AS total_sales
+          FROM
+            (
+              SELECT
+                'January' AS month_name,
+                1 AS month_num
+              UNION ALL
+              SELECT
+                'February',
+                2
+              UNION ALL
+              SELECT
+                'March',
+                3
+              UNION ALL
+              SELECT
+                'April',
+                4
+              UNION ALL
+              SELECT
+                'May',
+                5
+              UNION ALL
+              SELECT
+                'June',
+                6
+              UNION ALL
+              SELECT
+                'July',
+                7
+              UNION ALL
+              SELECT
+                'August',
+                8
+              UNION ALL
+              SELECT
+                'September',
+                9
+              UNION ALL
+              SELECT
+                'October',
+                10
+              UNION ALL
+              SELECT
+                'November',
+                11
+              UNION ALL
+              SELECT
+                'December',
+                12
+            ) AS m
+            LEFT JOIN user_order uo ON MONTH(uo.order_date) = m.month_num
+            AND YEAR(uo.order_date) = YEAR(CURDATE())
+            AND uo.shipping_status = 'delivered' OR uo.order_status = 'paid'
+          GROUP BY
+            m.month_name,
+            m.month_num
+          ORDER BY
+            m.month_num;
+        `;
+
+        const [salesOverview] = await db.query(salesOverviewQuery);
+
+        // Get total sales by category (for Sales by Category chart)
+        const categorySalesQuery = `
+          SELECT
+            c.name AS category,
+            COALESCE(
+              SUM(
+                CASE
+                  WHEN uo.shipping_status = 'delivered' OR uo.order_status = 'paid' THEN od.quantity * pw.price
+                  ELSE 0
+                END
+              ),
+              0
+            ) AS total_sales
+          FROM
+            product_category c
+            LEFT JOIN product p ON c.id = p.category_id
+            LEFT JOIN product_weight pw ON p.id = pw.product_id
+            LEFT JOIN order_detail od ON pw.product_id = od.product_id
+            AND pw.weight_id = od.weight_id
+            LEFT JOIN user_order uo ON od.user_order_id = uo.id
+            AND YEAR(uo.order_date) = YEAR(CURDATE()) -- Keeps only current year's orders
+          GROUP BY
+            c.id
+          ORDER BY
+            total_sales DESC;
+        `;
+
+        const [categorySales] = await db.query(categorySalesQuery);
+
+        return { salesOverview, categorySales };
+    } catch (error) {
+        console.error('Error fetching sales data:', error);
+        throw error;
+    }
+  }
+
 }
 
 module.exports = new DashboardController();

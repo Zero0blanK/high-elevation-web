@@ -28,8 +28,9 @@ router.get('/dashboard', async (req, res) => {
     try {
         const topProducts = await productController.getTopProducts();
         const dashboardData = await dashboardController.getDashboardData();
+        const ordersData = await dashboardController.getOrders(req);
+        const {salesOverview, categorySales} = await dashboardController.getSalesData(req);
 
-        console.log("Fetched Dashboard Data:", dashboardData);
         // Provide default values if dashboardData is undefined
         const safeData = {
             totalSales: dashboardData?.totalSales || 0,
@@ -43,11 +44,14 @@ router.get('/dashboard', async (req, res) => {
             username: user[0].username, 
             email: user[0].email, 
             topProducts, 
-            dashboardData: safeData 
+            dashboardData: safeData,
+            orders: ordersData.orders,
+            salesOverview,
+            categorySales
         });
 
     } catch (error) {
-        res.status(500).send('Error fetching dashboard data');
+        res.status(500).send('Error fetching dashboard data: ' + error);
     }
 
 });

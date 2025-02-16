@@ -261,7 +261,7 @@ body {
 /* Enhanced Charts Grid */
 .charts-grid {
     display: grid;
-    grid-template-columns: 6fr 3fr 3fr;
+    grid-template-columns: 6.5fr 3.12fr 3.12fr;
     gap: 24px;
     margin-bottom: 24px;
 }
