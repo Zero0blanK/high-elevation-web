@@ -28,7 +28,7 @@ router.get('/product/overview/:product_name', async (req, res) => {
                 p.image_url, 
                 p.description, 
                 pc.name AS category_name, 
-                p.stock,
+                p.total_stock,
                 (SELECT pw.price 
                  FROM product_weight pw 
                  JOIN weight w ON pw.weight_id = w.id 

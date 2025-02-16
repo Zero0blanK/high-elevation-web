@@ -55,11 +55,11 @@
                                     <td><%= order.customer_name %></td>
                                     <td><%= order.products %></td>
                                     <td><%= order.order_date %></td>
-                                    <td>₱<%= order.total_amount %></td>
+                                    <td>₱<%= (parseFloat(order.total_amount) + (parseFloat(order.total_amount) * shippingRate)).toFixed(2) %></td>
                                     <td><span class="status-badge status-<%= order.shipping_status %>"><%= order.shipping_status %></span></td>
                                     <td>
                                         <div class="order-actions">
-                                            <button class="action-btn accept-btn" onclick="updateOrderStatus('<%= order.order_id %>')">Accept</button>
+                                            <button class="action-btn accept-btn" onclick="viewOrder('<%= order.order_id %>')">View</button>
                                             <button class="action-btn delete-btn" onclick="deleteOrder('<%= order.order_id %>')">Delete</button>
                                         </div>
                                     </td>
@@ -89,6 +89,126 @@
                 </div>
             </div>
         </main>
+
+        <!-- Modal -->
+        <div id="orderModal" class="orderPageModal">
+            <div class="order-page-modal-content">
+                <div class="order-page-modal-header">
+                    <h2>Order Details</h2>
+                    <span class="close">&times;</span>
+                </div>
+                <div class="order-page-modal-body">
+                    <div class="info-group">
+                        <div class="info-label">Order ID</div>
+                        <div class="info-value" id="modalOrderId"></div>
+                    </div>
+                    <div class="info-group">
+                        <div class="info-label">Order Date</div>
+                        <div class="info-value" id="modalOrderDate"></div>
+                    </div>
+                    <div class="info-group">
+                        <div class="info-label">Customer Name</div>
+                        <div class="info-value" id="modalCustomerName"></div>
+                    </div>
+                    <div class="info-group">
+                        <div class="info-label">Contact Number</div>
+                        <div class="info-value" id="modalContactNumber"></div>
+                    </div>
+                    <div class="info-group">
+                        <div class="info-label">Shipping Address</div>
+                        <div class="info-value" id="modalAddress"></div>
+                    </div>
+                    <div class="info-group">
+                        <div class="info-label">Payment Method</div>
+                        <div class="info-value" id="modalPaymentMethod"></div>
+                    </div>
+                    <div class="info-group">
+                        <div class="info-label">Payment Status</div>
+                        <div class="info-value payment-status-badge" id="modalPaymentStatus"></div>
+                    </div>
+                    <div class="info-group">
+                        <div class="info-label">Total Amount</div>
+                        <div class="info-value" id="modalTotalAmount"></div>
+                    </div>
+                </div>
+                <div class="order-page-card">
+                    <table class="order-products">
+                        <thead>
+                            <tr>
+                                <th>Product</th>
+                                <th>Category</th>
+                                <th>Weight</th>
+                                <th>Quantity</th>
+                                <th>Price</th>
+                                <th>Subtotal</th>
+                            </tr>
+                        </thead>
+                        <tbody id="modalProductsList">
+                            <!-- Products will be populated here -->
+                        </tbody>
+                    </table>
+                </div>
+                <div class="order-page-modal-footer">
+                    <form action="/accept-order" method="post">
+                        <div class="btn-group">
+                            <button type="submit" class="btn btn-accept">
+                                <i class="fas fa-check"></i> Accept Order
+                            </button>
+                            <button type="button" class="btn btn-cancel">
+                                <i class="fas fa-times"></i> Cancel
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
     </div>
+
+    <script>
+        // Modal functionality
+        const modal = document.getElementById("orderModal");
+        const span = document.getElementsByClassName("close")[0];
+
+        function viewOrder(orderId) {
+            fetch(`/dashboard/orders/${orderId}`)
+                .then(response => response.json())
+                .then(order => {
+                    document.getElementById("modalOrderId").textContent = "#" + order.order_id;
+                    document.getElementById("modalOrderDate").textContent = order.order_date;
+                    document.getElementById("modalCustomerName").textContent = order.customer_name;
+                    document.getElementById("modalContactNumber").textContent = order.contact_number;
+                    document.getElementById("modalAddress").textContent = order.address;
+                    document.getElementById("modalPaymentMethod").textContent = order.payment_method === 'cash_on_delivery' ? 'Cash On Delivery' : 'Credit Card';
+                    document.getElementById("modalPaymentStatus").textContent = order.payment_status.charAt(0).toUpperCase() + order.payment_status.slice(1);
+                    document.getElementById("modalPaymentStatus").classList.add(`payment-status-${order.payment_status}`)
+                    document.getElementById("modalTotalAmount").textContent = `₱${order.total_amount} + ₱${order.shipping_fee.toFixed(2)}🚚 = ₱${parseFloat(order.total_amount) + order.shipping_fee}`;
+
+                    // Populate products table
+                    const productsList = document.getElementById("modalProductsList");
+                    productsList.innerHTML = order.products.map(product => `
+                        <tr>
+                            <td>${product.name}</td>
+                            <td>${product.category.charAt(0).toUpperCase() + product.category.slice(1)}</td>
+                            <td>${product.weight}</td>
+                            <td>${product.quantity}</td>
+                            <td>₱${product.price}</td>
+                            <td>₱${product.subtotal}</td>
+                        </tr>
+                    `).join('');
+
+                    modal.style.display = "block";
+                }).catch(error => console.error('Error fetching order details:', error));
+        }
+
+        span.onclick = function() {
+            modal.style.display = "none";
+        }
+
+        window.onclick = function(event) {
+            if (event.target == modal) {
+                modal.style.display = "none";
+            }
+        }
+    </script>
 </body>
 </html>

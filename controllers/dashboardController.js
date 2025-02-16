@@ -9,6 +9,8 @@ class DashboardController {
     this.productModel = new Product(db);
     this.userOrderModel = new User_Order(db);
     this.addProduct = this.addProduct.bind(this);
+    this.getWeightId = this.getWeightId.bind(this);
+    this.updateProduct = this.updateProduct.bind(this);
   }
 
   async getAllProducts() {
@@ -29,6 +31,57 @@ class DashboardController {
     } catch (err) {
         console.error('Error fetching products:', err.message);
         throw err;
+    }
+  }
+
+  async getProductById(productId) {
+    const query = `
+      SELECT
+        p.id,
+        p.name,
+        p.description,
+        p.image_url,
+        p.category_id,
+        pc.name AS category_name,
+        pw.weight_id,
+        w.value,
+        w.unit,
+        pw.price,
+        pw.stock
+      FROM
+        product p
+        JOIN product_category pc ON p.category_id = pc.id
+        LEFT JOIN product_weight pw ON p.id = pw.product_id
+        LEFT JOIN weight w ON pw.weight_id = w.id
+      WHERE
+        p.id = ?
+    `;
+    try {
+        const [rows] = await db.query(query, [productId]);
+        if (rows.length === 0) {
+            throw new Error('Product not found');
+        }
+
+        const product = {
+            id: rows[0].id,
+            name: rows[0].name,
+            description: rows[0].description,
+            image_url: rows[0].image_url,
+            category_id: rows[0].category_id,
+            category_name: rows[0].category_name,
+            weights: rows.map(row => ({
+                weight_id: row.weight_id,
+                value: row.value,
+                unit: row.unit,
+                price: row.price,
+                stock: row.stock
+            }))
+        };
+
+        return product;
+    } catch (error) {
+        console.error('Error fetching product details:', error);
+        throw error;
     }
   }
 
@@ -102,6 +155,70 @@ class DashboardController {
     } catch (err) {
         console.error("Error adding product:", err);
         res.status(500).send("Error adding product");
+    }
+  }
+
+  async getWeightId(weight) {
+    const [rows] = await db.query('SELECT id FROM weight WHERE CONCAT(value, unit) = ?', [weight]);
+    if (rows.length === 0) {
+        throw new Error('Weight not found');
+    }
+    return rows[0].id;
+  }
+
+  async updateProduct(productData) {
+    const { id, name, description, category, weights } = productData;
+    const image = productData.image && productData.image !== '' ? productData.image : null;
+    
+
+    console.log("updateProduct image:", productData.image);
+
+    // Fetch the category_id based on the category name
+    const [categoryRows] = await db.query('SELECT id FROM product_category WHERE name = ?', [category]);
+    if (categoryRows.length === 0) {
+        throw new Error('Category not found');
+    }
+    const category_id = categoryRows[0].id;
+
+    const updateProductQuery = `
+        UPDATE product
+        SET name = ?, description = ?, category_id = ?, image_url = COALESCE(?, image_url), total_stock = ?
+        WHERE id = ?
+    `;
+
+    const updateWeightQuery = `
+        INSERT INTO product_weight (product_id, weight_id, price, stock)
+        VALUES (?, ?, ?, ?)
+        ON DUPLICATE KEY UPDATE price = VALUES(price), stock = VALUES(stock)
+    `;
+
+    const connection = await db.getConnection();
+    try {
+      await connection.beginTransaction();
+
+      // Calculate total stock
+      let totalStock = 0;
+      for (const weight of weights) {
+        const stock = parseInt(productData[`stock_${weight}`], 10);
+        totalStock += stock;
+      }
+
+      await connection.query(updateProductQuery, [name, description, category_id, image, totalStock, id]);
+
+      for (const weight of weights) {
+        const weightId = await this.getWeightId(weight);
+        const price = productData[`price_${weight}`];
+        const stock = productData[`stock_${weight}`];
+        await connection.query(updateWeightQuery, [id, weightId, price, stock]);
+      }
+
+      await connection.commit();
+    } catch (error) {
+      await connection.rollback();
+        console.error('Error updating product:', error);
+        throw error;
+    } finally {
+      connection.release();
     }
   }
 
@@ -190,7 +307,7 @@ class DashboardController {
     let params = [];
 
     if (search) {
-        whereClauses.push("(CONCAT(u.first_name, ' ', u.last_name) AS customer_name LIKE ? OR uo.id LIKE ?)");
+        whereClauses.push("(CONCAT(u.first_name, ' ', u.last_name) LIKE ? OR uo.id LIKE ?)");
         params.push(`%${search}%`, `%${search}%`);
     }
     if (status && status !== 'all') {
@@ -222,12 +339,19 @@ class DashboardController {
     try {
         const [orders] = await db.query(query, [...params, limit, offset]);
 
-        const countQuery = `SELECT COUNT(*) AS total FROM user_order uo ${whereSQL}`;
+        const countQuery = `
+        SELECT COUNT(*) AS total 
+        FROM user_order uo 
+        JOIN user u ON uo.user_id = u.id
+        ${whereSQL}`;
         const [[{ total }]] = await db.query(countQuery, params);
         const totalPages = Math.ceil(total / limit);
 
+        const shippingRate = 0.05;
+
         return {
-          orders, 
+          orders,
+          shippingRate,
           total,
           totalPages,
           page: page || 1, 
@@ -241,6 +365,72 @@ class DashboardController {
         res.status(500).json({ error: "Internal server error" });
     }
 };
+
+  // 📌 Fetch orders by id
+  async getOrderById(orderId) {
+    const query = `
+      SELECT
+          uo.id AS order_id,
+          CONCAT(u.first_name, " ", u.last_name) AS customer_name,
+          u.contact_number,
+          CONCAT(ua.street_address, ', ', ua.city, ', ', ua.zip_code) AS address,
+          pmt.payment_method,
+          pmt.payment_status,
+          DATE_FORMAT(uo.order_date, '%M %d, %Y') AS order_date,
+          uo.total_amount,
+          p.name,
+          pc.name AS category,
+          w.value AS weight,
+          w.unit,
+          od.quantity,
+          pw.price,
+          (od.quantity * pw.price) AS subtotal
+      FROM
+          user_order uo
+          JOIN user u ON uo.user_id = u.id
+          JOIN user_address ua ON uo.address_id = ua.id
+          JOIN order_detail od ON uo.id = od.user_order_id
+          JOIN product p ON od.product_id = p.id
+          JOIN product_category pc ON p.category_id = pc.id
+          JOIN product_weight pw ON p.id = pw.product_id AND od.weight_id = pw.weight_id
+          JOIN weight w ON pw.weight_id = w.id
+          JOIN payment pmt ON uo.id = pmt.order_id
+      WHERE
+          uo.id = ?;
+    `;
+    try {
+      const [rows] = await db.query(query, [orderId]);
+      if (rows.length === 0) {
+          throw new Error('Order not found');
+      }
+      const shippingRate = 0.05;
+
+      const order = {
+        order_id: rows[0].order_id,
+        customer_name: rows[0].customer_name,
+        contact_number: rows[0].contact_number,
+        address: rows[0].address,
+        payment_method: rows[0].payment_method,
+        payment_status: rows[0].payment_status,
+        order_date: rows[0].order_date,
+        total_amount: rows[0].total_amount,
+        shipping_fee: parseFloat(rows[0].total_amount) * shippingRate,
+        products: rows.map(row => ({
+            name: row.name,
+            category: row.category,
+            weight: `${row.weight}${row.unit}`,
+            quantity: row.quantity,
+            price: row.price,
+            subtotal: row.subtotal
+        }))
+
+      };
+      return order;
+    } catch (error) {
+      console.error('Error fetching order details:', error);
+      throw error;
+    }
+  }
 
   // 📌 Edit Order Status
   async updateOrderStatus(req, res) {

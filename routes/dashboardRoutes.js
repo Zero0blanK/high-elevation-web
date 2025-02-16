@@ -2,6 +2,7 @@ const express = require('express');
 const db = require('../config/db')
 const router = express.Router();
 const upload = require("../middleware/upload");
+const deleteImg = require("../middleware/delete");
 
 // Import controller
 const userController = require('../controllers/userController')
@@ -17,6 +18,16 @@ router.get('/dashboard/products', async (req, res) => {
         res.render('dashboard-products', { product });
     } catch (err) {
         res.status(500).send('Error fetching products');
+    }
+});
+
+router.get('/dashboard/products/:productId', async (req, res) => {
+    const { productId } = req.params;
+    try {
+        const product = await dashboardController.getProductById(productId);
+        res.json(product);
+    } catch (error) {
+        console.error("Error fetching product details:", error);
     }
 });
 
@@ -47,7 +58,7 @@ router.get('/dashboard', async (req, res) => {
             dashboardData: safeData,
             orders: ordersData.orders,
             salesOverview,
-            categorySales
+            categorySales,
         });
 
     } catch (error) {
@@ -58,11 +69,12 @@ router.get('/dashboard', async (req, res) => {
 
 router.get('/dashboard/orders', async (req, res) => {
     try {
-        const { orders, total, totalPages, page, limit, searchQuery, statusFilter, sortFilter } = await dashboardController.getOrders(req);
+        const { orders, shippingRate, total, totalPages, page, limit, searchQuery, statusFilter, sortFilter } = await dashboardController.getOrders(req);
 
         res.render('dashboard-orders', {
             title: 'Dashboard',
             orders,
+            shippingRate,
             totalOrders: total,
             totalPages,
             currentPage: page,
@@ -73,12 +85,17 @@ router.get('/dashboard/orders', async (req, res) => {
         });
     } catch (error) {
         console.error("Error rendering orders:", error);
-        res.status(500).send("Internal server error");
     }
 });
 
-router.get('/dashboard/products', (req, res) => {
-    res.render('dashboard-products', { title: 'Dashboard' });
+router.get('/dashboard/orders/:orderId', async (req, res) => {
+    const { orderId } = req.params;
+    try {
+        const order = await dashboardController.getOrderById(orderId);
+        res.json(order);
+    } catch (error) {
+        console.error("Error fetching order details:", error);
+    }
 });
 
 router.get('/dashboard/customers', (req, res) => {
@@ -96,6 +113,30 @@ router.get('/dashboard/settings', (req, res) => {
 router.post('/logout',)
 
 router.post('/dashboard/products', upload.single("image"), dashboardController.addProduct);
+
+router.post('/dashboard/edit-product', upload.single('image'), deleteImg, async (req, res) => {
+    const { id, name, description, category } = req.body;
+    const weights = req.body.weights || [];
+
+    const productData = {
+        id,
+        name,
+        description,
+        category,
+        weights,
+        image: req.file ?  `/assets/product-image/${req.file.filename}` : (req.newImage || req.body.image || null),
+        ...req.body // Include price and stock for each weight
+    };
+
+    console.log("Final productData:", productData);
+
+    try {
+        await dashboardController.updateProduct(productData);
+        res.redirect('/dashboard/products');
+    } catch (error) {
+        console.error('Error updating product:', error);
+    }
+});
 
 router.delete('/dashboard/products/:productId', dashboardController.deleteProductById);
 

@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="/css/components/dashboard.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.0/chart.min.js"></script>
+    <script src="/javaScript/dashboard/productHandler.js" defer></script>
 </head>
 <body>
     <div class="container">
@@ -45,7 +46,7 @@
                                 <span class="product-stock">In Stock: <%= product.total_stock %></span>
                             </div>
                             <div class="product-actions">
-                                <button class="product-btn edit-product">Edit</button>
+                                <button class="product-btn edit-product" data-id="<%= product.id %>">Edit</button>
                                 <button class="product-btn delete-product" data-id="<%= product.id %>">Delete</button>
                             </div>
                         </div>
@@ -185,14 +186,15 @@
                 <h2>Edit Product</h2>
                 <button class="close-btn">&times;</button>
             </div>
-            <form class="product-form">
+            <form class="product-form" action="/dashboard/edit-product" method="post">
+                <input type="hidden" id="editProductId" name="id">
                 <div class="form-group">
                     <label for="editProductName">Product Name</label>
                     <input type="text" id="editProductName" name="name" required>
                 </div>
                 <div class="form-group">
-                    <label for="editproductDescription">Description</label>
-                    <textarea id="editproductDescription" name="description" rows="3" placeholder="Enter product description" required></textarea>
+                    <label for="editProductDescription">Description</label>
+                    <textarea id="editProductDescription" name="description" rows="3" placeholder="Enter product description" required></textarea>
                 </div>
                 <div class="form-group">
                     <label for="editProductCategory">Category</label>
@@ -207,8 +209,8 @@
                     <div class="variants-container">
                         <div class="variant-card">
                             <div class="variant-header">
-                                <input type="checkbox" id="weight100g" name="weights" value="100g">
-                                <label for="weight100g">100g</label>
+                                <input type="checkbox" id="editWeight100g" name="weights" value="100g">
+                                <label for="editWeight100g">100g</label>
                             </div>
                             <div class="variant-inputs">
                                 <div class="input-group">
@@ -224,8 +226,8 @@
 
                         <div class="variant-card">
                             <div class="variant-header">
-                                <input type="checkbox" id="weight250g" name="weights" value="250g">
-                                <label for="weight250g">250g</label>
+                                <input type="checkbox" id="editWeight250g" name="weights" value="250g">
+                                <label for="editWeight250g">250g</label>
                             </div>
                             <div class="variant-inputs">
                                 <div class="input-group">
@@ -241,34 +243,34 @@
 
                         <div class="variant-card">
                             <div class="variant-header">
-                                <input type="checkbox" id="weight1kg" name="weights" value="1kg">
-                                <label for="weight1kg">1kg</label>
+                                <input type="checkbox" id="editWeight1000g" name="weights" value="1000g">
+                                <label for="editWeight1kg">1kg</label>
                             </div>
                             <div class="variant-inputs">
                                 <div class="input-group">
                                     <label>Price (₱)</label>
-                                    <input type="number" name="price_1kg" placeholder="0.00" step="0.01" disabled>
+                                    <input type="number" name="price_1000g" placeholder="0.00" step="0.01" disabled>
                                 </div>
                                 <div class="input-group">
                                     <label>Stock</label>
-                                    <input type="number" name="stock_1kg" placeholder="0" disabled>
+                                    <input type="number" name="stock_1000g" placeholder="0" disabled>
                                 </div>
                             </div>
                         </div>
 
                         <div class="variant-card">
                             <div class="variant-header">
-                                <input type="checkbox" id="weight2kg" name="weights" value="2kg">
-                                <label for="weight2kg">2kg</label>
+                                <input type="checkbox" id="editWeight2000g" name="weights" value="2000g">
+                                <label for="editWeight2kg">2kg</label>
                             </div>
                             <div class="variant-inputs">
                                 <div class="input-group">
                                     <label>Price (₱)</label>
-                                    <input type="number" name="price_2kg" placeholder="0.00" step="0.01" disabled>
+                                    <input type="number" name="price_2000g" placeholder="0.00" step="0.01" disabled>
                                 </div>
                                 <div class="input-group">
                                     <label>Stock</label>
-                                    <input type="number" name="stock_2kg" placeholder="0" disabled>
+                                    <input type="number" name="stock_2000g" placeholder="0" disabled>
                                 </div>
                             </div>
                         </div>
@@ -276,7 +278,17 @@
                 </div>
                 <div class="form-group">
                     <label for="editProductImage">Product Image</label>
-                    <input type="file" id="editProductImage" name="image" accept="image/*">
+                    <!-- This will show the image preview -->
+                    <div id="editImagePreviewContainer" style="margin-top: 10px; text-align:center;">
+                        <img id="editImagePreview" src="" alt="Image Preview" style="max-width: 200px; max-height: 200px; border: 1px solid var(--gray-500);">
+                    </div>
+                    <div class="image-upload-container">
+                        <input type="file" id="editProductImage" name="image" accept="image/*" onchange="previewEditImage(event)">
+                        <label for="editProductImage" class="upload-label">
+                            <i class="fas fa-cloud-upload-alt"></i>
+                            <span>Click to upload image</span>
+                        </label>
+                    </div>
                     <small>Leave empty to keep current image</small>
                 </div>
                 <div class="form-actions">
@@ -314,136 +326,5 @@
             <p>Product deleted successfully!</p>
         </div>
     </div>
-
-    <script>
-        // Enable/disable variant inputs based on checkbox
-        document.querySelectorAll('input[type="checkbox"][name="weights"]').forEach(checkbox => {
-            checkbox.addEventListener('change', function () {
-                const variantCard = this.closest('.variant-card');
-                const inputs = variantCard.querySelectorAll('input[type="number"]');
-                inputs.forEach(input => {
-                    input.disabled = !this.checked;
-                    if (!this.checked) {
-                        input.value = '';
-                    }
-                });
-            });
-        });
-        // Show/hide modals
-        function showModal(modalId) {
-            const modal = document.getElementById(modalId);
-            modal.classList.add('show');
-        }
-
-        function hideModal(modalId) {
-            const modal = document.getElementById(modalId);
-            modal.classList.remove('show');
-        }
-
-        // Show success notification
-        function showNotification() {
-            const notification = document.getElementById('successNotification');
-            notification.classList.add('show');
-            setTimeout(() => {
-                notification.classList.remove('show');
-            }, 3000);
-        }
-
-        // Event listeners
-        document.querySelectorAll('.close-btn, .cancel-btn').forEach(button => {
-            button.addEventListener('click', () => {
-                const modal = button.closest('.modal');
-                modal.classList.remove('show');
-            });
-        });
-
-
-        // Add product button
-        document.querySelector('.add-order-btn').addEventListener('click', () => {
-            showModal('addProductModal');
-        });
-
-        // Edit product buttons
-        document.querySelectorAll('.edit-product').forEach(button => {
-            button.addEventListener('click', () => {
-                showModal('editProductModal');
-            });
-        });
-
-        // Delete confirmation
-        document.querySelector('#deleteModal .delete-btn').addEventListener('click', () => {
-            hideModal('deleteModal');
-            showNotification();
-        });
-
-        // Function to show the preview of the selected image
-        function previewImage(event) {
-            const file = event.target.files[0];
-            const previewContainer = document.getElementById('imagePreviewContainer');
-            const imagePreview = document.getElementById('imagePreview');
-
-            // Only proceed if a file is selected and it is an image
-            if (file && file.type.startsWith('image/')) {
-                const reader = new FileReader();
-
-                reader.onload = function (e) {
-                    imagePreview.src = e.target.result; // Set the source of the image preview
-                    previewContainer.style.display = 'block'; // Show the preview container
-                };
-
-                reader.readAsDataURL(file); // Read the selected file as a data URL
-            } else {
-                // Hide the preview container if the file is not an image
-                previewContainer.style.display = 'none';
-            }
-        }
-
-        // Delete confirmation
-        document.querySelectorAll('.delete-product').forEach(button => {
-            button.addEventListener('click', function () {
-                // Get the product ID from the data-id attribute
-                const productId = this.dataset.id;
-
-                // Show the modal
-                showModal('deleteModal');
-
-                // Attach event listener to confirm delete button
-                const confirmDeleteButton = document.querySelector('.delete-btn');
-                confirmDeleteButton.addEventListener('click', function () {
-                    // Send DELETE request to the server
-                    fetch(`/dashboard/products/${productId}`, {
-                        method: 'DELETE',
-                        headers: {
-                            'Content-Type': 'application/json',
-                        },
-                    })
-                        .then(response => response.json())
-                        .then(data => {
-                            if (data.success) {
-                                // If successful, remove the product card from the UI
-                                const productCard = button.closest('.product-card');
-                                productCard.remove();
-
-                                // Show success notification
-                                showNotification();
-                            } else {
-                                // Handle failure case
-                                alert('Failed to delete product. Please try again.');
-                            }
-                        })
-                        .catch(error => {
-                            console.error('Error:', error);
-                            alert('Failed to delete product. Please try again.');
-                        });
-
-                    // Close the modal
-                    hideModal('deleteModal');
-                });
-            });
-        });
-
-
-
-    </script>
 </body>
 </html>
