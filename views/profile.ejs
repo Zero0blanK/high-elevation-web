@@ -10,13 +10,15 @@
     <link rel="stylesheet" href="/css/components/footer.css">
     <link rel="stylesheet" href="/css/pages/profile.css">
     <link rel="stylesheet" href="/css/components/profile-sidebar.css">
+    <link rel="stylesheet" href="/css/components/toast.css">
     <script src="/javaScript/navbar/navToggle.js" defer></script>
     <script src="/javaScript/navbar/profile-icon-dropdown.js" defer></script>
     <script src="/javaScript/profile.js" defer></script>
+    <script src="/javaScript/toast.js" defer></script>
 </head>
 <body>
     <%- include('./partials/navbar'); %>
-
+    <%- include('./partials/toast'); %>
     <div class="main-container">
         <aside class="sidebar">
             <div class="user-profile">
@@ -55,7 +57,7 @@
                 <div class="profile-picture">
                     <label for="profile-upload">
                         <img src="<%= user.profile_pic_url || '/assets/profile-image/default-profile.png' %>" alt="your profile" id="profile-image"/>
-                        <input type="file" id="profile-upload" accept="image/*" hidden />
+                        <input type="file" id="profile-upload" accept="image/*" hidden disabled/>
                     </label>
                 </div>
                 <div class="profile-info">

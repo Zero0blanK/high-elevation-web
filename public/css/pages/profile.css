@@ -79,6 +79,7 @@ body {
     align-items: center;
     justify-content: center;
     font-size: 14px;
+    z-index: 1;
 }
 
 .profile-details .profile-picture:hover::after {

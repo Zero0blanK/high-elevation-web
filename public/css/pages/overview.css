@@ -23,6 +23,8 @@ body{
 }
 
 .product-thumbnail img{
+    display: flex;
+    align-self: center;
     width: 360px;
     height: auto;
 }
@@ -222,11 +224,17 @@ opacity: 1;
     color: var(--text-color);
 }
 
+.product-overview {
+    height: 100vh;
+}
 
-/* Add to your overview.css file */
+.product-details-container {
+    padding: 100px 8rem 100px;
+    min-height: 70vh;
+}
 
 .product-details {
-    padding: 40px 0;
+
     background-color: #fff;
 }
 

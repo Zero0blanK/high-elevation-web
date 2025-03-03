@@ -50,7 +50,8 @@
             </div>
 
             <% if (user.orders && user.orders.length > 0) { %>
-                <% user.orders.forEach(order => { %>
+                <% let reversedOrders = [...user.orders].reverse(); %>
+                <% reversedOrders.forEach(order => { %>
                     <div class="order-card">
                         <div class="order-header">
                             <div class="order-info">

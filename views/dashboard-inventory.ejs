@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventory Management Dashboard</title>
+    <link rel="stylesheet" href="/css/components/dashboard.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <%- include('./partials/sidebar'); %>
+
+        <div class="main-content">
+            <div class="header">
+                <div class="header-title">
+                    <h1>Inventory Management</h1>
+                    <p>Monitor and manage your product inventory</p>
+                </div>
+            </div>
+            <form class="orders-filters" style="margin-top: 30px;" method="GET" action="/dashboard/inventory-logs">
+                <div class="search-box">
+                    <i class="fas fa-search"></i>
+                    <input type="text" name="search" placeholder="Search inventory..." value="<%= searchQuery || '' %>">
+                </div>
+                <select class="filter-select" name="action" onchange="this.form.submit()">
+                    <option value="all" <%= actionFilter === 'all' ? 'selected' : '' %>>All Actions</option>
+                    <option value="stock-in" <%= actionFilter === 'stock-in' ? 'selected' : '' %>>Stock In</option>
+                    <option value="stock-out" <%= actionFilter === 'stock-out' ? 'selected' : '' %>>Stock Out</option>
+                    <option value="add-product" <%= actionFilter === 'add-product' ? 'selected' : '' %>>Add Product</option>
+                    <option value="update-product" <%= actionFilter === 'update-product' ? 'selected' : '' %>>Update Product</option>
+                    <option value="delete-product" <%= actionFilter === 'delete-product' ? 'selected' : '' %>>Delete Product</option>
+                </select>
+                <select class="filter-select" name="sort" onchange="this.form.submit()">
+                    <option value="newest" <%= sortOption === 'newest' ? 'selected' : '' %>>Newest First</option>
+                    <option value="oldest" <%= sortOption === 'oldest' ? 'selected' : '' %>>Oldest First</option>
+                </select>
+            </form>
+            <div class="orders-card">
+                <table class="orders-table">
+                    <thead>
+                        <tr>
+                            <th>Log ID</th>
+                            <th>Product</th>
+                            <th>Action</th>
+                            <th>Details</th>
+                            <th>Quantity</th>
+                            <th>Weight</th>
+                            <th>User</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <% if (inventoryLogs && inventoryLogs.length > 0) { %>
+                            <% inventoryLogs.forEach(log => { %>
+                                <tr>
+                                    <td>#INV-<%= log.id.toString().padStart(3, '0') %></td>
+                                    <td>
+                                        <div class="inventory-info">
+                                            <img src="<%= log.image_url %>" alt="<%= log.product_name %>" class="product-thumbnail">
+                                            <span><%= log.product_name %></span>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="status-badge status-<%= log.action.toLowerCase() %>">
+                                            <%= log.action %>
+                                        </span>
+                                    </td>
+                                    <td><%= log.details %></td>
+                                    <td class="<%= log.quantity > 0 ? 'text-success' : 'text-danger' %>">
+                                        <%= log.quantity > 0 ? '+' : '' %><%= log.quantity %>
+                                    </td>
+                                    <td><%= log.weight %><%= log.unit %></td>
+                                    <td>
+                                        <div class="user-info">
+                                            <span><%= log.first_name %></span>
+                                        </div>
+                                    </td>
+                                    <td><%= new Date(log.created_at).toLocaleDateString() %></td>
+                                </tr>
+                            <% }); %>
+                        <% } else { %>
+                            <tr>
+                                <td colspan="8" class="no-orders">No inventory logs found</td>
+                            </tr>
+                        <% } %>
+                    </tbody>
+                </table>
+            </div>
+            
+            <!-- Pagination -->
+            <div class="pagination">
+                <span class="page-info">
+                    Showing <%= (currentPage - 1) * 10 + 1 %> to <%= Math.min(currentPage * 10, totalLogs) %> of <%= totalLogs %> entries
+                </span>
+                <div class="page-buttons">
+                    <% if (currentPage > 1) { %>
+                        <a href="/dashboard/inventory-logs?page=<%= currentPage - 1 %>&search=<%= searchQuery %>&action=<%= actionFilter %>&sort=<%= sortOption %>" class="page-btn">Prev</a>
+                    <% } %>
+                    
+                    <% 
+                    let startPage = Math.max(1, currentPage - 1);
+                    let endPage = Math.min(totalPages, startPage + 2);
+                    
+                    // Adjust start page if we're near the end
+                    if (endPage === totalPages) {
+                        startPage = Math.max(1, endPage - 2);
+                    }
+            
+                    // Show first page if we're not starting from 1
+                    if (startPage > 1) { %>
+                        <a href="/dashboard/inventory-logs?page=1&search=<%= searchQuery %>&action=<%= actionFilter %>&sort=<%= sortOption %>" 
+                           class="page-btn">1</a>
+                        <% if (startPage > 2) { %>
+                            <span class="page-ellipsis">...</span>
+                        <% } %>
+                    <% } %>
+                    
+                    <% for (let i = startPage; i <= endPage; i++) { %>
+                        <a href="/dashboard/inventory-logs?page=<%= i %>&search=<%= searchQuery %>&action=<%= actionFilter %>&sort=<%= sortOption %>" 
+                           class="page-btn <%= currentPage === i ? 'active' : '' %>">
+                            <%= i %>
+                        </a>
+                    <% } %>
+                    
+                    <% if (endPage < totalPages) { %>
+                        <% if (endPage < totalPages - 1) { %>
+                            <span class="page-ellipsis">...</span>
+                        <% } %>
+                        <a href="/dashboard/inventory-logs?page=<%= totalPages %>&search=<%= searchQuery %>&action=<%= actionFilter %>&sort=<%= sortOption %>" 
+                           class="page-btn"><%= totalPages %></a>
+                    <% } %>
+                    
+                    <% if (currentPage < totalPages) { %>
+                        <a href="/dashboard/inventory-logs?page=<%= currentPage + 1 %>&search=<%= searchQuery %>&action=<%= actionFilter %>&sort=<%= sortOption %>" 
+                           class="page-btn">Next</a>
+                    <% } %>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal-backdrop" id="addLogModal">
+        <div class="modal">
+            <div class="modal-header">
+                <div class="modal-title">Add Inventory Log Entry</div>
+                <button class="modal-close" id="closeModalBtn">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label class="form-label">Product</label>
+                    <select class="form-select">
+                        <option value="">Select Product</option>
+                        <option value="1">Premium Coffee Beans</option>
+                        <option value="2">Organic Green Tea</option>
+                        <option value="3">Ceylon Black Tea</option>
+                        <option value="4">Herbal Infusion Pack</option>
+                        <option value="5">Earl Grey Special</option>
+                    </select>
+                </div>
+                <div class="form-row">
+                    <div class="form-group">
+                        <label class="form-label">Weight Option</label>
+                        <select class="form-select">
+                            <option value="">Select Weight</option>
+                            <option value="1">50g</option>
+                            <option value="2">100g</option>
+                            <option value="3">250g</option>
+                            <option value="4">500g</option>
+                            <option value="5">1kg</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Action</label>
+                        <select class="form-select">
+                            <option value="">Select Action</option>
+                            <option value="stock_in">Stock In</option>
+                            <option value="stock_out">Stock Out</option>
+                            <option value="add_product">Add Product</option>
+                            <option value="update_product">Update Product</option>
+                            <option value="delete_product">Delete Product</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Quantity</label>
+                    <input type="number" class="form-control" placeholder="Enter quantity">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Details</label>
+                    <textarea class="form-control" rows="3" placeholder="Additional details"></textarea>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" id="cancelModalBtn">Cancel</button>
+                <button class="btn btn-primary">Save Log Entry</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Modal functionality
+        const addLogBtn = document.getElementById('addLogBtn');
+        const closeModalBtn = document.getElementById('closeModalBtn');
+        const cancelModalBtn = document.getElementById('cancelModalBtn');
+        const addLogModal = document.getElementById('addLogModal');
+
+        addLogBtn.addEventListener('click', () => {
+            addLogModal.style.display = 'flex';
+        });
+
+        closeModalBtn.addEventListener('click', () => {
+            addLogModal.style.display = 'none';
+        });
+
+        cancelModalBtn.addEventListener('click', () => {
+            addLogModal.style.display = 'none';
+        });
+
+        // Close modal when clicking outside
+        addLogModal.addEventListener('click', (e) => {
+            if (e.target === addLogModal) {
+                addLogModal.style.display = 'none';
+            }
+        });
+
+        // Tab switching functionality
+        const tabs = document.querySelectorAll('.tab');
+        tabs.forEach(tab => {
+            tab.addEventListener('click', () => {
+                tabs.forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+            });
+        });
+    </script>
+</body>
+</html>

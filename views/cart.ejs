@@ -8,8 +8,10 @@
     <link rel="stylesheet" href="/css/pages/cart.css">
     <link rel="stylesheet" href="/css/components/footer.css">
     <script src="/javaScript/navbar/navToggle.js" defer></script>
+    <link rel="stylesheet" href="/css/components/toast.css">
     <script src="/javaScript/navbar/profile-icon-dropdown.js" defer></script>
     <script src="/javaScript/updateSubtotal.js" defer></script>
+    <script src="/javaScript/toast.js" defer></script>
 </head>
 <body>
     <%- include('./partials/navbar'); %>
@@ -43,6 +45,7 @@
                                         <td>
                                             <div class="product-details">
                                                 <div class="product-title"><h3><%= item.name %></h3></div>
+                                                <div class="product-price" style="display: none;"><h4><%= item.price %></h4></div>
                                                 <div class="product-weight"><h4>Weight: </h4> <%= item.weight %><%= item.unit %></div>
                                                 <div class="product-flavor"><h4>Flavor: </h4> <%= item.category_name %></div>
                                                 <div class="product-roast-lvl"><h4>Roast Level:</h4> Medium-Dark</div>

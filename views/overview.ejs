@@ -7,12 +7,14 @@
     <link rel="stylesheet" href="/css/components/navbar.css">
     <link rel="stylesheet" href="/css/pages/overview.css">
     <link rel="stylesheet" href="/css/components/footer.css">
+    <link rel="stylesheet" href="/css/components/toast.css">
     <script src="/javaScript/navbar/navToggle.js" defer></script>
     <script src="/javaScript/navbar/profile-icon-dropdown.js" defer></script>
+    <script src="/javaScript/toast.js" defer></script>
 </head>
 <body>
     <%- include('./partials/navbar'); %>
-
+    <%- include('./partials/toast'); %>
     <section class="product-overview">
         <div class="container">
             <div class="product-content">
@@ -91,7 +93,7 @@
     </section>
 
     <section class="product-details">
-        <div class="container">
+        <div class="product-details-container">
             <div class="tabs">
                 <button class="tab-btn active" data-tab="description">Description</button>
                 <button class="tab-btn" data-tab="reviews">Reviews</button>
@@ -326,6 +328,33 @@
             // Redirect to checkout with parameters
             window.location.href = `/cart/checkout?${params.toString()}`;
         });
+
+        // Add to cart form submission handler
+        document.querySelector('.form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            try {
+                const formData = new FormData(e.target);
+                const response = await fetch('/cart/add', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(Object.fromEntries(formData))
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    Toast.show('Product added to cart successfully!', 'success');
+                } else {
+                    Toast.show(result.error || 'Failed to add product to cart', 'error');
+                }
+            } catch (error) {
+                Toast.show('Error adding product to cart', 'error');
+            }
+        });
+
     </script>
 
 </body>

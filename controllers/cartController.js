@@ -34,7 +34,11 @@ class CartController {
           [user_id, product_id, weight_id, quantity]
         );
       }
-      res.redirect('/cart')
+      res.json({ 
+        success: true, 
+        message: 'Product added to cart successfully!' 
+      });
+
 
     } catch (err) {
       console.error('Error adding to cart:', err.message);
@@ -44,10 +48,6 @@ class CartController {
 
   async viewCart(req, res) {
     const user_id = req.session.userId;
-
-    if (!user_id) {
-      return res.status(401).json({ error: 'User not logged in' });
-    }
 
     try {
       const query = `
@@ -99,16 +99,14 @@ class CartController {
     const { product_id, weight_id } = req.body;
     const user_id = req.session.userId;
 
-    if (!user_id) {
-      return res.status(401).json({ error: 'User not logged in' });
-    }
-
     try {
       await db.query('DELETE FROM cart WHERE user_id = ? AND product_id = ? AND weight_id = ?', [
         user_id, product_id, weight_id
       ]);
-
-      res.redirect('/cart')
+      res.json({ 
+        success: true, 
+        message: 'Product added to cart successfully!' 
+      });
     } catch (err) {
       console.error('Error removing from cart:', err.message);
       res.status(500).json({ error: 'Error removing item from cart' });
@@ -118,10 +116,6 @@ class CartController {
   async updateQuantity(req, res) {
     const { product_id, weight_id, quantity } = req.body;
     const user_id = req.session.userId;
-
-    if (!user_id) {
-      return res.status(401).json({ error: 'User not logged in' });
-    }
 
     try {
       await db.query(
@@ -207,15 +201,25 @@ class CartController {
           [userOrderId, payment_method]
       );
 
-      await connection.execute('DELETE FROM cart WHERE user_id = ?', [user_id]);
+      if (!req.body.isBuyNow) {
+        await connection.execute('DELETE FROM cart WHERE user_id = ?', [user_id]);
+    }
 
       await connection.commit(); // ✅ Commit transaction
 
-      res.redirect('/');
+      res.json({
+        success: true,
+        orderId: userOrderId,
+        message: 'Order placed successfully'
+      });
 
     } catch (err) {
         await connection.rollback(); // ❌ Rollback on failure
         console.error('Error processing payment:', err.message);
+        res.status(500).json({
+          success: false,
+          error: 'Error processing payment'
+        });
     } finally {
         connection.release();
     }

@@ -58,6 +58,11 @@ aside .search-bar {
     font-size: 20px;
 }
 
+.add-to-cart-btn {
+    background-color: transparent;
+    border: none;
+}
+
 .sizes p {
     font-size: 20px;
 }

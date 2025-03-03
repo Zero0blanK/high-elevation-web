@@ -67,6 +67,35 @@ router.get('/dashboard', async (req, res) => {
 
 });
 
+router.get('/dashboard/inventory-logs', dashboardController.getInventoryData)
+
+router.get('/dashboard/stocks', async (req, res) => {
+    res.render('dashboard-stock', { title: 'Dashboard' });
+});
+
+// Add these new routes
+router.get('/dashboard/stock/products', async (req, res) => {
+    try {
+        const products = await dashboardController.getProductInventory();
+        res.json(products);
+    } catch (error) {
+        res.status(500).json({ error: 'Failed to fetch inventory' });
+    }
+});
+
+router.post('/dashboard/stock/operation', async (req, res) => {
+    try {
+        const { items, operation } = req.body;
+        const userId = req.session.userId; // Get logged in user ID
+        
+        const result = await dashboardController.processStockOperation(items, operation, userId);
+        res.json(result);
+    } catch (error) {
+        console.error('Stock operation error:', error);
+        res.status(500).json({ error: 'Failed to process stock operation' });
+    }
+});
+
 router.get('/dashboard/orders', async (req, res) => {
     try {
         const { orders, shippingRate, total, totalPages, page, limit, searchQuery, statusFilter, sortFilter } = await dashboardController.getOrders(req);
@@ -111,6 +140,18 @@ router.get('/dashboard/settings', (req, res) => {
 });
 
 router.post('/logout',)
+
+router.post('/dashboard/orders/update-status', async (req, res) => {
+    try {
+        await dashboardController.updateUserOrderStatus(req, res);
+    } catch (error) {
+        console.error('Route error:', error);
+        res.status(500).json({
+            success: false,
+            error: 'Internal server error'
+        });
+    }
+});
 
 router.post('/dashboard/products', upload.single("image"), dashboardController.addProduct);
 

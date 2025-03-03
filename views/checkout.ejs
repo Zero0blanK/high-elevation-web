@@ -9,10 +9,11 @@
     <link rel="stylesheet" href="/css/components/footer.css">
     <script src="/javaScript/navbar/navToggle.js" defer></script>
     <script src="/javaScript/navbar/profile-icon-dropdown.js" defer></script>
+    <script src="/javaScript/checkout/orderSuccess.js" defer></script>
 </head>
 <body>
     <%- include('./partials/navbar'); %>
-    
+    <%- include('./partials/toast'); %>
     <!-- Main content -->
     <main>
         <div class="container">
@@ -79,6 +80,7 @@
                 <% } %>
 
                 <form id="payment-form" action="/cart/paynow" method="post">
+                    <input type="hidden" name="isBuyNow" value="<%= isBuyNow %>">
                     <input type="hidden" name="address_id" id="selected_address">
                     <input type="hidden" name="payment_method" id="selected_payment">
                     <div class="form-group">
@@ -135,9 +137,36 @@
             </div>
         </div>
     </main>
-
+    <!-- Order Placed Modal -->
+    <div id="orderSuccessModal" class="success-modal">
+        <div class="success-modal-content">
+            <div class="success-modal-header">
+                <div class="success-icon-wrapper">
+                    <span class="success-icon">✓</span>
+                </div>
+                <h2>Thank You for Your Order!</h2>
+            </div>
+            <div class="success-modal-body">
+                <p>Your order has been successfully placed.</p>
+                <div class="order-number">
+                    Order #: <span id="orderNumberDisplay"></span>
+                </div>
+                <p>We'll send you a confirmation email with your order details.</p>
+                <div class="order-details">
+                    <p>Estimated delivery time: 3-5 business days</p>
+                    <p>You can track your order in the Orders section of your account.</p>
+                </div>
+            </div>
+            <div class="countdown">
+                Redirecting to home in <span id="countdownDisplay">10</span> seconds
+            </div>
+            <div class="success-modal-actions">
+                <button class="view-order-btn">View Order</button>
+                <button class="continue-shopping-btn">Continue Shopping</button>
+            </div>
+        </div>
+    </div>
     <script>
-        document.addEventListener('DOMContentLoaded', function() {
             const showNewAddressForm = document.getElementById('showNewAddressForm');
             const newAddressForm = document.querySelector('.new-address-form');
             const cancelNewAddress = document.getElementById('cancelNewAddress');
@@ -158,27 +187,50 @@
                 showNewAddressForm.style.display = 'block';
             });
 
-            paymentForm.addEventListener('submit', function(event) {
-                const selectedAddress = document.querySelector('input[name="address_id"]:checked');
-                const selectedPayment = document.querySelector('input[name="payment_method"]:checked');
+        // Update the payment form event listener in your script section
+        paymentForm.addEventListener('submit', async function(event) {
+            event.preventDefault(); // Prevent default form submission
 
-                if (!selectedAddress) {
-                    alert("Please select a delivery address.");
-                    event.preventDefault();
-                    return;
+            const selectedAddress = document.querySelector('input[name="address_id"]:checked');
+            const selectedPayment = document.querySelector('input[name="payment_method"]:checked');
+
+            if (!selectedAddress) {
+                Toast.show("Please select a delivery address.", "error");
+                return;
+            }
+
+            if (!selectedPayment) {
+                Toast.show("Please select a payment method.", "error");
+                return;
+            }
+
+            selectedAddressInput.value = selectedAddress.value;
+            selectedPaymentInput.value = selectedPayment.value;
+
+            try {
+                const formData = new FormData(paymentForm);
+                const response = await fetch('/cart/paynow', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(Object.fromEntries(formData))
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    showOrderSuccessModal(result.orderId);
+                } else {
+                    Toast.show(result.error || 'Error processing payment', 'error');
                 }
-
-                if (!selectedPayment) {
-                    alert("Please select a payment method.");
-                    event.preventDefault();
-                    return;
-                }
-
-                selectedAddressInput.value = selectedAddress.value;
-                selectedPaymentInput.value = selectedPayment.value;
-            });
-
+            } catch (error) {
+                console.error('Payment error:', error);
+                Toast.show('Error processing payment', 'error');
+            }
         });
+
+
     </script>
 
     <%- include('./partials/footer') %>

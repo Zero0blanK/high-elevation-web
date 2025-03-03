@@ -41,21 +41,23 @@ const updateCartItem = debounce(async function(product_id, weight_id, quantity) 
         });
 
         const result = await response.json();
-        if (!result.success) {
-            alert('Error updating quantity');
+        if (result.success) {
+            Toast.show('Quantity updated successfully', 'success');
+        } else {
+            Toast.show(result.error || 'Error updating quantity', 'error');
         }
     } catch (error) {
         console.error('Error updating cart:', error);
+        Toast.show('Error updating quantity', 'error');
     } finally {
         isUpdating = false;
-        // If there was a queued update, process it now
         if (updateQueue) {
             const {product_id, weight_id, quantity} = updateQueue;
             updateQueue = false;
             updateCartItem(product_id, weight_id, quantity);
         }
     }
-}, 300); // 300ms debounce time
+}, 300);
 
 // Event listener for when the quantity is manually changed by the user
 document.querySelectorAll('.quantity-input').forEach(input => {
@@ -133,16 +135,17 @@ document.querySelectorAll('.removeButton').forEach(button => {
 
             const result = await response.json();
             if (result.success) {
-                row.remove(); // Remove the row from the cart view
+                Toast.show("Item removed from cart", "success", () => {
+                    window.location.reload(); // Reload after the toast disappears
+                });
                 updateSubtotal();
             } else {
-                alert('Error removing item');
+                Toast.show('Error removing item', 'error');
             }
         } catch (error) {
             console.error('Error removing item:', error);
         } finally {
             isUpdating = false;
-            location.reload();
         }
     });
 });

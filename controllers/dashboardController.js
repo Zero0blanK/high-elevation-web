@@ -300,6 +300,7 @@ class DashboardController {
   // 📌 Fetch Orders with Filters
   async getOrders(req, res) {
     let { search, status, sort, page } = req.query;
+    page = parseInt(page) || 1;
     let limit = 10;
     let offset = (page - 1) * limit || 0;
 
@@ -340,9 +341,11 @@ class DashboardController {
         const [orders] = await db.query(query, [...params, limit, offset]);
 
         const countQuery = `
-        SELECT COUNT(*) AS total 
-        FROM user_order uo 
-        JOIN user u ON uo.user_id = u.id
+          SELECT COUNT(*) AS total 
+          FROM user_order uo 
+          JOIN user u ON uo.user_id = u.id
+          JOIN order_detail od ON uo.id = od.user_order_id
+          JOIN product p ON od.product_id = p.id
         ${whereSQL}`;
         const [[{ total }]] = await db.query(countQuery, params);
         const totalPages = Math.ceil(total / limit);
@@ -371,6 +374,8 @@ class DashboardController {
     const query = `
       SELECT
           uo.id AS order_id,
+          uo.shipping_status,
+          uo.order_status,
           CONCAT(u.first_name, " ", u.last_name) AS customer_name,
           u.contact_number,
           CONCAT(ua.street_address, ', ', ua.city, ', ', ua.zip_code) AS address,
@@ -407,6 +412,8 @@ class DashboardController {
 
       const order = {
         order_id: rows[0].order_id,
+        shipping_status: rows[0].shipping_status,
+        order_status: rows[0].order_status,
         customer_name: rows[0].customer_name,
         contact_number: rows[0].contact_number,
         address: rows[0].address,
@@ -571,6 +578,259 @@ class DashboardController {
     }
   }
 
+  async getInventoryData(req, res) {
+    try {
+      const page = parseInt(req.query.page) || 1;
+      const limit = 10;
+      const offset = (page - 1) * limit;
+      
+      let whereClause = '';
+      const params = [];
+      
+      // Handle search
+      if (req.query.search) {
+          whereClause += ' WHERE (p.name LIKE ? OR u.first_name LIKE ? OR il.details LIKE ?)';
+          const searchTerm = `%${req.query.search}%`;
+          params.push(searchTerm, searchTerm, searchTerm);
+      }
+      
+      // Handle action filter
+      if (req.query.action && req.query.action !== 'all') {
+          whereClause += whereClause ? ' AND' : ' WHERE';
+          whereClause += ' il.action = ?';
+          params.push(req.query.action.replace('-', ' ').toUpperCase());
+      }
+      
+      // Handle sorting
+      const sortOrder = req.query.sort === 'oldest' ? 'ASC' : 'DESC';
+      
+      const query = `
+          SELECT
+              il.*,
+              p.name AS product_name,
+              w.value AS weight,
+              w.unit,
+              u.first_name,
+              p.image_url
+          FROM
+              inventory_log il
+              JOIN product p ON il.product_id = p.id
+              LEFT JOIN weight w ON il.weight_id = w.id
+              JOIN user u ON il.user_id = u.id
+          ${whereClause}
+          ORDER BY
+              il.created_at ${sortOrder}
+          LIMIT ? OFFSET ?
+      `;
+
+      const countQuery = `
+          SELECT COUNT(*) as total 
+          FROM inventory_log il
+          JOIN product p ON il.product_id = p.id
+          JOIN user u ON il.user_id = u.id
+          ${whereClause}
+      `;
+
+      const [inventoryLogs] = await db.query(query, [...params, limit, offset]);
+      const [[{ total }]] = await db.query(countQuery, params);
+      
+      const totalPages = Math.ceil(total / limit);
+
+      res.render('dashboard-inventory', {
+          inventoryLogs,
+          currentPage: page,
+          totalPages,
+          totalLogs: total,
+          searchQuery: req.query.search || '',
+          actionFilter: req.query.action || 'all',
+          sortOption: req.query.sort || 'newest'
+      });
+
+  } catch (err) {
+      console.error('Error fetching inventory data:', err);
+      res.status(500).render('error', { error: 'Error loading inventory data' });
+  }
+  }
+
+  async updateUserOrderStatus(req, res) {
+    const { orderId, status } = req.body;
+
+    try {
+        // Begin transaction
+        const connection = await db.getConnection();
+        await connection.beginTransaction();
+
+        try {
+            // Update shipping status
+            await connection.query(
+                'UPDATE user_order SET shipping_status = ? WHERE id = ?',
+                [status, orderId]
+            );
+            
+            // Update order status based on shipping status
+            let orderStatus;
+
+            if (status === 'processing' || status === 'shipped') {
+                orderStatus = 'processing';
+            } else if (status === 'delivered') {
+                orderStatus = 'delivered';
+            } 
+
+            // Update order status to confirmed if status is processing
+            if (orderStatus) {
+                await connection.query(
+                    'UPDATE user_order SET order_status = ? WHERE id = ?',
+                    [orderStatus, orderId]
+                );
+            }
+
+            await connection.commit();
+            
+            res.json({
+              success: true,
+              message: status === 'processing' 
+                  ? 'Order accepted successfully'
+                  : status === 'shipped'
+                  ? 'Order shipped successfully'
+                  : 'Order status updated successfully'
+          });
+        } catch (err) {
+            await connection.rollback();
+            throw err;
+        } finally {
+            connection.release();
+        }
+    } catch (err) {
+        console.error('Error updating order status:', err);
+        res.status(500).json({
+            success: false,
+            error: 'Failed to update order status'
+        });
+    }
+  }
+
+  async getProductInventory() {
+    const query = `
+      SELECT
+        p.id as product_id,
+        p.name,
+        p.image_url,
+        p.description,
+        pc.name as category_name,
+        pw.weight_id,
+        w.value as weight_value,
+        w.unit as weight_unit,
+        pw.price,
+        pw.stock,
+        il.created_at as last_updated
+      FROM
+        product p
+        JOIN product_category pc ON p.category_id = pc.id
+        JOIN product_weight pw ON p.id = pw.product_id
+        JOIN weight w ON pw.weight_id = w.id
+        LEFT JOIN inventory_log il ON pw.product_id = il.product_id
+        AND pw.weight_id = il.weight_id
+        AND il.created_at = (
+          SELECT
+            MAX(created_at)
+          FROM
+            inventory_log
+          WHERE
+            product_id = p.id
+            AND weight_id = pw.weight_id
+        )
+      ORDER BY
+        p.name,
+        w.value
+      `;
+  
+    const [products] = await db.query(query);
+    return products;
+  }
+  
+  async processStockOperation(items, operation, userId) {
+    const connection = await db.getConnection();
+    
+    try {
+      await connection.beginTransaction();
+  
+      for (const item of items) {
+        // Update product_weight stock
+        const stockChange = operation === 'stock-in' ? item.quantity : -item.quantity;
+
+        await connection.query(`
+          UPDATE product_weight 
+          SET stock = stock + ? 
+          WHERE product_id = ? AND weight_id = ?`,
+          [stockChange, item.productId, item.weightId]
+        );
+
+        // Then calculate and update total stock in product table
+        const [weightStocks] = await connection.query(`
+          SELECT SUM(stock) as total_stock 
+          FROM product_weight 
+          WHERE product_id = ?`,
+          [item.productId]
+        );
+        await connection.query(`
+          UPDATE product 
+          SET total_stock = ? 
+          WHERE id = ?`,
+          [weightStocks[0].total_stock, item.productId]
+        );
+
+        // Create inventory log entry
+        await connection.query(`
+          INSERT INTO inventory_log 
+          (product_id, weight_id, user_id, action, quantity, details)
+          VALUES (?, ?, ?, ?, ?, ?)`,
+          [
+            item.productId, 
+            item.weightId,
+            userId,
+            operation === 'stock-in' ? 'Stock In' : 'Stock Out',
+            Math.abs(stockChange),
+            `${operation === 'stock-in' ? 'Added' : 'Removed'} ${item.quantity} units`
+          ]
+        );
+      }
+  
+      await connection.commit();
+      return { success: true };
+  
+    } catch (error) {
+      await connection.rollback();
+      console.error('Stock operation error:', error);
+      return { success: false, error: error.message };
+    } finally {
+      connection.release();
+    }
+  }
+  
+  // Supporting functions
+  async getCategories() {
+    const [categories] = await db.query('SELECT id, name FROM product_category');
+    return categories;
+  }
+  
+  async getInventoryLogs(productId) {
+    const query = `
+      SELECT 
+        il.*,
+        u.first_name,
+        u.last_name,
+        w.value as weight_value,
+        w.unit as weight_unit
+      FROM inventory_log il
+      JOIN user u ON il.user_id = u.id
+      LEFT JOIN weight w ON il.weight_id = w.id
+      WHERE il.product_id = ?
+      ORDER BY il.created_at DESC`;
+  
+    const [logs] = await db.query(query, [productId]);
+    return logs;
+  }
+  
 }
 
 module.exports = new DashboardController();

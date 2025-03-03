@@ -37,6 +37,9 @@ function enableEditMode() {
             input.disabled = false;
         }
     });
+
+    profileUpload.disabled = false;
+
     editButton.textContent = 'Save Changes';
     togglePassword.style.display = 'block';
     isEditing = true;
@@ -46,6 +49,9 @@ function disableEditMode() {
     inputs.forEach(input => {
         input.disabled = true;
     });
+
+    profileUpload.disabled = true;
+
     editButton.textContent = 'Edit Profile';
     togglePassword.style.display = 'none';
     passwordInput.type = 'password';
@@ -76,9 +82,9 @@ function submitForm() {
                 profileImage.src = data.profileUrl;
             }
             disableEditMode();
-            alert('Profile updated successfully!');
+            Toast.show('Profile updated successfully!');
         } else {
-            throw new Error(data.error || 'Update failed');
+            Toast.show('Failed to update profile', 'error');
         }
     })
     .catch(error => {

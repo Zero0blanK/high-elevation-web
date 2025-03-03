@@ -8,12 +8,14 @@
     <link rel="stylesheet" href="/css/components/card.css">
     <link rel="stylesheet" href="/css/components/footer.css">
     <link rel="stylesheet" href="/css/pages/product.css">
+    <link rel="stylesheet" href="/css/components/toast.css">
     <script src="/javaScript/navbar/navToggle.js" defer></script>
     <script src="/javaScript/navbar/profile-icon-dropdown.js" defer></script>
+    <script src="/javaScript/toast.js" defer></script>
 </head>
 <body>
     <%- include('./partials/navbar'); %>
-
+    <%- include('./partials/toast'); %>
         <div class="main-container">
             <section class="products-section">
                 <aside>
@@ -67,11 +69,16 @@
                             </div>
                         </a>
                             <div class="card-hover-icons">
-                                <div class="icon-container">
-                                    <div class="icon"><img src="/assets/icons/overview.svg" alt="Overview"></div>
-                                    <div class="icon"><img src="/assets/icons/addtocart.svg" alt="Add to Cart"></div>
+                                <div class="available-size-container">
+                                    <% if (product.weight_variants) { %>
+                                        <% let weightVariants = JSON.parse('[' + product.weight_variants + ']').reverse(); %>
+                                        <% weightVariants.forEach((variant, index) => { %>
+                                            <%= variant.weight %><%= variant.unit %><%= index < weightVariants.length - 1 ? ' | ' : '' %>
+                                        <% }); %>
+                                    <% } else { %>
+                                        <p>No weight variants available</p>
+                                    <% } %>
                                 </div>
-                                <div class="available-size-container">100g | 500g | 1000g</div>
                             </div>
                         </div>
                 <% }) %>
