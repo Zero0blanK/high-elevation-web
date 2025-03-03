@@ -1,6 +1,7 @@
 const express = require('express');
 const session = require('express-session');
 const bodyParser = require('body-parser');
+const flash = require('connect-flash');
 const path = require('path');
 const app = express();
 
@@ -13,9 +14,18 @@ app.use(session({
 }));
 
 // Middleware
+app.use(flash());
 app.use(bodyParser.json());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+app.use((req, res, next) => {
+  res.locals.messages = {
+      error: req.flash('error'),
+      success: req.flash('success')
+  };
+  next();
+});
 
 // EJS Setup
 app.set('view engine', 'ejs');

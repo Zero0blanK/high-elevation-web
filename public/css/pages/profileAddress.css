@@ -1,0 +1,213 @@
+:root {
+  --primary-color: #4361ee;
+  --secondary-color: #3f37c9;
+  --light-text: #6c757d;
+  --dark-text: #212529;
+  --background-color: #f8f9fa;
+  --card-color: #ffffff;
+  --border-radius: 12px;
+  --box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  --transition: all 0.3s ease;
+}
+
+body {
+    background-color: var(--background-color);
+    color: var(--dark-text);
+    margin: 0;
+    padding: 0;
+    line-height: 1.6;
+}
+
+.main-container {
+  display: grid;
+  grid-template-columns: 280px 1fr;
+  gap: 24px;
+  max-width: 1500px;
+  margin-top: 96px;
+  margin-left: auto;
+  margin-right: auto;
+  margin-bottom: 20px;
+  padding: 0 16px;
+}
+
+.address-content {
+    background-color: var(--card-color);
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    padding: 32px;
+}
+
+.address-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 24px;
+}
+
+.address-header h3 {
+    margin: 0;
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+.address-header p {
+    margin: 4px 0 0;
+    color: var(--light-text);
+}
+
+.address-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 24px;
+}
+
+.address-table th {
+    text-align: left;
+    padding: 12px 16px;
+    background-color: rgba(67, 97, 238, 0.05);
+    font-weight: 600;
+    color: var(--dark-text);
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+.address-table td {
+    padding: 16px;
+    border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+    vertical-align: middle;
+}
+
+.address-table tr:last-child td {
+    border-bottom: none;
+}
+
+.default-label {
+    display: inline-block;
+    background-color: rgba(67, 97, 238, 0.1);
+    color: var(--primary-color);
+    padding: 4px 12px;
+    border-radius: 16px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    text-align: center;
+    margin: 0;
+}
+
+.edit-btn, .save-btn {
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 8px 16px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.edit-btn:hover, .save-btn:hover {
+    background-color: var(--secondary-color);
+}
+
+.delete-btn, .cancel-btn {
+    background-color: #ec4141;
+    color: var(--text-color);
+    border: none;
+    border-radius: 6px;
+    padding: 8px 16px;
+    margin-left: 8px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.delete-btn:hover {
+    background-color: #dc2626;
+    color: white;
+}
+
+.cancel-btn:hover {
+    background-color: #d1d5db;
+}
+
+.add-address-btn {
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 12px 24px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: var(--transition);
+    display: flex;
+    align-items: center;
+    margin-top: 16px;
+}
+
+.add-address-btn:hover {
+    background-color: var(--secondary-color);
+}
+
+/* Edit mode styles */
+.edit-mode input[type="text"],
+.edit-mode input[type="email"],
+.add-mode input[type="text"],
+.add-mode input[type="email"] {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid rgba(0, 0, 0, 0.12);
+    border-radius: 6px;
+    font-size: 0.95rem;
+    margin-bottom: 8px;
+}
+
+.edit-mode input[type="checkbox"] {
+    margin-right: 6px;
+}
+
+/* Modal styles */
+.modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    align-items: center;
+    justify-content: center;
+}
+
+.modal-content {
+    background-color: white;
+    padding: 32px;
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    max-width: 460px;
+    width: 100%;
+    margin: 14rem auto;
+}
+
+.modal-content h3 {
+    margin-top: 0;
+    margin-bottom: 16px;
+    font-size: 1.4rem;
+}
+
+.modal-buttons {
+    display: flex;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 24px;
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+    .main-container {
+        grid-template-columns: 1fr;
+    }
+    
+    .address-table {
+        display: block;
+        overflow-x: auto;
+    }
+}

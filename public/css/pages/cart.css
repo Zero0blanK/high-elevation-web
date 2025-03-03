@@ -153,9 +153,11 @@ td{
 }
 
 .cart-footer{
-    align-self: flex-end;
+    display: flex;
+    justify-self: flex-end;
     text-align: right;
     width: 280px;
+    margin-top: 40px;
 }
 
 .cart-content{
@@ -180,4 +182,36 @@ td{
 
 .checkout-form{
     width: 100%;
+}
+
+.empty-cart-message {
+    text-align: center;
+    padding: 2rem;
+}
+
+.empty-cart-message p {
+    font-size: 1.2rem;
+    margin-bottom: 1rem;
+}
+
+.continue-shopping {
+    display: inline-block;
+    color: white;
+    text-decoration: underline;
+    border-radius: 4px;
+    transition: background-color 0.3s ease;
+}
+
+.continue-shopping:hover {
+    background-color: #2a2a2a;
+}
+
+.login-prompt {
+    text-align: center;
+    padding: 2rem;
+}
+
+.login-prompt a {
+    color: #4a4a4a;
+    text-decoration: underline;
 }

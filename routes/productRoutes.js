@@ -4,6 +4,7 @@ const router = express.Router();
 
 // Import controller
 const productController = require('../controllers/productController');
+const dashboardController = require('../controllers/dashboardController');
 
 // Routes
 router.get('/product', async (req, res) => {
@@ -16,9 +17,11 @@ router.get('/product', async (req, res) => {
     }
 });
 
+router.post('/reviews/add', productController.addReview);
+
 // Route to handle individual product pages
 router.get('/product/overview/:product_name', async (req, res) => {
-    const productName = req.params.product_name;
+    const productName = req.params.product_name.replace(/%20/g, ' ');
 
     try {
         const query = `
@@ -77,6 +80,7 @@ router.get('/product/overview/:product_name', async (req, res) => {
         console.error('Error fetching product:', err.message);
         res.status(500).send('Error fetching product');
     }
+
     
 });
 

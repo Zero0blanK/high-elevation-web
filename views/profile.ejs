@@ -3,37 +3,58 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Document</title>
-    <link rel="stylesheet" href="/css/pages/profile.css">
+    <title>User Profile</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
     <link rel="stylesheet" href="/css/components/navbar.css">
     <link rel="stylesheet" href="/css/components/footer.css">
+    <link rel="stylesheet" href="/css/pages/profile.css">
+    <link rel="stylesheet" href="/css/components/profile-sidebar.css">
     <script src="/javaScript/navbar/navToggle.js" defer></script>
     <script src="/javaScript/navbar/profile-icon-dropdown.js" defer></script>
+    <script src="/javaScript/profile.js" defer></script>
 </head>
 <body>
     <%- include('./partials/navbar'); %>
 
     <div class="main-container">
-        <aside class="setting-section">
-            <h1>User Settings</h1>
-            <div class="user-settings-menu">
-                <ul>
-                    <li><a href="#">Profile</a></li>
-                    <li><a href="#">Address</a></li>
-                </ul>
+        <aside class="sidebar">
+            <div class="user-profile">
+                <div class="profile-picture">
+                    <img src="<%= user.profile_pic_url || '/assets/profile-image/default-profile.png' %>" alt="Profile">
+                </div>
+                <h3><%= user.full_name %></h3>
             </div>
+            <nav class="sidebar-nav">
+                <a href="/profile" class="nav-item active" data-tab="profile">
+                    <i class="fas fa-user"></i>
+                    <span>Profile</span>
+                </a>
+                <a href="/profile/address" class="nav-item" data-tab="address">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <span>Address</span>
+                </a>
+                <a href="/profile/orders" class="nav-item" data-tab="orders">
+                    <i class="fas fa-shopping-bag"></i>
+                    <span>Orders</span>
+                </a>
+                <!-- <a href="#" class="nav-item" data-tab="settings">
+                    <i class="fas fa-cog"></i>
+                    <span>Settings</span>
+                </a> -->
+            </nav>
         </aside>
 
         <div class="profile-content">
             <div class="profile-header">
-                <h3>Profile</h3>
-                <p>Settings and options for your web application</p>
+                <h3>My Profile</h3>
+                <p>Manage your personal information and account preferences</p>
             </div>
 
             <div class="profile-details">
                 <div class="profile-picture">
                     <label for="profile-upload">
-                        <img src="assets/image/coffee-bg.jpg" alt="your profile" id="profile-image"/>
+                        <img src="<%= user.profile_pic_url || '/assets/profile-image/default-profile.png' %>" alt="your profile" id="profile-image"/>
                         <input type="file" id="profile-upload" accept="image/*" hidden />
                     </label>
                 </div>
@@ -42,7 +63,8 @@
                         <% if (locals.user) {%>
                             <%= locals.user.full_name %>
                         <% } %>
-                        </h4>
+                    </h4>
+                    <p class="user-email"><%= locals.user ? locals.user.email : '' %></p>
                 </div>
             </div>
 
@@ -65,6 +87,15 @@
                         disabled/>
                     </div>
                     <div class="form-group">
+                        <label for="email">Email</label>
+                        <input type="email" id="email" 
+                        <% if (locals.user) {%>
+                            value="<%= locals.user.email %>"
+                            disabled
+                        <% } %>
+                        >
+                    </div>
+                    <div class="form-group">
                         <label for="phone">Phone Number</label>
                         <input type="text" id="phone"  
                         <% if (locals.user.contact_number !== null) {%>
@@ -74,19 +105,20 @@
                         >
                     </div>
                     <div class="form-group">
-                        <label for="address">Address</label>
-                        <input type="text" id="address">
-                    </div>
-                    <div class="form-group">
                         <label for="password">Password</label>
-                        <input type="password" id="password" 
-                        <% if (locals.user) {%>
-                            value="<%= locals.user.password %>" 
-                            disabled
-                        <% } %>
-                        >
+                        <div class="password-field">
+                            <input type="password" id="password" 
+                            <% if (locals.user) {%>
+                                value="<%= locals.user.password %>" 
+                                disabled
+                            <% } %>
+                            >
+                            <button type="button" class="toggle-password" style="display: none;">
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </div>
                     </div>
-                    <button type="submit" class="save-button">Save</button>
+                    <button type="button" class="save-button" id="edit-button">Edit Profile</button>
                 </form>
             </div>
         </div>
@@ -95,5 +127,4 @@
     <%- include('./partials/footer'); %>
 
 </body>
-
 </html>

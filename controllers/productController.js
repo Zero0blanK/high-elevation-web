@@ -103,6 +103,47 @@ class ProductController {
       return distribution;
   }
 
+  async addReview(req, res) {
+    try {
+      const user_id = req.session.userId;
+      const product_id = req.body.product_id;
+      const rating = parseInt(req.body.rating);
+      const review_title = req.body.title;
+      const review_text = req.body.content;
+
+      if (!user_id) {
+        req.flash('error', 'Please login to write a review');
+        return res.redirect('back');
+      }
+
+      if (isNaN(rating) || rating < 1 || rating > 5) {
+        req.flash('error', 'Invalid rating. Please select a rating between 1 and 5.');
+        return res.redirect('back');
+      }
+
+      if (!review_title || !review_text) {
+        req.flash('error', 'Title and review content are required.');
+        return res.redirect('back');
+    }
+
+      const query = `
+        INSERT INTO review (user_id, product_id, rating, review_title, review_text)
+        VALUES (?, ?, ?, ?, ?)
+      `;
+
+      const productQuery = `SELECT name FROM product WHERE id = ?`;
+      const [productRows] = await db.query(productQuery, [product_id]);
+
+      await db.query(query, [user_id, product_id, rating, review_title, review_text]);
+      req.flash('success', 'Review added successfully!');
+      res.redirect(`/product/overview/${encodeURIComponent(productRows[0].name)}`);
+    } catch (error) {
+      console.error('Error adding review:', error);
+      req.flash('error', 'Error adding review. Please try again.');
+      res.redirect('back');
+    }
+}
+
 }
 
 module.exports = new ProductController();

@@ -19,9 +19,9 @@
             <div class="left-container">
                 <h2>Delivery Addresses</h2>
                 <!-- Existing Addresses -->
-                <% if (addresses && addresses.length > 0) { %>
+                <% if (user.addresses && user.addresses.length > 0) { %>
                     <div class="address-list">
-                        <% addresses.forEach(address => { %>
+                        <% user.addresses.forEach(address => { %>
                             <div class="address-item">
                                 <input type="radio" name="address_id" id="address<%= address.id %>" value="<%= address.id %>" <%= address.is_default ? 'checked' : '' %>>
                                 <label for="address<%= address.id %>">
@@ -57,7 +57,7 @@
                 
                 <!-- New Shipping Method Section -->
                 <h2 class="title">Shipping method</h2>
-                <% if (addresses.length > 0) { %>
+                <% if (user.addresses.length > 0) { %>
                     <div class="payment-options">
                         <div class="payment-option">
                             <input type="radio" id="cod" name="payment_method" value="cash_on_delivery" checked>
@@ -90,6 +90,19 @@
 
             <div class="right-container">
                 <% cartItems.forEach(item => { %>
+                    <% if (isBuyNow) { %>
+                    <div class="cart-item">
+                        <div class="thumbnail-wrap">
+                            <div class="quantity-badge"><%= item.quantity%></div>
+                            <img src="<%= item.product.image_url %>" alt="<%= item.product.name %>" class="item-image">
+                        </div>
+                        <div class="item-details">
+                            <div class="item-name"><%= item.product.name %></div>
+                            <div class="item-description"><%= item.product.category_name.charAt(0).toUpperCase() + item.product.category_name.slice(1) %> | <%= item.product.weight %><%= item.product.unit %></div>
+                        </div>
+                        <div class="item-price">₱<%= parseFloat(item.product.price).toFixed(2) %></div>
+                    </div>
+                    <% } else { %>
                     <div class="cart-item">
                         <div class="thumbnail-wrap">
                             <div class="quantity-badge"><%= item.quantity %></div>
@@ -99,8 +112,9 @@
                             <div class="item-name"><%= item.name %></div>
                             <div class="item-description"><%= item.category_name.charAt(0).toUpperCase() + item.category_name.slice(1) %> | <%= item.weight %><%= item.unit %></div>
                         </div>
-                        <div class="item-price">₱<%= item.price.toFixed(2) %></div>
+                        <div class="item-price">₱<%= parseFloat(item.price).toFixed(2) %></div>
                     </div>
+                    <% } %>
                 <% }); %>
         
                 <div class="cart-summary">

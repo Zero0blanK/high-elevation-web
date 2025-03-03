@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Address Book</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/pages/profileAddress.css">
+    <link rel="stylesheet" href="/css/components/navbar.css">
+    <link rel="stylesheet" href="/css/components/footer.css">
+    <link rel="stylesheet" href="/css/components/profile-sidebar.css">
+    <script src="/javaScript/navbar/navToggle.js" defer></script>
+    <script src="/javaScript/navbar/profile-icon-dropdown.js" defer></script>
+    <script src="/javaScript/profileAddress.js" defer></script>
+
+</head>
+<body>
+    <%- include('./partials/navbar') %>
+
+    <div class="main-container">
+        <aside class="sidebar">
+            <div class="user-profile">
+                <div class="profile-picture">
+                    <img src="<%= user.profile_pic_url || '/assets/image/default-profile.jpg' %>" alt="Profile">
+                </div>
+                <h3><%= user.full_name %></h3>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="/profile" class="nav-item " data-tab="profile">
+                    <i class="fas fa-user"></i>
+                    <span>Profile</span>
+                </a>
+                <a href="/profile/address" class="nav-item active" data-tab="address">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <span>Address</span>
+                </a>
+                <a href="/profile/orders" class="nav-item" data-tab="orders">
+                    <i class="fas fa-shopping-bag"></i>
+                    <span>Orders</span>
+                </a>
+                <!-- <a href="#" class="nav-item" data-tab="settings">
+                    <i class="fas fa-cog"></i>
+                    <span>Settings</span>
+                </a> -->
+            </nav>
+        </aside>
+        
+        <div class="address-content">
+            <div class="address-header">
+                <div>
+                    <h3>My Addresses</h3>
+                    <p>Manage your shipping and billing addresses</p>
+                </div>
+                <button type="button" onclick="showNewAddressRow()" class="add-address-btn">
+                    <i class="fas fa-plus" style="margin-right: 8px;"></i> Add New Address
+                </button>
+            </div>
+            
+            <table class="address-table">
+                <thead>
+                    <tr>
+                        <th>Full Name</th>
+                        <th>Address</th>
+                        <th>Postcode</th>
+                        <th>Phone Number</th>
+                        <th>Status</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% if (user.addresses && user.addresses.length > 0) { %>
+                        <% user.addresses.forEach(address => { %>
+                            <tr data-address-id="<%= address.id %>">
+                                <td class="view-mode"><%= user.full_name %></td>
+                                <td class="view-mode">
+                                    <%= address.street_address %>
+                                    <% if (address.apartment) { %>, <%= address.apartment %><% } %>
+                                    , <%= address.city %>
+                                </td>
+                                <td class="view-mode"><%= address.zip_code %></td>
+                                <td class="view-mode"><%= user.contact_number || '-' %></td>
+                                <td class="view-mode">
+                                    <% if (address.is_default) { %>
+                                        <p class="default-label">Default Address</p>
+                                    <% } %>
+                                </td>
+                                <td class="view-mode">
+                                    <button onclick="toggleEditMode('<%= address.id %>')" class="edit-btn">
+                                        <i class="fas fa-edit" style="margin-right: 4px;"></i> Edit
+                                    </button>
+                                    <% if (!address.is_default) { %>
+                                        <form action="/profile/address/delete/<%= address.id %>" method="POST" class="delete-form" style="display: inline;">
+                                            <button type="submit" class="delete-btn">
+                                                <i class="fas fa-trash-alt" style="margin-right: 4px;"></i> Delete
+                                            </button>
+                                        </form>
+                                    <% } %>
+                                </td>
+                
+                                <!-- Edit Mode -->
+                                <td class="edit-mode" style="display: none;">
+                                    <input type="text" name="fullName" value="<%= user.full_name %>" readonly>
+                                </td>
+                                <td class="edit-mode" style="display: none;">
+                                    <input type="text" name="street_address" value="<%= address.street_address %>" required placeholder="Street Address">
+                                    <input type="text" name="apartment" value="<%= address.apartment %>" placeholder="Apartment (optional)">
+                                    <input type="text" name="city" value="<%= address.city %>" required placeholder="City">
+                                </td>
+                                <td class="edit-mode" style="display: none;">
+                                    <input type="text" name="zip_code" value="<%= address.zip_code %>" required placeholder="ZIP Code">
+                                </td>
+                                <td class="edit-mode" style="display: none;">
+                                    <input type="text" value="<%= user.contact_number %>" readonly>
+                                </td>
+                                <td class="edit-mode" style="display: none;">
+                                    <label class="checkbox-container">
+                                        <input type="checkbox" name="is_default" 
+                                        <%= address.is_default ? 'checked disabled' : '' %> 
+                                        onchange="handleDefaultChange(this, '<%= address.id %>')">
+                                    <span>Make Default</span>
+                                    </label>
+                                </td>
+                                <td class="edit-mode" style="display: none;">
+                                    <button type="button" class="save-btn" onclick="showConfirmationModal('edit', '<%= address.id %>')">
+                                        <i class="fas fa-save" style="margin-right: 4px;"></i> Save
+                                    </button>
+                                    <button type="button" class="cancel-btn" onclick="toggleEditMode('<%= address.id %>')">
+                                        <i class="fas fa-times" style="margin-right: 4px;"></i> Cancel
+                                    </button>
+                                </td>
+                            </tr>
+                        <% }); %>
+                    <% } else { %>
+                        <tr>
+                            <td colspan="6" style="text-align: center; padding: 32px;">
+                                <p style="color: var(--light-text);">You don't have any saved addresses yet.</p>
+                            </td>
+                        </tr>
+                    <% } %>
+                </tbody>
+            </table>
+            
+            <!-- Add hidden user data -->
+            <input type="hidden" id="userName" value="<%= user.full_name %>">
+            <input type="hidden" id="userPhone" value="<%= user.contact_number %>">
+        </div>
+    </div>
+    
+    <!-- Confirmation Modal -->
+    <div id="confirmationModal" class="modal">
+        <div class="modal-content">
+            <h3>Confirm Address</h3>
+            <p>Are you sure you want to save this address?</p>
+            <div class="modal-buttons">
+                <button class="cancel-btn" type="button" onclick="hideConfirmation()">Cancel</button>
+                <button class="confirm-btn edit-btn" type="button" id="confirmButton">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <%- include('./partials/footer') %>
+</body>
+</html>

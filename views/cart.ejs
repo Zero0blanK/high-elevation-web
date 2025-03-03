@@ -43,7 +43,6 @@
                                         <td>
                                             <div class="product-details">
                                                 <div class="product-title"><h3><%= item.name %></h3></div>
-                                                <div class="product-price"><h4><%= item.price %></h5></div>
                                                 <div class="product-weight"><h4>Weight: </h4> <%= item.weight %><%= item.unit %></div>
                                                 <div class="product-flavor"><h4>Flavor: </h4> <%= item.category_name %></div>
                                                 <div class="product-roast-lvl"><h4>Roast Level:</h4> Medium-Dark</div>
@@ -70,20 +69,27 @@
                             </table>
                         </div>
                     </form>
+                    <div class="cart-footer">
+                        <div class="cart-content">
+                            <div class="subtotal"><h4>Subtotal</h4><h2>₱<%= subtotal.toFixed(2) %> php</h2></div>
+                            <p>Taxes and shipping calculated at checkout</p>
+                            <form action="/cart/checkout" method="get" class="checkout-form">
+                                <button class="checkout-btn" href="/checkout" type="submit">Check out</button>
+                            </form>
+                        </div>
+                    </div>
+                    <% } else { %>
+                        <div class="empty-cart-message">
+                            <p>Your cart is empty.</p>
+                            <a href="/product" class="continue-shopping">Continue Shopping</a>
+                        </div>
                     <% } %>
-                
             </div>
-            <div class="cart-footer">
-                <div class="cart-content">
-                    <div class="subtotal"><h4>Subtotal</h4><h2>₱<%= subtotal.toFixed(2) %> php</h2></div>
-                    <p>Taxes and shipping calculated at checkout</p>
-                    <form action="/cart/checkout" method="get" class="checkout-form">
-                        <button class="checkout-btn" href="/checkout" type="submit">Check out</button>
-                    </form>
+
+            <% } else { %>
+                <div class="login-prompt">
+                    <p>Please <a href="/login">login</a> to view your cart.</p>
                 </div>
-            </div>
-            <%} else { %>
-                <p>Your cart is empty.</p>
             <% } %>
         </div>
     </main>

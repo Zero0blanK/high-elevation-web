@@ -74,9 +74,15 @@
                             <input type="hidden" name="quantity" id="quantity" value="1">
                             <div class="product-form-btn">
                                 <button type="submit">Add to Cart</button>
-                                <button type="button">Buy it Now</button>
+                                <button type="button" id="buyNowBtn">Buy it Now</button>
                             </div>
                         </form>
+                            <!-- Add this hidden form for buy now -->
+                            <form action="/cart/buynow" method="post" id="buyNowForm" style="display: none;">
+                                <input type="hidden" name="product_id" value="<%= product.id %>">
+                                <input type="hidden" name="weight_id" id="buy-now-weight-id">
+                                <input type="hidden" name="quantity" id="buy-now-quantity" value="1">
+                            </form>
                     </div>
                     <div class="product-availability">Availability: <%= product.total_stock %> left in stock</div>
                 </div>
@@ -84,7 +90,6 @@
         </div>
     </section>
 
-    <!-- Add this section after your product-overview section -->
     <section class="product-details">
         <div class="container">
             <div class="tabs">
@@ -129,6 +134,16 @@
                     <button class="write-review-btn">Write a Review</button>
 
                     <div class="review-form" style="display: none;">
+                        <% if (messages.error && messages.error.length > 0) { %>
+                            <div class="alert alert-danger">
+                                <%= messages.error %>
+                            </div>
+                        <% } %>
+                        <% if (messages.success && messages.success.length > 0) { %>
+                            <div class="alert alert-success">
+                                <%= messages.success %>
+                            </div>
+                        <% } %>
                         <form action="/reviews/add" method="POST">
                             <input type="hidden" name="product_id" value="<%= product.id %>">
                             <div class="rating-input">
@@ -148,7 +163,9 @@
                                 <label for="review-content">Review</label>
                                 <textarea id="review-content" name="content" required></textarea>
                             </div>
-                            <button type="submit">Submit Review</button>
+                            <button type="submit" <%= !locals.user ? 'disabled' : '' %>>
+                                <%= locals.user ? 'Submit Review' : 'Please Login to Review' %>
+                            </button>
                         </form>
                     </div>
 
@@ -222,34 +239,49 @@
             });
         });
         
-
-        const productStock = parseInt(`<%= product.stock %>`);
-        // Handle quantity increase and decrease
+        // Cache DOM elements
         const increaseBtn = document.querySelector('.quantity-btn-container button:nth-child(3)');
         const decreaseBtn = document.querySelector('.quantity-btn-container button:nth-child(1)');
-        let quantityInput = document.querySelector('.quantity-input');
+        const quantityInput = document.querySelector('.quantity-input');
         const quantityField = document.querySelector('#quantity');
 
-        increaseBtn.addEventListener('click', () => {
-            let quantity = quantityInput.value;
-            if (quantity < productStock) {
-                quantity++;
-                quantityInput.value = quantity;
-                quantityField.value = quantity; // Update the hidden input to reflect the value
-            }else{
-                console.log('err')
-            }
-            });
+        const productStock = parseInt(`<%= product.weight_variants[0].stock %>`);
 
-        decreaseBtn.addEventListener('click', () => {
-            let quantity = quantityInput.value;
-            if (quantity > 1) {
-                quantity--;
-                quantityInput.value = quantity;
-                quantityField.value = quantity; // Update the hidden input to reflect the value
+        // Update both visible and hidden inputs
+        function updateQuantity(newValue) {
+            newValue = parseInt(newValue);
+            if (newValue >= 1 && newValue <= productStock) {
+                quantityInput.value = newValue;
+                quantityField.value = newValue;
+            }
+        }
+
+        // Add event listeners for quantity buttons
+        increaseBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            const currentValue = parseInt(quantityInput.value) || 1;
+            if (currentValue < productStock) {
+                updateQuantity(currentValue + 1);
             }
         });
 
+        decreaseBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            const currentValue = parseInt(quantityInput.value) || 1;
+            if (currentValue > 1) {
+                updateQuantity(currentValue - 1);
+            }
+        });
+
+        // Handle direct input changes
+        quantityInput?.addEventListener('change', (e) => {
+            let value = parseInt(e.target.value) || 1;
+            // Ensure value is between 1 and product stock
+            value = Math.max(1, Math.min(value, productStock));
+            updateQuantity(value);
+        });
 
         // Tab switching functionality
         document.querySelectorAll('.tab-btn').forEach(button => {
@@ -269,6 +301,31 @@
             reviewForm.style.display = reviewForm.style.display === 'none' ? 'block' : 'none';
         });
 
+        const buyNowBtn = document.querySelector('#buyNowBtn');
+        const buyNowForm = document.querySelector('#buyNowForm');
+        const buyNowWeightId = document.querySelector('#buy-now-weight-id');
+        const buyNowQuantity = document.querySelector('#buy-now-quantity');
+
+        buyNowBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            const isLoggedIn = <%= !!locals.user %>;
+            
+            if (!isLoggedIn) {
+                window.location.href = '/login';
+                return;
+            }
+            
+            // Create URL with query parameters
+            const params = new URLSearchParams({
+                buyNow: true,
+                product_id: '<%= product.id %>',
+                weight_id: selectedWeightIdInput.value,
+                quantity: quantityField.value
+            });
+            
+            // Redirect to checkout with parameters
+            window.location.href = `/cart/checkout?${params.toString()}`;
+        });
     </script>
 
 </body>

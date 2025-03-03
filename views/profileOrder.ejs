@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Orders</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="/css/pages/profileOrder.css">
+    <link rel="stylesheet" href="/css/components/navbar.css">
+    <link rel="stylesheet" href="/css/components/footer.css">
+    <link rel="stylesheet" href="/css/components/profile-sidebar.css">
+    <script src="/javaScript/navbar/navToggle.js" defer></script>
+    <script src="/javaScript/navbar/profile-icon-dropdown.js" defer></script>
+
+</head>
+<body>
+    <%- include('./partials/navbar'); %>
+
+    <div class="main-container">
+        <aside class="sidebar">
+            <div class="user-profile">
+                <div class="profile-picture">
+                    <img src="<%= user.profile_pic_url || '/assets/image/default-profile.jpg' %>" alt="Profile">
+                </div>
+                <h3><%= user.full_name %></h3>
+            </div>
+            <nav class="sidebar-nav">
+                <a href="/profile" class="nav-item" data-tab="profile">
+                    <i class="fas fa-user"></i>
+                    <span>Profile</span>
+                </a>
+                <a href="/profile/address" class="nav-item" data-tab="address">
+                    <i class="fas fa-map-marker-alt"></i>
+                    <span>Address</span>
+                </a>
+                <a href="/profile/orders" class="nav-item active" data-tab="orders">
+                    <i class="fas fa-shopping-bag"></i>
+                    <span>Orders</span>
+                </a>
+                <!-- <a href="#" class="nav-item" data-tab="settings">
+                    <i class="fas fa-cog"></i>
+                    <span>Settings</span>
+                </a> -->
+            </nav>
+        </aside>
+        <div class="orders-content">
+            <div class="orders-header">
+                <h3>My Orders</h3>
+                <p>View and track your order history</p>
+            </div>
+
+            <% if (user.orders && user.orders.length > 0) { %>
+                <% user.orders.forEach(order => { %>
+                    <div class="order-card">
+                        <div class="order-header">
+                            <div class="order-info">
+                                <span class="order-id">Order #<%= order.id %></span>
+                                <span class="order-date"><%= new Date(order.order_date).toLocaleDateString() %></span>
+                            </div>
+                            <div class="order-status <%= order.order_status.toLowerCase() %>">
+                                <%= order.order_status %>
+                            </div>
+                        </div>
+
+                        <div class="order-items">
+                            <% order.items.forEach(item => { %>
+                                <div class="order-item">
+                                    <div class="product-image">
+                                        <img src="<%= item.image_url %>" alt="<%= item.name %>">
+                                    </div>
+                                    <div class="product-details">
+                                        <h3 class="product-name"><%= item.name %></h3>
+                                        <div class="product-info">
+                                            <span class="weight">Weight: <%= item.weight_value %><%= item.weight_unit %></span>
+                                            <span class="category">Category: <%= item.category_name %></span>
+                                        </div>
+                                        <div class="order-details">
+                                            <span class="quantity">Quantity: <%= item.quantity %></span>
+                                            <span class="price">₱<%= parseFloat(item.price).toFixed(2) %></span>
+                                        </div>
+                                    </div>
+                                </div>
+                            <% }); %>
+                        </div>
+
+                        <div class="order-footer">
+                            <div class="total-amount">
+                                Total Amount: ₱<%= parseFloat(order.total_amount).toFixed(2) %>
+                            </div>
+                        </div>
+                    </div>
+                <% }); %>
+            <% } else { %>
+                <div class="no-orders">
+                    <p>You haven't placed any orders yet</p>
+                </div>
+            <% } %>
+        </div>
+    </div>
+
+    <%- include('./partials/footer'); %>
+</body>
+</html>

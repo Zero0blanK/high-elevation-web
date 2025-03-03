@@ -1,178 +1,192 @@
 :root {
-    --text-color: #F8F4E1;
-    --background-color: #191919;
-    --card-description-background-color: #292726;
-    --card-price-color: #AF8F6F;
-    --card-font-size: 11px;
+    --primary-color: #4361ee;
+    --secondary-color: #3f37c9;
+    --light-text: #6c757d;
+    --dark-text: #212529;
+    --background-color: #f8f9fa;
+    --card-color: #ffffff;
+    --border-radius: 12px;
+    --box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+    --transition: all 0.3s ease;
 }
 
 body {
-    padding: 0;
-    margin: 0;
-    box-sizing: border-box;
-    color: var(--text-color);
     background-color: var(--background-color);
+    color: var(--dark-text);
+    margin: 0;
+    padding: 0;
+    line-height: 1.6;
 }
 
-/* ============ */
-/* MAIN CONTENT */
-/* ============ */
 .main-container {
-    display: flex;
-    padding: 200px 0px 100px;
-    justify-content: space-evenly;
-    max-width: 82%;
-    gap: 80px;
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    gap: 24px;
+    max-width: 1500px;
+    margin-top: 96px;
+    margin-left: auto;
+    margin-right: auto;
+    margin-bottom: 20px;
+    padding: 0 16px;
 }
 
-.main-container ul,
-.main-container a {
-    list-style: none;
-    color: var(--text-color);
-    font-size: 24px;
+/* Content area */
+.profile-content {
+    background-color: var(--card-color);
+    border-radius: var(--border-radius);
+    box-shadow: var(--box-shadow);
+    padding: 32px;
 }
-
-
-.setting-section {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 50px;
-
-}
-
-.setting-section h1{
-    font-size: 32px;
-    font-weight: 600;
-}
-
-.user-settings-menu > ul{
-    display: flex;
-    flex-direction: column;
-    gap: 20px   ;
-}
-
-.user-setting-menu ul li:hover {
-    text-decoration: underline;
-}
-
 
 .profile-header {
-    margin-bottom: 50px;
+    margin-bottom: 32px;
 }
 
-.profile-header p{
-    font-size: 18px;
-    font-weight: 500;
-}
-
-.profile-header h3{
-    font-size: 32px;
+.profile-header h3 {
+    margin: 0 0 8px 0;
+    font-size: 1.5rem;
     font-weight: 600;
-    margin-bottom: 20px;
 }
 
-.profile-content{
-    position: relative;
-    z-index: 10;
-    max-width: 500px;
-    min-width: 500px;
-}
-
-.profile-picture {
-    width: 200px;
-    height: 200px;
-    border-radius: 50%;
-    border: 1px solid var(--text-color);
-}
-
-.profile-picture img {
-    position: relative;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -.5%);
-    width: 200px;
-    height: 200px;
-    border-radius: 50%;
-    object-fit: cover;
-    border: 2px solid #fff;
-    /* Optional: Add a border */
-    cursor: pointer;
-}
-
-.profile-picture img:hover {
-    border-color: #ffffff;
+.profile-header p {
+    margin: 0;
+    color: var(--light-text);
 }
 
 .profile-details {
     display: flex;
     align-items: center;
-    margin-bottom: 50px;
+    margin-bottom: 32px;
+}
+
+.profile-details .profile-picture {
+    cursor: pointer;
+    position: relative;
+}
+
+.profile-details .profile-picture::after {
+    content: '\f030';
+    font-weight: 900;
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    background-color: var(--primary-color);
+    color: white;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+}
+
+.profile-details .profile-picture:hover::after {
+    background-color: var(--secondary-color);
 }
 
 .profile-info {
-    margin-left: 40px;
+    margin-left: 24px;
 }
 
-.profile-info h4{
-    font-size: 26px;
-    font-weight: 600;
-    margin-bottom: 10px;
+.profile-info h4 {
+    margin: 0;
+    font-size: 1.2rem;
+    font-weight: 500;
 }
 
-
-
+.profile-forms {
+    margin-top: 40px;
+}
 
 .form-group {
-    margin-bottom: 15px;
+    margin-bottom: 24px;
 }
 
 .form-group label {
-    margin-bottom: 5px;
-}
-
-.main-container form {
-    max-width: 500px;
-    margin: 0 auto;
-}
-
-.main-container label {
     display: block;
-    margin-bottom: 10px;
-    font-size: 20px;
-    font-weight: semi-bold;
+    margin-bottom: 8px;
+    font-weight: 500;
+    font-size: 0.9rem;
+    color: var(--light-text);
 }
 
-.main-container input {
+.form-group input {
     width: 100%;
-    padding: 10px;
-    font-size: 18px;
-    border: 1px solid #ffffff;
-    border-radius: 4px;
-    background-color: #191919;
-    color: white;
+    padding: 12px 16px;
+    border: 1px solid rgba(0, 0, 0, 0.12);
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: var(--transition);
+    box-sizing: border-box;
 }
 
-.main-container input:focus {
+.form-group input:focus {
     outline: none;
-    border-color: #ffffff;
+    border-color: var(--accent-color);
+    box-shadow: 0 0 0 3px rgba(72, 149, 239, 0.2);
+}
+
+.form-group input:disabled {
+    background-color: #f1f3f5;
+    cursor: not-allowed;
+}
+
+#profile-form {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
 }
 
 .save-button {
-    width: 120px;
-    height: 45px;
-    padding: 10px 5px;
-    font-size: 20px;
-    font-weight: 600;
-    background-color: var(--accent-color);
-    color: var(--text-color);
-    cursor: pointer;
-    margin-top: 15px;
+    grid-column: 1 / -1;
+    background-color: var(--primary-color);
+    color: white;
     border: none;
-    border-radius: 5px;
+    border-radius: 8px;
+    padding: 12px 24px;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: var(--transition);
+    margin-top: 16px;
 }
 
-
 .save-button:hover {
-    background-color: #af8f6fa1;
+    background-color: var(--secondary-color);
+}
+
+.password-field {
+    position: relative;
+    display: flex;
+    align-items: center;
+}
+
+.toggle-password {
+    position: absolute;
+    right: 12px;
+    background: none;
+    border: none;
+    color: var(--light-text);
+    cursor: pointer;
+}
+
+.toggle-password:hover {
+    color: var(--text-color);
+}
+
+/* Responsive styles */
+@media (max-width: 768px) {
+    .main-container {
+        grid-template-columns: 1fr;
+    }
+    
+    .sidebar {
+        position: static;
+        margin-bottom: 24px;
+    }
+    
+    #profile-form {
+        grid-template-columns: 1fr;
+    }
 }
