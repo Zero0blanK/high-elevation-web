@@ -35,6 +35,7 @@ class DashboardController {
   }
 
   async getProductById(productId) {
+    console.log(productId);
     const query = `
       SELECT
         p.id,
@@ -108,13 +109,12 @@ class DashboardController {
     }
 
     const image_url = req.file ? `/assets/product-image/${req.file.filename}` : "/assets/product-image/default.jpg";
-
+    const connection = await db.getConnection();
     try {
-        let totalStock = 0;
         const productWeights = [];
 
         // Fetch weight IDs from `weight` table
-        const [weightRows] = await db.query("SELECT id, value, unit FROM weight");
+        const [weightRows] = await connection.query("SELECT id, value, unit FROM weight");
         const weightMap = {};
         weightRows.forEach(w => {
             weightMap[`${w.value}${w.unit}`] = w.id; // Mapping weight value + unit to ID
@@ -122,41 +122,49 @@ class DashboardController {
 
         weights.forEach(weight => {
             const weightId = weightMap[weight];  // Corrected weight ID lookup
-
             const price = req.body[`price_${weight}`];
-            const stock = req.body[`stock_${weight}`];
 
-            console.log(`Weight: ${weight}, Price: ${price}, Stock: ${stock}, Weight ID: ${weightId}`);
+            console.log(`Weight: ${weight}, Price: ${price}, Weight ID: ${weightId}`);
 
-            if (weightId && price && stock) {
-                productWeights.push([name, image_url, description, category_id, price, stock, weightId]);
-                totalStock += parseInt(stock);
+            if (weightId && price) {
+                productWeights.push([name, image_url, description, category_id, price, weightId]);
             }
         });
 
-        // Insert product into `product` table, using the total stock
-        const [productResult] = await db.query(
+        // Insert product into `product` table, ensuring total_stock is 0
+        const [productResult] = await connection.query(
             "INSERT INTO product (name, image_url, description, category_id, total_stock) VALUES (?, ?, ?, ?, ?)",
-            [name, image_url, description, category_id, totalStock]
+            [name, image_url, description, category_id, 0]
         );
 
         const productId = productResult.insertId;
 
-        // Insert product_weight entries for each weight variant
+        // Insert product_weight entries with stock set to 0
         if (productWeights.length > 0) {
-            const productWeightValues = productWeights.map(item => [productId, item[6], item[4], item[5]]);
-            await db.query(
+            const productWeightValues = productWeights.map(item => [productId, item[5], item[4], 0]);
+            await connection.query(
                 "INSERT INTO product_weight (product_id, weight_id, price, stock) VALUES ?",
                 [productWeightValues]
             );
         }
 
+        // Create inventory log entries for product creation
+        await connection.query(
+          "INSERT INTO inventory_log (product_id, weight_id, user_id, action, quantity, details) VALUES (?, ?, ?, ?, ?, ?)",
+          [productId, null, req.session.userId, 'Add Product', 0, 'New product added']
+        );
+
+        await connection.commit();
         res.redirect("/dashboard/products");
     } catch (err) {
-        console.error("Error adding product:", err);
-        res.status(500).send("Error adding product");
+      await connection.rollback();
+      console.error("Error adding product:", err);
+      res.status(500).send("Error adding product");
+    } finally {
+      connection.release();
     }
-  }
+};
+
 
   async getWeightId(weight) {
     const [rows] = await db.query('SELECT id FROM weight WHERE CONCAT(value, unit) = ?', [weight]);
@@ -171,7 +179,7 @@ class DashboardController {
     const image = productData.image && productData.image !== '' ? productData.image : null;
     
 
-    console.log("updateProduct image:", productData.image);
+    console.log("updateProduct", productData);
 
     // Fetch the category_id based on the category name
     const [categoryRows] = await db.query('SELECT id FROM product_category WHERE name = ?', [category]);
@@ -829,6 +837,179 @@ class DashboardController {
   
     const [logs] = await db.query(query, [productId]);
     return logs;
+  }
+
+  async getAnalyticsData() {
+    try {
+        // Get revenue growth
+        const [revenueGrowth] = await db.query(`
+            WITH current_quarter AS (
+                SELECT SUM(total_amount) as current_amount
+                FROM user_order
+                WHERE order_date >= DATE_SUB(CURDATE(), INTERVAL 3 MONTH)
+            ),
+            previous_quarter AS (
+                SELECT SUM(total_amount) as prev_amount
+                FROM user_order
+                WHERE order_date BETWEEN DATE_SUB(CURDATE(), INTERVAL 6 MONTH) 
+                AND DATE_SUB(CURDATE(), INTERVAL 3 MONTH)
+            )
+            SELECT 
+                ((current_amount - prev_amount) / prev_amount * 100) as growth
+            FROM current_quarter, previous_quarter
+        `);
+
+        // Get customer lifetime value
+        const [customerValue] = await db.query(`
+            SELECT AVG(total_spent) as avg_lifetime_value
+            FROM (
+                SELECT user_id, SUM(total_amount) as total_spent
+                FROM user_order
+                GROUP BY user_id
+            ) as customer_totals
+        `);
+
+        // Get conversion rate (orders vs unique customers)
+        const [conversionRate] = await db.query(`
+            WITH unique_customers AS (
+                SELECT COUNT(DISTINCT user_id) as customer_count
+                FROM user_order
+                WHERE order_date >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
+            ),
+            total_visitors AS (
+                SELECT 100 as visitor_count  -- Replace with actual analytics data
+            )
+            SELECT 
+                (customer_count / visitor_count * 100) as conversion_rate
+            FROM unique_customers, total_visitors
+        `);
+
+        // Get inventory turnover
+        const [inventoryTurnover] = await db.query(`
+            WITH cogs AS (
+                SELECT SUM(od.quantity * pw.price) as total_cogs
+                FROM order_detail od
+                JOIN product_weight pw ON od.product_id = pw.product_id
+                WHERE od.weight_id = pw.weight_id
+            ),
+            avg_inventory AS (
+                SELECT AVG(stock * price) as avg_inventory_value
+                FROM product_weight
+            )
+            SELECT 
+                (total_cogs / avg_inventory_value) as turnover_rate
+            FROM cogs, avg_inventory
+        `);
+
+        // Get sales performance data
+        const [salesPerformance] = await db.query(`
+            SELECT 
+                DATE_FORMAT(order_date, '%Y-%m') as month,
+                SUM(total_amount) as revenue
+            FROM user_order
+            WHERE order_date >= DATE_SUB(CURDATE(), INTERVAL 6 MONTH)
+            GROUP BY DATE_FORMAT(order_date, '%Y-%m')
+            ORDER BY month
+        `);
+
+        // Get customer behavior data
+        const [customerBehavior] = await db.query(`
+            SELECT 
+                DATE_FORMAT(order_date, '%Y-Q%q') as quarter,
+                COUNT(DISTINCT CASE WHEN user_id NOT IN (
+                    SELECT DISTINCT user_id 
+                    FROM user_order uo2 
+                    WHERE uo2.order_date < uo1.order_date
+                ) THEN user_id END) as new_customers,
+                COUNT(DISTINCT CASE WHEN user_id IN (
+                    SELECT DISTINCT user_id 
+                    FROM user_order uo2 
+                    WHERE uo2.order_date < uo1.order_date
+                ) THEN user_id END) as returning_customers
+            FROM user_order uo1
+            WHERE order_date >= DATE_SUB(CURDATE(), INTERVAL 1 YEAR)
+            GROUP BY DATE_FORMAT(order_date, '%Y-Q%q')
+            ORDER BY quarter
+        `);
+
+        // Get inventory trends
+        const [inventoryTrends] = await db.query(`
+            SELECT 
+                DATE_FORMAT(created_at, '%Y-%m') as month,
+                SUM(CASE WHEN action = 'Stock In' THEN quantity
+                    WHEN action = 'Stock Out' THEN -quantity
+                    ELSE 0 END) as stock_change
+            FROM inventory_log
+            WHERE created_at >= DATE_SUB(CURDATE(), INTERVAL 6 MONTH)
+            GROUP BY DATE_FORMAT(created_at, '%Y-%m')
+            ORDER BY month
+        `);
+
+        // Get sales channel distribution
+        const [channelDistribution] = await db.query(`
+            SELECT 
+                'Online Store' as channel,
+                COUNT(*) as orders,
+                SUM(total_amount) as revenue
+            FROM user_order
+            WHERE order_date >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
+            GROUP BY 'Online Store'
+        `);
+
+        // Get KPI metrics
+        const [kpiMetrics] = await db.query(`
+            WITH current_period AS (
+                SELECT 
+                    AVG(total_amount) as avg_order_value,
+                    COUNT(*) * 850 as total_acquisition_cost,
+                    COUNT(*) as total_orders,
+                    SUM(CASE WHEN order_status = 'Returned' THEN 1 ELSE 0 END) as returns
+                FROM user_order
+                WHERE order_date >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
+            ),
+            previous_period AS (
+                SELECT 
+                    AVG(total_amount) as prev_avg_order_value,
+                    COUNT(*) * 850 as prev_total_acquisition_cost,
+                    COUNT(*) as prev_total_orders,
+                    SUM(CASE WHEN order_status = 'Returned' THEN 1 ELSE 0 END) as prev_returns
+                FROM user_order
+                WHERE order_date BETWEEN DATE_SUB(CURDATE(), INTERVAL 60 DAY) 
+                AND DATE_SUB(CURDATE(), INTERVAL 30 DAY)
+            )
+            SELECT 
+                avg_order_value,
+                prev_avg_order_value,
+                (total_acquisition_cost / total_orders) as cac,
+                (prev_total_acquisition_cost / prev_total_orders) as prev_cac,
+                (returns / total_orders * 100) as return_rate,
+                (prev_returns / prev_total_orders * 100) as prev_return_rate
+            FROM current_period, previous_period
+        `);
+
+        return {
+          revenueGrowth: {
+              growth: revenueGrowth[0]?.growth || 0
+          },
+          customerValue: {
+              avg_lifetime_value: customerValue[0]?.avg_lifetime_value || 0
+          },
+          conversionRate: {
+              conversion_rate: conversionRate[0]?.conversion_rate || 0
+          },
+          inventoryTurnover: {
+              turnover_rate: inventoryTurnover[0]?.turnover_rate || 0
+          },
+          salesPerformance: salesPerformance || [],
+          customerBehavior: customerBehavior || [],
+          inventoryTrends: inventoryTrends || [],
+          channelDistribution: channelDistribution || [],
+          kpiMetrics: kpiMetrics[0] || {}
+      };
+    } catch (error) {
+        console.error('Error fetching analytics data:', error);
+        throw error;
+    }
   }
   
 }

@@ -45,39 +45,15 @@ document.querySelector('.add-order-btn').addEventListener('click', () => {
     showModal('addProductModal');
 });
 
+const addProductBtn = document.querySelector(".add-order-btn");
 
-// Edit product buttons
-document.querySelectorAll('.edit-product').forEach(button => {
-    button.addEventListener('click', function () {
-        const productId = this.dataset.id;
-        fetch(`/dashboard/products/${productId}`)
-            .then(response => response.json())
-            .then(product => {
-                document.getElementById('editProductId').value = product.id;
-                document.getElementById('editProductName').value = product.name;
-                document.getElementById('editProductDescription').value = product.description;
-                document.getElementById('editProductCategory').value = product.category_id;
-
-                // Populate weight variants
-                const weights = product.weights;
-                weights.forEach(weight => {
-                    const checkbox = document.getElementById(`editWeight${weight.value}${weight.unit}`);
-                    if (checkbox) {
-                        checkbox.checked = true;
-                        const priceInput = checkbox.closest('.variant-card').querySelector('input[name="price_' + weight.value + weight.unit + '"]');
-                        const stockInput = checkbox.closest('.variant-card').querySelector('input[name="stock_' + weight.value + weight.unit + '"]');
-                        priceInput.value = weight.price;
-                        stockInput.value = weight.stock;
-                        priceInput.disabled = false;
-                        stockInput.disabled = false;
-                    }
-                });
-
-                showModal('editProductModal');
-            })
-            .catch(error => console.error('Error fetching product details:', error));
+if (addProductBtn) {
+    addProductBtn.addEventListener("click", (event) => {
+        event.preventDefault(); // Prevent unintended modal behavior
+        window.location.href = "/dashboard/products/add";
     });
-});
+}
+
 
 // Function to handle the "Edit Product" functionality
 document.querySelectorAll('.edit-product').forEach(button => {
@@ -134,7 +110,7 @@ document.querySelectorAll('.edit-product').forEach(button => {
 });
 
 // Function to handle the form submission for editing a product
-document.querySelector('.product-form').addEventListener('submit', function (event) {
+document.querySelector('.edit-form').addEventListener('submit', function (event) {
     event.preventDefault();
 
     const formData = new FormData(this);

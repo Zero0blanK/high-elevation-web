@@ -1,5 +1,6 @@
 // controllers/userController.js
 const db = require('../config/db');
+const bcrypt = require('bcryptjs');
 
 class UserController {
 
@@ -9,9 +10,12 @@ class UserController {
       // Query the database to find the user
       const [user] = await db.execute('SELECT * FROM user WHERE email = ?', [email]);
 
+      const isMatch = await bcrypt.compare(password, user[0].password);
+
       // Check if user exists and password is correct
-      if (user.length === 0 || user[0].password !== password) {
-        return res.status(400).send('Invalid email or password');
+      if (user.length === 0 || !isMatch) {
+        req.flash('error', 'Invalid email and password. Please try again.');
+        return res.redirect('/login');
       }
       
       // Set session variables for the logged-in user
@@ -38,14 +42,20 @@ class UserController {
     try {
       const [existingUser] = await db.query('SELECT * FROM user WHERE email = ?', [email]);
       if (existingUser.length > 0) {
-        return res.status(400).send('Username already taken');
+        req.flash('error', 'This email is already registered.');
+        return res.redirect('/register');
       }
 
-      await db.query('INSERT INTO user (first_name, last_name, email, password) VALUES (?, ?, ?, ?)', [first_name, last_name, email, password]);
-      res.redirect('/');
+      // Hash the password before saving it
+      const hashedPassword = await bcrypt.hash(password, 10);
+
+      await db.query('INSERT INTO user (first_name, last_name, email, password) VALUES (?, ?, ?, ?)', [first_name, last_name, email, hashedPassword]);
+      req.flash('success', `Welcome, ${first_name}! Your account has been created. You can now log in.`);
+      res.redirect('/login');
     } catch (err) {
       console.log('Error registering user:', err);
-      res.status(500).send('Error registering user');
+      req.flash('error', 'An unexpected error occurred while registering. Please try again later.');
+      res.status(500).redirect('/register');
     }
   }
 

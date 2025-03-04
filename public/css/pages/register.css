@@ -168,3 +168,31 @@ label{
     animation-delay: 0.4s;
     left: -35px;
 }
+
+/* Flash messages */
+.alert {
+    padding: 15px;
+    margin-bottom: 20px;
+    border: 1px solid transparent;
+    border-radius: 4px;
+    text-align: center;
+    display: none;
+}
+
+.alert:empty {
+    display: none;
+}
+
+.alert-success {
+    color: #155724;
+    background-color: #d4edda;
+    border-color: #c3e6cb;
+    display: block;
+}
+
+.alert-danger {
+    color: #721c24;
+    background-color: #f8d7da;
+    border-color: #f5c6cb;
+    display: block;
+}

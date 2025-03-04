@@ -21,32 +21,32 @@
                     <span class="stat-title">Revenue Growth</span>
                     <i class="fas fa-chart-line stat-icon" style="color: #10b981;"></i>
                 </div>
-                <div class="stat-value">+24.5%</div>
-                <div class="stat-trend trend-up">vs last quarter</div>
+                <div class="stat-value"><%= parseFloat(analytics.revenueGrowth.growth).toFixed(1) %>%</div>
+                <div class="stat-trend <%= parseFloat(analytics.revenueGrowth.growth) > 0 ? 'trend-up' : 'trend-down' %>">vs last quarter</div>
             </div>
             <div class="stat-card">
                 <div class="stat-header">
                     <span class="stat-title">Customer Lifetime Value</span>
                     <i class="fas fa-user-tag stat-icon" style="color: #3b82f6;"></i>
                 </div>
-                <div class="stat-value">₱12,450</div>
-                <div class="stat-trend trend-up">+15.2% improvement</div>
+                <div class="stat-value"><%= parseFloat(analytics.customerLifetimeValue).toFixed(1) %></div>
+                <div class="stat-trend trend-up"><%= parseFloat(analytics.customerLifetimeValueGrowth).toFixed(1) %> from last year</div>
             </div>
             <div class="stat-card">
                 <div class="stat-header">
                     <span class="stat-title">Conversion Rate</span>
                     <i class="fas fa-exchange-alt stat-icon" style="color: #8b5cf6;"></i>
                 </div>
-                <div class="stat-value">5.8%</div>
-                <div class="stat-trend trend-up">+2.1% improvement</div>
+                <div class="stat-value"><%= parseFloat(analytics.conversionRate).toFixed(1) %></div>
+                <div class="stat-trend trend-up"><%= parseFloat(analytics.conversionRateGrowth).toFixed(1) %> from last month</div>
             </div>
             <div class="stat-card">
                 <div class="stat-header">
                     <span class="stat-title">Inventory Turnover</span>
                     <i class="fas fa-box-open stat-icon" style="color: #f59e0b;"></i>
                 </div>
-                <div class="stat-value">4.2x</div>
-                <div class="stat-trend trend-down">-0.3x from target</div>
+                <div class="stat-value"><%= parseFloat(analytics.inventoryTurnover).toFixed(1) %></div>
+                <div class="stat-trend trend-down"><%= parseFloat(analytics.inventoryTurnoverGrowth).toFixed(1) %> from last month</div>
             </div>
         </div>
     
@@ -134,17 +134,11 @@
         new Chart(salesCtx, {
             type: 'line',
             data: {
-                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                labels: <%- JSON.stringify(analytics.salesPerformance.map(d => d.month)) %>,
                 datasets: [{
                     label: 'Revenue',
-                    data: [42000, 45000, 48000, 46000, 52000, 55000],
+                    data: <%- JSON.stringify(analytics.salesPerformance.map(d => d.revenue)) %>,
                     borderColor: '#4f46e5',
-                    tension: 0.3
-                }, {
-                    label: 'Target',
-                    data: [40000, 42000, 44000, 46000, 48000, 50000],
-                    borderColor: '#ef4444',
-                    borderDash: [5, 5],
                     tension: 0.3
                 }]
             },
@@ -164,15 +158,12 @@
         new Chart(behaviorCtx, {
             type: 'bar',
             data: {
-                labels: ['Q1', 'Q2', 'Q3', 'Q4'],
+                labels: <%- JSON.stringify(analytics.customerBehavior.map(d => d.month)) %>,
                 datasets: [{
-                    label: 'New Customers',
-                    data: [120, 150, 180, 210],
-                    backgroundColor: '#4f46e5'
-                }, {
-                    label: 'Returning Customers',
-                    data: [250, 280, 300, 340],
-                    backgroundColor: '#3b82f6'
+                    label: 'Revenue',
+                    data: <%- JSON.stringify(analytics.customerBehavior.map(d => d.revenue)) %>,
+                    borderColor: '#4f46e5',
+                    tension: 0.3
                 }]
             },
             options: {
@@ -191,11 +182,11 @@
         new Chart(inventoryCtx, {
             type: 'line',
             data: {
-                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                labels: <%- JSON.stringify(analytics.inventoryTrends.map(d => d.month)) %>,
                 datasets: [{
-                    label: 'Stock Level',
-                    data: [85, 82, 78, 75, 80, 78],
-                    borderColor: '#f59e0b',
+                    label: 'Revenue',
+                    data: <%- JSON.stringify(analytics.inventoryTrends.map(d => d.revenue)) %>,
+                    borderColor: '#4f46e5',
                     tension: 0.3
                 }]
             },
@@ -215,16 +206,12 @@
         new Chart(channelCtx, {
             type: 'bar',
             data: {
-                labels: ['Online Store', 'Mobile App', 'Marketplace', 'Physical Store'],
+                labels: <%- JSON.stringify(analytics.channelDistribution.map(d => d.month)) %>,
                 datasets: [{
-                    label: 'Sales Distribution',
-                    data: [45, 25, 20, 10],
-                    backgroundColor: [
-                        '#4f46e5',
-                        '#3b82f6',
-                        '#8b5cf6',
-                        '#ef4444'
-                    ]
+                    label: 'Revenue',
+                    data: <%- JSON.stringify(analytics.channelDistribution.map(d => d.revenue)) %>,
+                    borderColor: '#4f46e5',
+                    tension: 0.3
                 }]
             },
             options: {
@@ -237,6 +224,25 @@
                 }
             }
         });
+
+        // Update the KPI table with real data
+        const kpiData = <%- JSON.stringify(analytics.kpiMetrics || {}) %>;
+        if (kpiData) {
+            document.querySelector('tbody').innerHTML = `
+                <tr>
+                    <td>Average Order Value</td>
+                    <td>₱${parseFloat(kpiData.avg_order_value || 0).toFixed(2)}</td>
+                    <td>₱${parseFloat(kpiData.prev_avg_order_value || 0).toFixed(2)}</td>
+                    <td><span class="${kpiData.avg_order_value > kpiData.prev_avg_order_value ? 'trend-up' : 'trend-down'}">
+                        ${((kpiData.avg_order_value - kpiData.prev_avg_order_value) / kpiData.prev_avg_order_value * 100).toFixed(1)}%
+                    </span></td>
+                    <td><span class="status-badge ${kpiData.avg_order_value > kpiData.prev_avg_order_value ? 'status-delivered' : 'status-pending'}">
+                        ${kpiData.avg_order_value > kpiData.prev_avg_order_value ? 'Above Target' : 'Below Target'}
+                    </span></td>
+                </tr>
+                <!-- Similar rows for other metrics -->
+            `;
+        }
     </script>
 </body>
 </html>

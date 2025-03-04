@@ -131,8 +131,17 @@ router.get('/dashboard/customers', (req, res) => {
     res.render('dashboard-customers', { title: 'Dashboard' });
 });
 
-router.get('/dashboard/analytics', (req, res) => {
-    res.render('dashboard-analytics', { title: 'Dashboard' });
+router.get('/dashboard/analytics', async (req, res) => {
+    try {
+        const analyticsData = await dashboardController.getAnalyticsData();
+        res.render('dashboard-analytics', { 
+            title: 'Analytics Dashboard',
+            analytics: analyticsData
+        });
+    } catch (error) {
+        console.error('Error loading analytics:', error);
+        res.status(500).render('error', { error: 'Failed to load analytics data' });
+    }
 });
 
 router.get('/dashboard/settings', (req, res) => {
@@ -153,8 +162,14 @@ router.post('/dashboard/orders/update-status', async (req, res) => {
     }
 });
 
-router.post('/dashboard/products', upload.single("image"), dashboardController.addProduct);
-
+router.post('/dashboard/products/add', upload.single("image"), async (req, res) => {
+    try {
+        await dashboardController.addProduct(req, res);
+    } catch (error) {
+        console.error('Error adding product:', error);
+        res.status(500).json({ error: 'Failed to add product' });
+    }
+});
 router.post('/dashboard/edit-product', upload.single('image'), deleteImg, async (req, res) => {
     const { id, name, description, category } = req.body;
     const weights = req.body.weights || [];

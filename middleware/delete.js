@@ -4,6 +4,13 @@ const dashboardController = require('../controllers/dashboardController');
 
 const deleteImg = async (req, res, next) => {
     const { id } = req.body;
+
+    // For new product creation, skip image deletion check
+    if (!id) {
+        req.newImage = req.file ? `/assets/product-image/${req.file.filename}` : '/assets/product-image/default.jpg';
+        return next();
+    }
+
     const newImage = req.file ? `/assets/product-image/${req.file.filename}` : null;
 
     try {
