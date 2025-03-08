@@ -10,7 +10,7 @@ const dashboardController = require('../controllers/dashboardController');
 router.get('/product', async (req, res) => {
     try {
         const product = await productController.getAllProducts();
-        console.log(product);
+
         res.render('product', { product });
     } catch (err) {
         res.status(500).send('Error fetching products');

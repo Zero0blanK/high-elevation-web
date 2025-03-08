@@ -127,22 +127,9 @@ router.get('/dashboard/orders/:orderId', async (req, res) => {
     }
 });
 
-router.get('/dashboard/customers', (req, res) => {
-    res.render('dashboard-customers', { title: 'Dashboard' });
-});
+router.get('/dashboard/customers', dashboardController.getCustomersData);
 
-router.get('/dashboard/analytics', async (req, res) => {
-    try {
-        const analyticsData = await dashboardController.getAnalyticsData();
-        res.render('dashboard-analytics', { 
-            title: 'Analytics Dashboard',
-            analytics: analyticsData
-        });
-    } catch (error) {
-        console.error('Error loading analytics:', error);
-        res.status(500).render('error', { error: 'Failed to load analytics data' });
-    }
-});
+router.get('/dashboard/analytics', dashboardController.getAnalyticsData);
 
 router.get('/dashboard/settings', (req, res) => {
     res.render('dashboard-settings', { title: 'Dashboard' });
@@ -195,6 +182,7 @@ router.post('/dashboard/edit-product', upload.single('image'), deleteImg, async 
 });
 
 router.delete('/dashboard/products/:productId', dashboardController.deleteProductById);
+router.post('/dashboard/products/:productId/return', dashboardController.returnProductById);
 
 
 module.exports = router;

@@ -1,8 +1,16 @@
 const Product = require('../models/Product');
 const User_Order = require('../models/User_Order');
+const moment = require('moment');
 
 const db = require('../config/db');
 
+const getLastSixMonths = () => {
+  const months = [];
+  for (let i = 5; i >= 0; i--) {
+    months.push(moment().subtract(i, 'months').format('MMM'));
+  }
+  return months;
+};
 
 class DashboardController {
   constructor() {
@@ -15,7 +23,7 @@ class DashboardController {
 
   async getAllProducts() {
     const query = `
-        SELECT p.id, p.name, p.image_url, p.description, p.category_id, p.total_stock, pc.name AS category_name,
+        SELECT p.id, p.name, p.image_url, p.description, p.category_id, p.total_stock, pc.name AS category_name, is_deleted,
                (SELECT pw.price 
                 FROM product_weight pw 
                 JOIN weight w ON pw.weight_id = w.id
@@ -177,9 +185,6 @@ class DashboardController {
   async updateProduct(productData) {
     const { id, name, description, category, weights } = productData;
     const image = productData.image && productData.image !== '' ? productData.image : null;
-    
-
-    console.log("updateProduct", productData);
 
     // Fetch the category_id based on the category name
     const [categoryRows] = await db.query('SELECT id FROM product_category WHERE name = ?', [category]);
@@ -237,19 +242,45 @@ class DashboardController {
       // First, check if product exists
       const product = await db.query("SELECT * FROM product WHERE id = ?", [productId]);
       if (product.length === 0) {
-        return res.status(404).json({ message: 'Product not found' });
+        return res.json({ message: 'Product not found' });
       }
 
       // Delete from product_weight table first (if any foreign key relations exist)
-      await db.query("DELETE FROM product_weight WHERE product_id = ?", [productId]);
+      // await db.query("DELETE FROM product_weight WHERE product_id = ?", [productId]);
+
+      // Soft delete from product_weight table first
+      await db.query("UPDATE product_weight SET is_deleted = 1 WHERE product_id = ?", [productId]);
 
       // Now delete the product from the product table
-      await db.query("DELETE FROM product WHERE id = ?", [productId]);
+      // await db.query("DELETE FROM product WHERE id = ?", [productId]);
+
+      await db.query("UPDATE product SET is_deleted = 1 WHERE id = ?", [productId]);
 
       res.status(200).json({success: true, message: 'Product deleted successfully' });
     } catch (err) {
       console.error("Error deleting product:", err);
       res.status(500).json({success: false, message: 'Error deleting product' });
+    }
+  }
+
+  async returnProductById(req, res) {
+    const { productId } = req.params; // Get productId from the URL parameter
+
+    try {
+      // First, check if product exists
+      const product = await db.query("SELECT * FROM product WHERE id = ?", [productId]);
+      if (product.length === 0) {
+        return res.json({ message: 'Product not found' });
+      }
+
+      await db.query("UPDATE product_weight SET is_deleted = 0 WHERE product_id = ?", [productId]);
+
+      await db.query("UPDATE product SET is_deleted = 0 WHERE id = ?", [productId]);
+
+      res.status(200).json({success: true});
+    } catch (err) {
+      console.error("Error deleting product:", err);
+      res.status(500).json({success: false});
     }
   }
 
@@ -678,8 +709,10 @@ class DashboardController {
             // Update order status based on shipping status
             let orderStatus;
 
-            if (status === 'processing' || status === 'shipped') {
+            if (status === 'processing') {
                 orderStatus = 'processing';
+            } else if(status === 'shipped') {
+                orderStatus = 'shipped';
             } else if (status === 'delivered') {
                 orderStatus = 'delivered';
             } 
@@ -839,178 +872,417 @@ class DashboardController {
     return logs;
   }
 
-  async getAnalyticsData() {
+  // ANALYTICS DASHBOARD
+  async getAnalyticsData(req, res) {
+    // Get connection from pool
+    const connection = await db.getConnection();
+    
     try {
-        // Get revenue growth
-        const [revenueGrowth] = await db.query(`
-            WITH current_quarter AS (
-                SELECT SUM(total_amount) as current_amount
-                FROM user_order
-                WHERE order_date >= DATE_SUB(CURDATE(), INTERVAL 3 MONTH)
-            ),
-            previous_quarter AS (
-                SELECT SUM(total_amount) as prev_amount
-                FROM user_order
-                WHERE order_date BETWEEN DATE_SUB(CURDATE(), INTERVAL 6 MONTH) 
-                AND DATE_SUB(CURDATE(), INTERVAL 3 MONTH)
-            )
-            SELECT 
-                ((current_amount - prev_amount) / prev_amount * 100) as growth
-            FROM current_quarter, previous_quarter
-        `);
-
-        // Get customer lifetime value
-        const [customerValue] = await db.query(`
-            SELECT AVG(total_spent) as avg_lifetime_value
-            FROM (
-                SELECT user_id, SUM(total_amount) as total_spent
-                FROM user_order
-                GROUP BY user_id
-            ) as customer_totals
-        `);
-
-        // Get conversion rate (orders vs unique customers)
-        const [conversionRate] = await db.query(`
-            WITH unique_customers AS (
-                SELECT COUNT(DISTINCT user_id) as customer_count
-                FROM user_order
-                WHERE order_date >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
-            ),
-            total_visitors AS (
-                SELECT 100 as visitor_count  -- Replace with actual analytics data
-            )
-            SELECT 
-                (customer_count / visitor_count * 100) as conversion_rate
-            FROM unique_customers, total_visitors
-        `);
-
-        // Get inventory turnover
-        const [inventoryTurnover] = await db.query(`
-            WITH cogs AS (
-                SELECT SUM(od.quantity * pw.price) as total_cogs
-                FROM order_detail od
-                JOIN product_weight pw ON od.product_id = pw.product_id
-                WHERE od.weight_id = pw.weight_id
-            ),
-            avg_inventory AS (
-                SELECT AVG(stock * price) as avg_inventory_value
-                FROM product_weight
-            )
-            SELECT 
-                (total_cogs / avg_inventory_value) as turnover_rate
-            FROM cogs, avg_inventory
-        `);
-
-        // Get sales performance data
-        const [salesPerformance] = await db.query(`
-            SELECT 
-                DATE_FORMAT(order_date, '%Y-%m') as month,
-                SUM(total_amount) as revenue
-            FROM user_order
-            WHERE order_date >= DATE_SUB(CURDATE(), INTERVAL 6 MONTH)
-            GROUP BY DATE_FORMAT(order_date, '%Y-%m')
-            ORDER BY month
-        `);
-
-        // Get customer behavior data
-        const [customerBehavior] = await db.query(`
-            SELECT 
-                DATE_FORMAT(order_date, '%Y-Q%q') as quarter,
-                COUNT(DISTINCT CASE WHEN user_id NOT IN (
-                    SELECT DISTINCT user_id 
-                    FROM user_order uo2 
-                    WHERE uo2.order_date < uo1.order_date
-                ) THEN user_id END) as new_customers,
-                COUNT(DISTINCT CASE WHEN user_id IN (
-                    SELECT DISTINCT user_id 
-                    FROM user_order uo2 
-                    WHERE uo2.order_date < uo1.order_date
-                ) THEN user_id END) as returning_customers
-            FROM user_order uo1
-            WHERE order_date >= DATE_SUB(CURDATE(), INTERVAL 1 YEAR)
-            GROUP BY DATE_FORMAT(order_date, '%Y-Q%q')
-            ORDER BY quarter
-        `);
-
-        // Get inventory trends
-        const [inventoryTrends] = await db.query(`
-            SELECT 
-                DATE_FORMAT(created_at, '%Y-%m') as month,
-                SUM(CASE WHEN action = 'Stock In' THEN quantity
-                    WHEN action = 'Stock Out' THEN -quantity
-                    ELSE 0 END) as stock_change
-            FROM inventory_log
-            WHERE created_at >= DATE_SUB(CURDATE(), INTERVAL 6 MONTH)
-            GROUP BY DATE_FORMAT(created_at, '%Y-%m')
-            ORDER BY month
-        `);
-
-        // Get sales channel distribution
-        const [channelDistribution] = await db.query(`
-            SELECT 
-                'Online Store' as channel,
-                COUNT(*) as orders,
-                SUM(total_amount) as revenue
-            FROM user_order
-            WHERE order_date >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
-            GROUP BY 'Online Store'
-        `);
-
-        // Get KPI metrics
-        const [kpiMetrics] = await db.query(`
-            WITH current_period AS (
-                SELECT 
-                    AVG(total_amount) as avg_order_value,
-                    COUNT(*) * 850 as total_acquisition_cost,
-                    COUNT(*) as total_orders,
-                    SUM(CASE WHEN order_status = 'Returned' THEN 1 ELSE 0 END) as returns
-                FROM user_order
-                WHERE order_date >= DATE_SUB(CURDATE(), INTERVAL 30 DAY)
-            ),
-            previous_period AS (
-                SELECT 
-                    AVG(total_amount) as prev_avg_order_value,
-                    COUNT(*) * 850 as prev_total_acquisition_cost,
-                    COUNT(*) as prev_total_orders,
-                    SUM(CASE WHEN order_status = 'Returned' THEN 1 ELSE 0 END) as prev_returns
-                FROM user_order
-                WHERE order_date BETWEEN DATE_SUB(CURDATE(), INTERVAL 60 DAY) 
-                AND DATE_SUB(CURDATE(), INTERVAL 30 DAY)
-            )
-            SELECT 
-                avg_order_value,
-                prev_avg_order_value,
-                (total_acquisition_cost / total_orders) as cac,
-                (prev_total_acquisition_cost / prev_total_orders) as prev_cac,
-                (returns / total_orders * 100) as return_rate,
-                (prev_returns / prev_total_orders * 100) as prev_return_rate
-            FROM current_period, previous_period
-        `);
-
-        return {
-          revenueGrowth: {
-              growth: revenueGrowth[0]?.growth || 0
-          },
-          customerValue: {
-              avg_lifetime_value: customerValue[0]?.avg_lifetime_value || 0
-          },
-          conversionRate: {
-              conversion_rate: conversionRate[0]?.conversion_rate || 0
-          },
-          inventoryTurnover: {
-              turnover_rate: inventoryTurnover[0]?.turnover_rate || 0
-          },
-          salesPerformance: salesPerformance || [],
-          customerBehavior: customerBehavior || [],
-          inventoryTrends: inventoryTrends || [],
-          channelDistribution: channelDistribution || [],
-          kpiMetrics: kpiMetrics[0] || {}
+      // Initialize analytics object
+      const analytics = {
+        revenueGrowth: { growth: 0 },
+        customerLifetimeValue: { value: 0, change: 0 },
+        conversionRate: { rate: 0, change: 0 },
+        inventoryTurnover: { value: 0, target: 0 },
+        averageOrderValue: { current: 0, previous: 0 },
+        customerAcquisitionCost: { current: 0, previous: 0 },
+        returnRate: { current: 0, previous: 0 },
+        salesPerformance: { revenue: [], target: [], labels: [] },
+        customerBehavior: { new: [], returning: [], labels: [] },
+        inventoryTrends: { stockLevel: [], labels: [] },
+        channelDistribution: { data: [], labels: [] }
       };
+  
+      // Calculate current quarter and previous quarter dates
+      const currentDate = new Date();
+      const currentQuarterStart = new Date(currentDate.getFullYear(), Math.floor(currentDate.getMonth() / 3) * 3, 1);
+      const previousQuarterStart = new Date(currentQuarterStart);
+      previousQuarterStart.setMonth(previousQuarterStart.getMonth() - 3);
+      
+      // Format dates for MySQL queries
+      const currentQuarterStartFormatted = currentQuarterStart.toISOString().split('T')[0];
+      const previousQuarterStartFormatted = previousQuarterStart.toISOString().split('T')[0];
+      const currentDateFormatted = currentDate.toISOString().split('T')[0];
+  
+      // 1. Revenue Growth (Current Quarter vs Previous Quarter)
+      const [revenueResults] = await connection.query(`
+        SELECT 
+          SUM(CASE WHEN order_date >= ? AND order_date <= ? THEN total_amount ELSE 0 END) as current_revenue,
+          SUM(CASE WHEN order_date >= ? AND order_date < ? THEN total_amount ELSE 0 END) as previous_revenue
+        FROM user_order
+        WHERE order_status = 'delivered'
+      `, [currentQuarterStartFormatted, currentDateFormatted, previousQuarterStartFormatted, currentQuarterStartFormatted]);
+      
+      const currentRevenue = revenueResults[0].current_revenue || 0;
+      const previousRevenue = revenueResults[0].previous_revenue || 0;
+      
+      analytics.revenueGrowth.growth = previousRevenue > 0 
+        ? ((currentRevenue - previousRevenue) / previousRevenue) * 100 
+        : 0;
+  
+      // 2. Customer Lifetime Value
+      const [clvResults] = await connection.query(`
+        SELECT AVG(total_amount) as avg_order_value, 
+               COUNT(DISTINCT user_id) as customer_count,
+               COUNT(*) as order_count
+        FROM user_order
+        WHERE order_status = 'delivered'
+      `);
+
+      const avgOrderValue = clvResults[0].avg_order_value || 0;
+      const avgOrdersPerCustomer = clvResults[0].customer_count > 0 
+        ? clvResults[0].order_count / clvResults[0].customer_count 
+        : 0;
+
+      const currentCLV = Math.round(avgOrderValue * avgOrdersPerCustomer);
+      // Fetch historical CLV data (e.g., previous quarter)
+      const [historicalClvResults] = await connection.query(`
+        SELECT AVG(total_amount) as avg_order_value, 
+              COUNT(DISTINCT user_id) as customer_count,
+              COUNT(*) as order_count
+        FROM user_order
+        WHERE order_status = 'delivered'
+          AND order_date >= DATE_SUB(CURDATE(), INTERVAL 6 MONTH) -- Adjust the time period as needed
+          AND order_date < DATE_SUB(CURDATE(), INTERVAL 1 DAY) -- Adjust the time period as needed
+      `);
+
+      const historicalAvgOrderValue = historicalClvResults[0].avg_order_value || 0;
+      const historicalAvgOrdersPerCustomer = historicalClvResults[0].customer_count > 0 
+        ? historicalClvResults[0].order_count / historicalClvResults[0].customer_count 
+        : 0;
+
+      const previousCLV = Math.round(historicalAvgOrderValue * historicalAvgOrdersPerCustomer);
+
+      // Calculate the change in CLV
+      let clvChange = 0;
+      if (previousCLV > 0) {
+        clvChange = ((currentCLV - previousCLV) / previousCLV) * 100;
+      }
+
+      // Update the analytics object
+      analytics.customerLifetimeValue.value = currentCLV;
+      analytics.customerLifetimeValue.change = parseFloat(clvChange.toFixed(2)); // Round to 2 decimal 
+  
+      // 8. Chart Data: Monthly Sales Performance (Last 6 months)
+      const [monthlyRevenueResults] = await connection.query(`
+        SELECT
+          DATE_FORMAT(order_date, '%b') as month,
+          SUM(total_amount) as revenue
+        FROM
+          user_order
+        WHERE
+          order_status = 'delivered'
+          AND order_date >= DATE_SUB(CURDATE(), INTERVAL 6 MONTH)
+        GROUP BY
+          DATE_FORMAT(order_date, '%Y-%m'), DATE_FORMAT(order_date, '%b')
+        ORDER BY
+          MIN(order_date)
+      `);
+      
+      // Generate labels and data for charts
+      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+      const today = new Date();
+      const currentMonth = today.getMonth();
+      
+      for (let i = 5; i >= 0; i--) {
+        const monthIndex = (currentMonth - i + 12) % 12;
+        analytics.salesPerformance.labels.push(months[monthIndex]);
+        
+        // Find data for this month or use 0
+        const monthData = monthlyRevenueResults.find(row => row.month === months[monthIndex]);
+        analytics.salesPerformance.revenue.push(monthData ? Math.round(monthData.revenue) : 0);
+        analytics.salesPerformance.target.push(Math.round((monthData ? monthData.revenue : 40000) * 0.9));
+      }
+  
+      // Render the dashboard with the analytics data
+      res.render('dashboard-analytics', { 
+        analytics,
+        title: 'Analytics Dashboard'
+      });
+      
     } catch (error) {
-        console.error('Error fetching analytics data:', error);
-        throw error;
+      console.error('Error fetching analytics data:', error);
+      res.status(500).render('error', { 
+        message: 'Failed to load analytics data',
+        error 
+      });
+    } finally {
+      // Release connection back to pool
+      connection.release();
     }
   }
+
+  // CUSTOMERS DASHBOARD 
+  async getCustomersData(req, res) {
+    try {
+      const connection = await db.getConnection();
+      
+      try {
+
+        // Get current page from query parameter
+        const page = parseInt(req.query.page) || 1;
+        const itemsPerPage = 10;
+        const offset = (page - 1) * itemsPerPage;
+
+        // 1. Fetch customer statistics
+        // Total customers
+        const [totalCustomersRows] = await connection.query('SELECT COUNT(*) as total FROM user');
+        const totalCustomers = totalCustomersRows[0].total;
+        
+        // Active customers - users who placed orders in the last 30 days
+        const thirtyDaysAgo = moment().subtract(30, 'days').format('YYYY-MM-DD');
+        const [activeCustomersRows] = await connection.query(
+          'SELECT COUNT(DISTINCT user_id) as active FROM user_order WHERE order_date >= ?', 
+          [thirtyDaysAgo]
+        );
+        const activeCustomers = activeCustomersRows[0].active;
+  
+        // Calculate previous month stats for comparison
+        const previousMonthStart = moment().subtract(2, 'months').startOf('month').format('YYYY-MM-DD');
+        const previousMonthEnd = moment().subtract(1, 'months').endOf('month').format('YYYY-MM-DD');
+        const oneMonthAgo = moment().subtract(1, 'months').endOf('month').format('YYYY-MM-DD');
+        
+        const [previousMonthTotalRows] = await connection.query(
+          'SELECT COUNT(*) as total FROM user WHERE created_at < ?', 
+          [oneMonthAgo]
+        );
+        const previousMonthTotalCustomers = previousMonthTotalRows[0].total;
+        
+        const [previousMonthActiveRows] = await connection.query(
+          'SELECT COUNT(DISTINCT user_id) as active FROM user_order WHERE order_date BETWEEN ? AND ?', 
+          [previousMonthStart, previousMonthEnd]
+        );
+        const previousMonthActiveCustomers = previousMonthActiveRows[0].active;
+  
+        // Calculate growth percentages
+        const totalGrowthPercent = previousMonthTotalCustomers > 0 
+          ? (((totalCustomers - previousMonthTotalCustomers) / previousMonthTotalCustomers) * 100).toFixed(1)
+          : 0;
+          
+        const activeGrowthPercent = previousMonthActiveCustomers > 0
+          ? (((activeCustomers - previousMonthActiveCustomers) / previousMonthActiveCustomers) * 100).toFixed(1)
+          : 0;
+  
+        // 2. Calculate retention rate
+        // Find customers who ordered both this month and last month
+        const thisMonthStart = moment().startOf('month').format('YYYY-MM-DD');
+        const lastMonthStart = moment().subtract(1, 'months').startOf('month').format('YYYY-MM-DD');
+        const lastMonthEnd = moment().subtract(1, 'months').endOf('month').format('YYYY-MM-DD');
+        
+        const [thisMonthCustomers] = await connection.query(
+          'SELECT DISTINCT user_id FROM user_order WHERE order_date >= ?',
+          [thisMonthStart]
+        );
+        
+        const [lastMonthCustomers] = await connection.query(
+          'SELECT DISTINCT user_id FROM user_order WHERE order_date BETWEEN ? AND ?',
+          [lastMonthStart, lastMonthEnd]
+        );
+        
+        const thisMonthCustomerIds = thisMonthCustomers.map(c => c.user_id);
+        const lastMonthCustomerIds = lastMonthCustomers.map(c => c.user_id);
+        
+        // Count how many of last month's customers also ordered this month
+        const returnedCustomers = lastMonthCustomerIds.filter(id => thisMonthCustomerIds.includes(id));
+        const retentionRate = lastMonthCustomerIds.length > 0 
+          ? Math.round((returnedCustomers.length / lastMonthCustomerIds.length) * 100) 
+          : 0;
+        
+        // Calculate previous retention rate for comparison
+        const twoMonthsAgoStart = moment().subtract(2, 'months').startOf('month').format('YYYY-MM-DD');
+        const twoMonthsAgoEnd = moment().subtract(2, 'months').endOf('month').format('YYYY-MM-DD');
+        
+        const [twoMonthsAgoCustomers] = await connection.query(
+          'SELECT DISTINCT user_id FROM user_order WHERE order_date BETWEEN ? AND ?',
+          [twoMonthsAgoStart, twoMonthsAgoEnd]
+        );
+        
+        const twoMonthsAgoCustomerIds = twoMonthsAgoCustomers.map(c => c.user_id);
+        const previousReturnedCustomers = twoMonthsAgoCustomerIds.filter(id => lastMonthCustomerIds.includes(id));
+        const previousRetentionRate = twoMonthsAgoCustomerIds.length > 0 
+          ? Math.round((previousReturnedCustomers.length / twoMonthsAgoCustomerIds.length) * 100)
+          : 0;
+        
+        const retentionGrowthPercent = previousRetentionRate > 0
+          ? (((retentionRate - previousRetentionRate) / previousRetentionRate) * 100).toFixed(1)
+          : 0;
+  
+        // 3. Get top customers for the table
+        const [topCustomers] = await connection.query(`
+          SELECT 
+            u.id,
+            u.first_name,
+            u.last_name,
+            u.email,
+            COUNT(o.id) as totalOrders,
+            SUM(o.total_amount) as totalSpent,
+            MAX(o.order_date) as lastOrderDate
+          FROM 
+            user u
+          LEFT JOIN 
+            user_order o ON u.id = o.user_id
+          GROUP BY 
+            u.id
+          ORDER BY 
+            totalOrders DESC
+          LIMIT ? OFFSET ?
+        `, [itemsPerPage, offset]);
+        // Get total number of customers for pagination
+        const [totalCustomersCount] = await connection.query(`
+          SELECT COUNT(*) as total FROM user
+        `);
+        const totalPages = Math.ceil(totalCustomersCount[0].total / itemsPerPage);
+    
+        // Format customer data for display
+        const customerList = topCustomers.map(customer => {
+          // Determine customer status
+          let status = 'Inactive';
+          const lastOrderDate = moment(customer.lastOrderDate);
+          
+          if (lastOrderDate.isAfter(moment().subtract(30, 'days'))) {
+            status = 'Active';
+          } else if (lastOrderDate.isAfter(moment().subtract(90, 'days'))) {
+            status = 'New';
+          }
+          
+          return {
+            name: `${customer.first_name} ${customer.last_name}`,
+            email: customer.email,
+            totalOrders: customer.totalOrders || 0,
+            totalSpent: `₱${parseFloat(customer.totalSpent || 0).toLocaleString('en-PH', {
+              minimumFractionDigits: 2,
+              maximumFractionDigits: 2
+            })}`,
+            lastOrder: customer.lastOrderDate ? moment(customer.lastOrderDate).format('MMM D, YYYY') : 'Never',
+            status: status
+          };
+        });
+  
+        // 4. Get customer growth data for chart
+        const months = getLastSixMonths();
+        const growthData = [];
+        
+        for (let i = 0; i < 6; i++) {
+          const startDate = moment().subtract(5 - i, 'months').startOf('month').format('YYYY-MM-DD');
+          const endDate = moment().subtract(5 - i, 'months').endOf('month').format('YYYY-MM-DD');
+          
+          const [newCustomersResult] = await connection.query(
+            'SELECT COUNT(*) as count FROM user WHERE created_at BETWEEN ? AND ?',
+            [startDate, endDate]
+          );
+          
+          growthData.push(newCustomersResult[0].count);
+        }
+  
+        // 5. Get customer segments data for chart
+        const now = moment().format('YYYY-MM-DD');
+        const ninetyDaysAgo = moment().subtract(90, 'days').format('YYYY-MM-DD');
+        const oneEightyDaysAgo = moment().subtract(180, 'days').format('YYYY-MM-DD');
+        
+        // Premium customers (spent over ₱20,000 in last 90 days)
+        const [premiumCustomers] = await connection.query(`
+          SELECT user_id
+          FROM user_order
+          WHERE order_date >= ?
+          GROUP BY user_id
+          HAVING SUM(total_amount) > 20000
+        `, [ninetyDaysAgo]);
+        
+        // Regular customers (active but not premium)
+        const premiumIds = premiumCustomers.map(c => c.user_id).join(',');
+        let regularQuery = `
+          SELECT DISTINCT user_id
+          FROM user_order
+          WHERE order_date >= ?
+        `;
+        
+        if (premiumIds.length > 0) {
+          regularQuery += ` AND user_id NOT IN (${premiumIds})`;
+        }
+        
+        const [regularCustomers] = await connection.query(regularQuery, [ninetyDaysAgo]);
+        
+        // New customers (registered in last 90 days)
+        const [newCustomersResult] = await connection.query(
+          'SELECT COUNT(*) as count FROM user WHERE created_at >= ?',
+          [ninetyDaysAgo]
+        );
+        const newCustomers = newCustomersResult[0].count;
+        
+        // Inactive customers (no orders in 180 days but have placed orders before)
+        const activeUserIds = [...premiumCustomers, ...regularCustomers].map(c => c.user_id);
+        let inactiveQuery = `
+          SELECT DISTINCT user_id
+          FROM user_order
+          WHERE order_date < ?
+        `;
+        
+        if (activeUserIds.length > 0) {
+          inactiveQuery += ` AND user_id NOT IN (${activeUserIds.join(',')})`;
+        }
+        
+        const [inactiveCustomers] = await connection.query(inactiveQuery, [oneEightyDaysAgo]);
+        
+        const segmentData = [
+          regularCustomers.length,
+          newCustomers,
+          inactiveCustomers.length
+        ];
+  
+        // Render the view with all the data
+        res.render('dashboard-customers', {
+          stats: {
+            totalCustomers: {
+              value: totalCustomers.toLocaleString(),
+              growth: totalGrowthPercent,
+              trend: totalGrowthPercent >= 0 ? 'up' : 'down'
+            },
+            activeCustomers: {
+              value: activeCustomers.toLocaleString(),
+              growth: activeGrowthPercent,
+              trend: activeGrowthPercent >= 0 ? 'up' : 'down'
+            },
+            retention: {
+              value: `${retentionRate}%`,
+              growth: retentionGrowthPercent,
+              trend: retentionGrowthPercent >= 0 ? 'up' : 'down'
+            }
+          },
+          customerList: customerList,
+          pagination: {
+            currentPage: page,
+            totalPages: totalPages,
+            hasNext: page < totalPages,
+            hasPrev: page > 1
+          },
+          chartData: {
+            growth: {
+              labels: months,
+              data: growthData
+            },
+            segments: {
+              labels: ['Regular', 'New', 'Inactive'],
+              data: segmentData
+            }
+          }
+        });
+        
+      } finally {
+        // Always release the connection back to the pool
+        connection.release();
+      }
+      
+    } catch (error) {
+      console.error('Error in customer dashboard:', error);
+      res.status(500).render('error', { 
+        message: 'Error loading customer dashboard', 
+        error: process.env.NODE_ENV === 'development' ? error : {} 
+      });
+    }
+  }
+
+
+
   
 }
 

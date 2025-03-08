@@ -11,6 +11,36 @@ document.querySelectorAll('input[type="checkbox"][name="weights"]').forEach(chec
         });
     });
 });
+
+document.querySelector('.cat-filter').addEventListener('change', function () {
+    let selectedCategory = this.value.toLowerCase();
+    document.querySelectorAll('.product-card').forEach(card => {
+        let productCategory = card.getAttribute('data-product-category').toLowerCase();
+        if (selectedCategory === 'all-category' || productCategory === selectedCategory) {
+            card.style.display = 'block';
+        } else {
+            card.style.display = 'none';
+        }
+    });
+});
+
+
+const productFilter = document.querySelector('.pro-filter');
+const activeProduct = productFilter.value;
+
+const filterProducts = (selectedStatus) => {
+    document.querySelectorAll('.product-card').forEach(card => {
+        const isDeleted = card.getAttribute('data-deleted-product') === '1';
+        card.style.display = (selectedStatus === '0' && !isDeleted) || (selectedStatus === '1' && isDeleted) ? 'block' : 'none';
+    });
+};
+
+filterProducts(activeProduct);
+productFilter.addEventListener('change', function () {
+    filterProducts(this.value); // Apply the filter when the dropdown value changes
+});
+
+
 // Show/hide modals
 function showModal(modalId) {
     const modal = document.getElementById(modalId);
@@ -208,16 +238,41 @@ document.querySelectorAll('.delete-product').forEach(button => {
                         showNotification();
                     } else {
                         // Handle failure case
-                        alert('Failed to delete product. Please try again.');
+                        Toast.show('Failed to delete product. Please try again.');
                     }
                 })
                 .catch(error => {
                     console.error('Error:', error);
-                    alert('Failed to delete product. Please try again.');
+                    Toast.show('Failed to delete product. Please try again.');
                 });
 
             // Close the modal
             hideModal('deleteModal');
         });
+    });
+});
+
+document.querySelectorAll('.return-product').forEach(button => {
+    button.addEventListener('click', function () {
+        const productId = this.dataset.id;
+        if (confirm('Are you sure you want to return this product?')) {
+            fetch(`/dashboard/products/${productId}/return`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    Toast.show('Product have been returned successfully!', 'success', () => {
+                        window.location.reload();
+                    });
+                } else {
+                    Toast.show('Failed to return product. Please try again.', 'error');
+                }
+            })
+            .catch(error => console.error('Error:', error));
+        }
     });
 });

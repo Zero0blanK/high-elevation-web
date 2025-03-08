@@ -1,8 +1,9 @@
 :root {
-    --primary-color: #4361ee;
-    --secondary-color: #3f37c9;
-    --light-text: #6c757d;
     --dark-text: #212529;
+    --primary-color: #6F4E37;
+    --secondary-color: #B87333;
+    --accent-color: #c8832e;
+    --light-text: #2c3e50;
     --background-color: #f8f9fa;
     --card-color: #ffffff;
     --border-radius: 12px;
@@ -23,7 +24,7 @@ body {
     grid-template-columns: 280px 1fr;
     gap: 24px;
     max-width: 1500px;
-    margin-top: 96px;
+    margin-top: 26px;
     margin-left: auto;
     margin-right: auto;
     margin-bottom: 20px;

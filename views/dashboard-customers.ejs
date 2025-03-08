@@ -22,24 +22,30 @@
                         <span class="stat-title">Total Customers</span>
                         <i class="fas fa-users stat-icon" style="color: #8b5cf6;"></i>
                     </div>
-                    <div class="stat-value">1,245</div>
-                    <div class="stat-trend trend-up">+12.5% from last month</div>
+                    <div class="stat-value"><%= stats.totalCustomers.value %></div>
+                    <div class="stat-trend trend-<%= stats.totalCustomers.trend %>">
+                        <%= stats.totalCustomers.growth >= 0 ? '+' : '' %><%= stats.totalCustomers.growth %>% from last month
+                    </div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-header">
                         <span class="stat-title">Active Customers</span>
                         <i class="fas fa-user-check stat-icon" style="color: #10b981;"></i>
                     </div>
-                    <div class="stat-value">856</div>
-                    <div class="stat-trend trend-up">+8.2% from last month</div>
+                    <div class="stat-value"><%= stats.activeCustomers.value %></div>
+                    <div class="stat-trend trend-<%= stats.activeCustomers.trend %>">
+                        <%= stats.activeCustomers.growth >= 0 ? '+' : '' %><%= stats.activeCustomers.growth %>% from last month
+                    </div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-header">
                         <span class="stat-title">Customer Retention</span>
                         <i class="fas fa-user-shield stat-icon" style="color: #3b82f6;"></i>
                     </div>
-                    <div class="stat-value">78%</div>
-                    <div class="stat-trend trend-up">+5.3% from last month</div>
+                    <div class="stat-value"><%= stats.retention.value %></div>
+                    <div class="stat-trend trend-<%= stats.retention.trend %>">
+                        <%= stats.retention.growth >= 0 ? '+' : '' %><%= stats.retention.growth %>% from last month
+                    </div>
                 </div>
             </div>
 
@@ -58,33 +64,72 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr>
-                            <td>John Doe</td>
-                            <td>john@example.com</td>
-                            <td>15</td>
-                            <td>₱25,600</td>
-                            <td>Feb 1, 2024</td>
-                            <td><span class="status-badge status-delivered">Active</span></td>
-                        </tr>
-                        <tr>
-                            <td>Jane Smith</td>
-                            <td>jane@example.com</td>
-                            <td>8</td>
-                            <td>₱12,400</td>
-                            <td>Jan 28, 2024</td>
-                            <td><span class="status-badge status-processing">New</span></td>
-                        </tr>
-                        <tr>
-                            <td>Mike Johnson</td>
-                            <td>mike@example.com</td>
-                            <td>12</td>
-                            <td>₱18,900</td>
-                            <td>Feb 3, 2024</td>
-                            <td><span class="status-badge status-shipped">Active</span></td>
-                        </tr>
+                        <% customerList.forEach(customer => { %>
+                            <tr>
+                                <td><%= customer.name %></td>
+                                <td><%= customer.email %></td>
+                                <td><%= customer.totalOrders %></td>
+                                <td><%= customer.totalSpent %></td>
+                                <td><%= customer.lastOrder %></td>
+                                <td>
+                                    <% let statusClass = 'status-delivered'; %>
+                                    <% if (customer.status === 'New') statusClass = 'status-processing'; %>
+                                    <% if (customer.status === 'Inactive') statusClass = 'status-cancelled'; %>
+                                    <span class="status-badge <%= statusClass %>"><%= customer.status %></span>
+                                </td>
+                            </tr>
+                        <% }); %>
                     </tbody>
                 </table>
             </div>
+
+            <!-- Pagination Controls -->
+            <% if (pagination && pagination.totalPages > 1) { %>
+                <div class="pagination">
+                    <% if (pagination.hasPrev) { %>
+                        <a href="?page=<%= pagination.currentPage - 1 %>" class="pagination-btn">&laquo; Previous</a>
+                    <% } else { %>
+                        <span class="pagination-btn disabled">&laquo; Previous</span>
+                    <% } %>
+                    
+                    <% 
+                    // Show a limited number of page buttons
+                    let startPage = Math.max(1, pagination.currentPage - 2);
+                    let endPage = Math.min(pagination.totalPages, pagination.currentPage + 2);
+                    
+                    // Always show first page
+                    if (startPage > 1) { %>
+                        <a href="?page=1" class="pagination-btn">1</a>
+                        <% if (startPage > 2) { %>
+                            <span class="pagination-ellipsis">...</span>
+                        <% } %>
+                    <% } %>
+                    
+                    <% for(let i = startPage; i <= endPage; i++) { %>
+                        <% if (i === pagination.currentPage) { %>
+                            <span class="pagination-btn active"><%= i %></span>
+                        <% } else { %>
+                            <a href="?page=<%= i %>" class="pagination-btn"><%= i %></a>
+                        <% } %>
+                    <% } %>
+                    
+                    <% // Always show last page
+                    if (endPage < pagination.totalPages) { %>
+                        <% if (endPage < pagination.totalPages - 1) { %>
+                            <span class="pagination-ellipsis">...</span>
+                        <% } %>
+                        <a href="?page=<%= pagination.totalPages %>" class="pagination-btn"><%= pagination.totalPages %></a>
+                    <% } %>
+                    
+                    <% if (pagination.hasNext) { %>
+                        <a href="?page=<%= pagination.currentPage + 1 %>" class="pagination-btn">Next &raquo;</a>
+                    <% } else { %>
+                        <span class="pagination-btn disabled">Next &raquo;</span>
+                    <% } %>
+                    
+                    <span class="pagination-info">Page <%= pagination.currentPage %> of <%= pagination.totalPages %></span>
+                </div>
+            <% } %>
 
             <!-- Customer Analytics -->
             <div class="customer-analytics">
@@ -110,10 +155,10 @@
         new Chart(growthCtx, {
             type: 'line',
             data: {
-                labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+                labels: <%- JSON.stringify(chartData.growth.labels) %>,
                 datasets: [{
                     label: 'New Customers',
-                    data: [45, 52, 48, 58, 62, 65],
+                    data: <%- JSON.stringify(chartData.growth.data) %>,
                     borderColor: '#4f46e5',
                     tension: 0.3,
                     fill: false
@@ -135,9 +180,9 @@
         new Chart(segmentsCtx, {
             type: 'doughnut',
             data: {
-                labels: ['Premium', 'Regular', 'New', 'Inactive'],
+                labels: <%- JSON.stringify(chartData.segments.labels) %>,
                 datasets: [{
-                    data: [30, 45, 15, 10],
+                    data: <%- JSON.stringify(chartData.segments.data) %>,
                     backgroundColor: [
                         '#4f46e5',
                         '#3b82f6',

@@ -175,7 +175,7 @@ body {
 /* Enhanced Stats Grid */
 .stats-grid {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(3, 1fr);
     gap: 24px;
     margin-bottom: 24px;
 }
@@ -337,6 +337,11 @@ body {
 .product-item:hover {
     background: var(--primary-light);
     transform: translateX(4px);
+}
+
+.return-product {
+    background-color: #4CAF50;
+    color: white;
 }
 
 .product-dot {
@@ -1166,6 +1171,72 @@ input[type="file"] {
 
 
 /* Additional styles specific to the customer page */
+/* Pagination Styles */
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-top: 20px;
+    flex-wrap: wrap;
+}
+
+.pagination-btn {
+    padding: 8px 12px;
+    margin: 0 4px;
+    border: 1px solid #ddd;
+    color: #333;
+    text-decoration: none;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: background-color 0.2s, color 0.2s;
+    font-size: 14px;
+}
+
+.pagination-btn:hover {
+    background-color: #f5f5f5;
+}
+
+.pagination-btn.active {
+    background-color: #4CAF50;
+    color: white;
+    border-color: #4CAF50;
+}
+
+.pagination-btn.disabled {
+    color: #999;
+    cursor: not-allowed;
+    background-color: #f9f9f9;
+}
+
+.pagination-info {
+    margin-left: 15px;
+    color: #666;
+    font-size: 14px;
+}
+
+.pagination-ellipsis {
+    margin: 0 4px;
+    color: #666;
+}
+
+@media (max-width: 768px) {
+    .pagination {
+        justify-content: center;
+    }
+    
+    .pagination-btn {
+        padding: 6px 10px;
+        margin: 2px;
+    }
+    
+    .pagination-info {
+        width: 100%;
+        text-align: center;
+        margin-top: 10px;
+        margin-left: 0;
+    }
+}
+
 .customer-stats {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
@@ -1235,7 +1306,7 @@ input[type="file"] {
 
 .metrics-grid {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(2, 1fr);
     gap: 24px;
     margin-bottom: 24px;
 }

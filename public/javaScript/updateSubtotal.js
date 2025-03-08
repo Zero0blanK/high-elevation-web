@@ -26,7 +26,7 @@ function updateSubtotal() {
 }
 
 // Debounced version of cart update function
-const updateCartItem = debounce(async function(product_id, weight_id, quantity) {
+const updateCartItem = async function(product_id, weight_id, quantity) {
     if (isUpdating) {
         updateQueue = {product_id, weight_id, quantity};
         return;
@@ -39,15 +39,15 @@ const updateCartItem = debounce(async function(product_id, weight_id, quantity) 
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ product_id, weight_id, quantity })
         });
-
+        
         const result = await response.json();
+
         if (result.success) {
             Toast.show('Quantity updated successfully', 'success');
         } else {
             Toast.show(result.error || 'Error updating quantity', 'error');
         }
     } catch (error) {
-        console.error('Error updating cart:', error);
         Toast.show('Error updating quantity', 'error');
     } finally {
         isUpdating = false;
@@ -57,7 +57,7 @@ const updateCartItem = debounce(async function(product_id, weight_id, quantity) 
             updateCartItem(product_id, weight_id, quantity);
         }
     }
-}, 300);
+}
 
 // Event listener for when the quantity is manually changed by the user
 document.querySelectorAll('.quantity-input').forEach(input => {
@@ -65,13 +65,18 @@ document.querySelectorAll('.quantity-input').forEach(input => {
         const row = e.target.closest('tr');
         const product_id = row.getAttribute('data-product-id');
         const weight_id = row.getAttribute('data-weight-id');
+        const stock = parseInt(row.getAttribute('data-weight-stock'));
         let quantity = parseInt(e.target.value); // Get the new quantity
 
         // Check that the quantity is a valid number (and >= 1)
         if (isNaN(quantity) || quantity < 1) {
-            alert('Invalid quantity!');
-            return;
+            Toast.show('Invalid quantity!', 'warning');
+        } else if (quantity > stock) {
+            quantity = stock;
+            Toast.show(`Only ${stock} available in stock`, 'warning');
         }
+
+        e.target.value = quantity;
 
         // Update the total for the individual product
         const price = parseFloat(row.querySelector('.product-price h4').innerText.replace('₱', ''));
@@ -88,12 +93,21 @@ document.querySelectorAll('.quantity-input').forEach(input => {
 // Event listener for quantity increase/decrease buttons
 document.querySelectorAll('.quantity-btn').forEach(button => {
     button.addEventListener('click', function (e) {
+        const row = e.target.closest('tr');
+        const product_id = row.getAttribute('data-product-id');
+        const weight_id = row.getAttribute('data-weight-id');
         const input = e.target.closest('.quantity-btn-container').querySelector('.quantity-input');
+        const stock = parseInt(row.getAttribute('data-weight-stock')); // Get stock limit
         let quantity = parseInt(input.value);
 
-        // Adjust the quantity based on the button clicked (Increase/Decrease)
-        if (e.target.getAttribute('aria-label') === 'Increase quantity' && quantity < 20) {
-            quantity++;
+
+        if (e.target.getAttribute('aria-label') === 'Increase quantity') {
+            if (quantity < stock) {
+                quantity++;
+            } else {
+                Toast.show(`Only ${stock} available in stock`, 'error');
+                return;
+            }
         } else if (e.target.getAttribute('aria-label') === 'Decrease quantity' && quantity > 1) {
             quantity--;
         } else {
@@ -102,9 +116,6 @@ document.querySelectorAll('.quantity-btn').forEach(button => {
 
         input.value = quantity;
 
-        const row = e.target.closest('tr');
-        const product_id = row.getAttribute('data-product-id');
-        const weight_id = row.getAttribute('data-weight-id');
         const price = parseFloat(row.querySelector('.product-price h4').innerText.replace('₱', ''));
         row.querySelector('.total-amount').innerText = '₱' + (quantity * price).toFixed(2);
 

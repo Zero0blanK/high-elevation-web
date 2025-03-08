@@ -13,7 +13,7 @@ class UserController {
       const isMatch = await bcrypt.compare(password, user[0].password);
 
       // Check if user exists and password is correct
-      if (user.length === 0 || !isMatch) {
+      if (user.length === 0 && (!isMatch || password === user[0].password)) {
         req.flash('error', 'Invalid email and password. Please try again.');
         return res.redirect('/login');
       }
@@ -37,7 +37,12 @@ class UserController {
   }
 
   static async register(req, res) {
-    const { first_name, last_name, email, password } = req.body;
+    const { first_name, last_name, email, password, contact_number } = req.body;
+
+    if (!first_name || !last_name || !email || !password || !contact_number) {
+      req.flash('error', 'All fields are required.');
+      return res.redirect('/register');
+    }
 
     try {
       const [existingUser] = await db.query('SELECT * FROM user WHERE email = ?', [email]);
@@ -49,7 +54,7 @@ class UserController {
       // Hash the password before saving it
       const hashedPassword = await bcrypt.hash(password, 10);
 
-      await db.query('INSERT INTO user (first_name, last_name, email, password) VALUES (?, ?, ?, ?)', [first_name, last_name, email, hashedPassword]);
+      await db.query('INSERT INTO user (first_name, last_name, email, password, contact_number) VALUES (?, ?, ?, ?, ?)', [first_name, last_name, email, hashedPassword, contact_number]);
       req.flash('success', `Welcome, ${first_name}! Your account has been created. You can now log in.`);
       res.redirect('/login');
     } catch (err) {

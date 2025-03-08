@@ -21,32 +21,16 @@
                     <span class="stat-title">Revenue Growth</span>
                     <i class="fas fa-chart-line stat-icon" style="color: #10b981;"></i>
                 </div>
-                <div class="stat-value"><%= parseFloat(analytics.revenueGrowth.growth).toFixed(1) %>%</div>
-                <div class="stat-trend <%= parseFloat(analytics.revenueGrowth.growth) > 0 ? 'trend-up' : 'trend-down' %>">vs last quarter</div>
+                <div class="stat-value"><%= analytics.revenueGrowth.growth %>%</div>
+                <div class="stat-trend <%= parseInt(analytics.revenueGrowth.growth) > 0 ? 'trend-up' : 'trend-down' %>">vs last quarter</div>
             </div>
             <div class="stat-card">
                 <div class="stat-header">
                     <span class="stat-title">Customer Lifetime Value</span>
                     <i class="fas fa-user-tag stat-icon" style="color: #3b82f6;"></i>
                 </div>
-                <div class="stat-value"><%= parseFloat(analytics.customerLifetimeValue).toFixed(1) %></div>
-                <div class="stat-trend trend-up"><%= parseFloat(analytics.customerLifetimeValueGrowth).toFixed(1) %> from last year</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-header">
-                    <span class="stat-title">Conversion Rate</span>
-                    <i class="fas fa-exchange-alt stat-icon" style="color: #8b5cf6;"></i>
-                </div>
-                <div class="stat-value"><%= parseFloat(analytics.conversionRate).toFixed(1) %></div>
-                <div class="stat-trend trend-up"><%= parseFloat(analytics.conversionRateGrowth).toFixed(1) %> from last month</div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-header">
-                    <span class="stat-title">Inventory Turnover</span>
-                    <i class="fas fa-box-open stat-icon" style="color: #f59e0b;"></i>
-                </div>
-                <div class="stat-value"><%= parseFloat(analytics.inventoryTurnover).toFixed(1) %></div>
-                <div class="stat-trend trend-down"><%= parseFloat(analytics.inventoryTurnoverGrowth).toFixed(1) %> from last month</div>
+                <div class="stat-value"><%= analytics.customerLifetimeValue.value %></div>
+                <div class="stat-trend trend-up"><%= analytics.customerLifetimeValue.change %>% from last year</div>
             </div>
         </div>
     
@@ -59,72 +43,6 @@
                     <canvas id="salesPerformanceChart"></canvas>
                 </div>
             </div>
-    
-            <!-- Customer Behavior -->
-            <div class="chart-card">
-                <h3 class="chart-title">Customer Behavior Analysis</h3>
-                <div class="chart-container">
-                    <canvas id="customerBehaviorChart"></canvas>
-                </div>
-            </div>
-    
-            <!-- Inventory Trends -->
-            <div class="chart-card">
-                <h3 class="chart-title">Inventory Trends</h3>
-                <div class="chart-container">
-                    <canvas id="inventoryTrendsChart"></canvas>
-                </div>
-            </div>
-    
-            <!-- Sales Channel Distribution -->
-            <div class="chart-card analytics-full-width">
-                <h3 class="chart-title">Sales Channel Distribution</h3>
-                <div class="chart-container" style="height: 300px;">
-                    <canvas id="channelDistributionChart"></canvas>
-                </div>
-            </div>
-        </div>
-    
-        <!-- Detailed Metrics Table -->
-        <div class="orders-card">
-            <div class="orders-header">
-                <h3 class="orders-title">Key Performance Indicators</h3>
-                <div class="view-all">Last 30 Days</div>
-            </div>
-            <table class="orders-table">
-                <thead>
-                    <tr>
-                        <th>Metric</th>
-                        <th>Current Value</th>
-                        <th>Previous Period</th>
-                        <th>Change</th>
-                        <th>Status</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    <tr>
-                        <td>Average Order Value</td>
-                        <td>₱2,450</td>
-                        <td>₱2,280</td>
-                        <td><span class="trend-up">+7.4%</span></td>
-                        <td><span class="status-badge status-delivered">Above Target</span></td>
-                    </tr>
-                    <tr>
-                        <td>Customer Acquisition Cost</td>
-                        <td>₱850</td>
-                        <td>₱920</td>
-                        <td><span class="trend-up">-7.6%</span></td>
-                        <td><span class="status-badge status-delivered">Above Target</span></td>
-                    </tr>
-                    <tr>
-                        <td>Return Rate</td>
-                        <td>2.8%</td>
-                        <td>3.2%</td>
-                        <td><span class="trend-up">-0.4%</span></td>
-                        <td><span class="status-badge status-processing">On Target</span></td>
-                    </tr>
-                </tbody>
-            </table>
         </div>
     </main>
     
@@ -134,85 +52,25 @@
         new Chart(salesCtx, {
             type: 'line',
             data: {
-                labels: <%- JSON.stringify(analytics.salesPerformance.map(d => d.month)) %>,
-                datasets: [{
-                    label: 'Revenue',
-                    data: <%- JSON.stringify(analytics.salesPerformance.map(d => d.revenue)) %>,
-                    borderColor: '#4f46e5',
-                    tension: 0.3
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'bottom'
-                    }
-                }
-            }
-        });
-
-        // Customer Behavior Chart
-        const behaviorCtx = document.getElementById('customerBehaviorChart').getContext('2d');
-        new Chart(behaviorCtx, {
-            type: 'bar',
-            data: {
-                labels: <%- JSON.stringify(analytics.customerBehavior.map(d => d.month)) %>,
-                datasets: [{
-                    label: 'Revenue',
-                    data: <%- JSON.stringify(analytics.customerBehavior.map(d => d.revenue)) %>,
-                    borderColor: '#4f46e5',
-                    tension: 0.3
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'bottom'
-                    }
-                }
-            }
-        });
-
-        // Inventory Trends Chart
-        const inventoryCtx = document.getElementById('inventoryTrendsChart').getContext('2d');
-        new Chart(inventoryCtx, {
-            type: 'line',
-            data: {
-                labels: <%- JSON.stringify(analytics.inventoryTrends.map(d => d.month)) %>,
-                datasets: [{
-                    label: 'Revenue',
-                    data: <%- JSON.stringify(analytics.inventoryTrends.map(d => d.revenue)) %>,
-                    borderColor: '#4f46e5',
-                    tension: 0.3
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                plugins: {
-                    legend: {
-                        position: 'bottom'
-                    }
-                }
-            }
-        });
-
-        // Channel Distribution Chart
-        const channelCtx = document.getElementById('channelDistributionChart').getContext('2d');
-        new Chart(channelCtx, {
-            type: 'bar',
-            data: {
-                labels: <%- JSON.stringify(analytics.channelDistribution.map(d => d.month)) %>,
-                datasets: [{
-                    label: 'Revenue',
-                    data: <%- JSON.stringify(analytics.channelDistribution.map(d => d.revenue)) %>,
-                    borderColor: '#4f46e5',
-                    tension: 0.3
-                }]
+                <% if (analytics.salesPerformance && Array.isArray(analytics.salesPerformance.labels)) { %>
+                    labels: <%- JSON.stringify(analytics.salesPerformance.labels) %>,
+                    datasets: [{
+                      label: 'Revenue',
+                      data: <%- JSON.stringify(analytics.salesPerformance.revenue) %>,
+                    }, {
+                      label: 'Target',
+                      data: <%- JSON.stringify(analytics.salesPerformance.target) %>,
+                    }]
+                  <% } else { %>
+                    labels: [],
+                    datasets: [{
+                      label: 'Revenue',
+                      data: [],
+                    }, {
+                      label: 'Target',
+                      data: [],
+                    }]
+                <% } %>
             },
             options: {
                 responsive: true,

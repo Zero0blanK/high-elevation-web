@@ -57,7 +57,8 @@ class CartController {
               c.quantity, 
               p.name, 
               p.image_url, 
-              pw.price, 
+              pw.price,
+              pw.stock,
               w.value AS weight, 
               w.unit, 
               pc.name AS category_name
@@ -74,6 +75,7 @@ class CartController {
       // Ensure price is a number
       cartItems.forEach(item => {
         item.price = parseFloat(item.price);
+        item.stock = parseInt(item.stock);
       });
 
       let subtotal = 0;
@@ -117,15 +119,24 @@ class CartController {
     const { product_id, weight_id, quantity } = req.body;
     const user_id = req.session.userId;
 
+    const connection = await db.getConnection();
+
     try {
-      await db.query(
+      await connection.beginTransaction();
+
+      await connection.query(
         'UPDATE cart SET quantity = ? WHERE user_id = ? AND product_id = ? AND weight_id = ?',
         [quantity, user_id, product_id, weight_id]
       );
 
+      await connection.commit(); // �� Commit transaction
+      return res.json({ success: true, message: 'Quantity updated successfully' });
+
     } catch (err) {
+      await connection.rollback();
       console.error('Error updating quantity:', err.message);
-      res.status(500).json({ error: 'Error updating quantity' });
+    } finally {
+      connection.release();
     }
   }
 

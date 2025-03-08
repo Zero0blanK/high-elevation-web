@@ -15,7 +15,7 @@
 </head>
 <body>
     <%- include('./partials/navbar'); %>
-    
+    <%- include('./partials/toast'); %>
     <main class="main-content-container">
         <div class="container">
             <div class="cart-container">
@@ -34,39 +34,39 @@
                                 </thead>
                                 <tbody>
                                     <% cartItems.forEach(item=> { %>
-                                    <tr data-product-id="<%= item.product_id %>" data-weight-id="<%= item.weight_id %>">
-                                        <td>
-                                            <div class="product-thumbnail">
-                                                <a href="">
-                                                    <img src="<%= item.image_url %>" alt="">
-                                                </a>
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <div class="product-details">
-                                                <div class="product-title"><h3><%= item.name %></h3></div>
-                                                <div class="product-price" style="display: none;"><h4><%= item.price %></h4></div>
-                                                <div class="product-weight"><h4>Weight: </h4> <%= item.weight %><%= item.unit %></div>
-                                                <div class="product-flavor"><h4>Flavor: </h4> <%= item.category_name %></div>
-                                                <div class="product-roast-lvl"><h4>Roast Level:</h4> Medium-Dark</div>
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <div class="quantity-wrapper">
-                                                <div class="quantity-btn-container">
-                                                    <button type="button" class="quantity-btn" aria-label="Decrease quantity">-</button>
-                                                    <input type="number" class="quantity-input" value="<%= item.quantity %>" min="1">
-                                                    <button type="button" class="quantity-btn" aria-label="Increase quantity">+</button>
+                                        <tr data-product-id="<%= item.product_id %>" data-weight-id="<%= item.weight_id %>" data-weight-stock="<%= item.stock %>">
+                                            <td>
+                                                <div class="product-thumbnail">
+                                                    <a href="">
+                                                        <img src="<%= item.image_url %>" alt="">
+                                                    </a>
                                                 </div>
-                                                <button class="del-btn removeButton" type="button" ><img src="/assets/icons/delete.svg" alt=""></button>
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <div class="total-wrapper">
-                                                <div class="total-amount">₱<%= (item.quantity * item.price).toFixed(2) %></div>
-                                            </div>
-                                        </td>
-                                    </tr>
+                                            </td>
+                                            <td>
+                                                <div class="product-details">
+                                                    <div class="product-title"><h3><%= item.name %></h3></div>
+                                                    <div class="product-price" style="display: none;"><h4><%= item.price %></h4></div>
+                                                    <div class="product-weight"><h4>Weight: </h4> <%= item.weight %><%= item.unit %></div>
+                                                    <div class="product-flavor"><h4>Flavor: </h4> <%= item.category_name %></div>
+                                                    <div class="product-roast-lvl"><h4>Roast Level:</h4> Medium-Dark</div>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div class="quantity-wrapper">
+                                                    <div class="quantity-btn-container">
+                                                        <button type="button" class="quantity-btn" aria-label="Decrease quantity">-</button>
+                                                        <input type="number" class="quantity-input" value="<%= item.quantity %>" min="1">
+                                                        <button type="button" class="quantity-btn" aria-label="Increase quantity">+</button>
+                                                    </div>
+                                                    <button class="del-btn removeButton" type="button" ><img src="/assets/icons/delete.svg" alt=""></button>
+                                                </div>
+                                            </td>
+                                            <td>
+                                                <div class="total-wrapper">
+                                                    <div class="total-amount">₱<%= (item.quantity * item.price).toFixed(2) %></div>
+                                                </div>
+                                            </td>
+                                        </tr>
                                     <% }) %>
                                 </tbody>
                             </table>

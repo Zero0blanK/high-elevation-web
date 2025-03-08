@@ -6,7 +6,6 @@
     <title><% title %></title>
     <link rel="stylesheet" href="/css/pages/index.css">
     <link rel="stylesheet" href="/css/components/navbar.css">
-    <link rel="stylesheet" href="/css/components/card.css">
     <link rel="stylesheet" href="/css/components/footer.css">
     <script src="/javaScript/navbar/navToggle.js" defer></script>
     <script src="/javaScript/navbar/profile-icon-dropdown.js" defer></script>
@@ -14,84 +13,86 @@
 <body>
     <%- include('./partials/navbar'); %>
 
+    <!-- Hero Section -->
     <div class="bg"></div>
     <section class="hero-section">
         <div class="container">
             <div class="hero-content">
-            <h1>Start A Day With Coffee</h1>
-            <h3>COFFEE REDUCES THE RISK OF HEART DISEASE</h3>
-            <button type="button" class="btn">SHOP NOW</button>
+                <h1>Start A Day With Coffee</h1>
+                <h3>COFFEE REDUCES THE RISK OF HEART DISEASE</h3>
+                <a href="/shop" class="btn">SHOP NOW</a>
             </div>
         </div>
     </section>
-    <section class="content-section">
+
+    <!-- About Section -->
+    <section class="aboutus-section">
         <div class="container">
-            <div class="about-us-container">
-                <div class="about-image"><img src="assets/image/creamy-coffee.png" alt=""></div>
-                <div class="about-us-content">
-                    <h1>About Us</h1>
-                    <div class="v-divider"></div>
-                    <p>Everything we do is a matter of heart, body and soul. We strive to form profound partnerships with farmers from all over
-                    the world to create perspective together and form healthy working relationships built on trust and respect.</p>
-                    <button type="button" class="accent-btn">LEARN MORE</button>
+            <div class="about-container">
+                <div class="about-image">
+                    <img src="assets/image/creamy-coffee.png" alt="Creamy coffee in a white cup">
+                </div>
+                <div class="about-content">
+                    <h2>About Us</h2>
+                    <p>Everything we do is a matter of heart, body and soul. We strive to form profound partnerships with farmers from all over the world to create perspective together and form healthy working relationships built on trust and respect.</p>
+                    <p>Our coffee beans are sourced from high elevation regions, ensuring premium quality and rich flavors that make every cup an extraordinary experience.</p>
+                    <a href="/about" class="btn btn-outline">LEARN MORE</a>
                 </div>
             </div>
+        </div>
+    </section>
 
-            <div class="product-container">
-                <div class="product-card-content">
-                    <div class="title"><h1>HIGH ELEVATION PRODUCTS</h1></div>
-                    <div class="card-container">
-                        <div class="card">
-                            <div class="product-image"><img src="assets/product-image/product_sample.png" alt=""></div>
-                            <div class="product-title">Product Title</div>
-                            <div class="product-price">80php</div>
-                            <div class="card-hover-icons">
-                                <div class="icon-container">
-                                    <div class="icon"><img src="assets/icons/overview.svg" alt=""></div>
-                                    <div class="icon"><img src="assets/icons/addtocart.svg" alt=""></div>
-                                </div>
-                                <div class="available-size-container">100g | 500g | 1000g</div>
+    <!-- Products Section -->
+    <section class="products-section">
+        <div class="container">
+            <div class="section-header">
+                <h2>HIGH ELEVATION PRODUCTS</h2>
+                <p>Discover our premium selection of coffee beans from around the world</p>
+            </div>
+            <div class="product-grid">
+                <% product.forEach(product => { %>
+                    <div class="product-card" data-category="<%= product.category_name || 'coffee' %>">
+                        <div class="card-inner">
+                            <div class="card-badges">
+                                <% if (product.isNew) { %>
+                                    <span class="badge new">New</span>
+                                <% } %>
                             </div>
-                        </div>
-                        <div class="card">
-                            <div class="product-image"><img src="assets/product-image/product_sample.png" alt=""></div>
-                            <div class="product-title">Product Title</div>
-                            <div class="product-price">80php</div>
-                            <div class="card-hover-icons">
-                                <div class="icon-container">
-                                    <div class="icon"><img src="assets/icons/overview.svg" alt=""></div>
-                                    <div class="icon"><img src="assets/icons/addtocart.svg" alt=""></div>
+                            
+                            <a href="/product/overview/<%= encodeURIComponent(product.name) %>" class="product-link">
+                                <div class="product-image">
+                                    <img src="<%= product.image_url %>" alt="<%= product.name %>">
                                 </div>
-                                <div class="available-size-container">100g | 500g | 1000g</div>
-                            </div>
-                        </div>
-                        <div class="card">
-                            <div class="product-image"><img src="assets/product-image/product_sample.png" alt=""></div>
-                            <div class="product-title">Product Title</div>
-                            <div class="product-price">80php</div>
-                            <div class="card-hover-icons">
-                                <div class="icon-container">
-                                    <div class="icon"><img src="assets/icons/overview.svg" alt=""></div>
-                                    <div class="icon"><img src="assets/icons/addtocart.svg" alt=""></div>
+                                
+                                <div class="product-info">
+                                    <h3 class="product-title"><%= product.name %></h3>
+                                    <div class="product-price">
+                                        <% if (product.original_price && product.original_price > product.lowest_price) { %>
+                                            <span class="original-price">₱<%= product.original_price %></span>
+                                        <% } %>
+                                        <span class="current-price">₱<%= product.lowest_price %></span>
+                                    </div>
                                 </div>
-                                <div class="available-size-container">100g | 500g | 1000g</div>
-                            </div>
-                        </div>
-                        <div class="card">
-                            <div class="product-image"><img src="assets/product-image/product_sample.png" alt=""></div>
-                            <div class="product-title">Product Title</div>
-                            <div class="product-price">80php</div>
-                            <div class="card-hover-icons">
-                                <div class="icon-container">
-                                    <div class="icon"><img src="assets/icons/overview.svg" alt=""></div>
-                                    <div class="icon"><img src="assets/icons/addtocart.svg" alt=""></div>
+                            </a>
+                            
+                            <div class="product-actions">
+                                <div class="available-sizes">
+                                    <% if (product.weight_variants) { %>
+                                        <div class="size-variants">
+                                            <% let weightVariants = JSON.parse('[' + product.weight_variants + ']'); %>
+                                            <% weightVariants.forEach((variant) => { %>
+                                                <span class="size-chip"><%= variant.weight %><%= variant.unit %></span>
+                                            <% }); %>
+                                        </div>
+                                    <% } %>
                                 </div>
-                                <div class="available-size-container">100g | 500g | 1000g</div>
                             </div>
                         </div>
                     </div>
-                    <button type="button" class="btn btn-wide product">VIEW ALL PRODUCT</button>
-                </div>
+                <% }) %>
+            </div>
+            <div class="view-all">
+                <a href="/product" class="btn">VIEW ALL PRODUCTS</a>
             </div>
         </div>
     </section>

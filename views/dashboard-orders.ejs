@@ -5,9 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Orders Dashboard</title>
     <link rel="stylesheet" href="/css/components/dashboard.css">
-
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/css/components/toast.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.0/chart.min.js" defer></script>
+    <script src="/javaScript/toast.js" defer></script>
 </head>
 <body>
     <%- include('./partials/toast'); %>
@@ -62,7 +63,6 @@
                                     <td>
                                         <div class="order-actions">
                                             <button class="action-btn accept-btn" onclick="viewOrder('<%= order.order_id %>')">View</button>
-                                            <button class="action-btn delete-btn" onclick="deleteOrder('<%= order.order_id %>')">Delete</button>
                                         </div>
                                     </td>
                                 </tr>
@@ -195,6 +195,9 @@
                         <button type="submit" class="btn btn-ship" onclick="updateUserOrderStatus('shipped')">
                             <i class="fas fa-shipping-fast"></i> Ship Order
                         </button>
+                        <button type="submit" class="btn btn-delivered" onclick="updateUserOrderStatus('delivered')">
+                            <i class="fas fa-truck"></i> Deliver Order
+                        </button>
                         <button type="button" class="btn btn-cancel" onclick="closeModal()">
                             <i class="fas fa-times"></i> Close
                         </button>
@@ -241,14 +244,18 @@
                     // Show/hide accept button based on shipping_status
                     const acceptButton = document.querySelector('.btn-accept');
                     const shipButton = document.querySelector('.btn-ship');
+                    const deliveredButton = document.querySelector('.btn-delivered');
 
                     shipButton.style.display = 'none';
                     acceptButton.style.display = 'none';
+                    deliveredButton.style.display = 'none';
 
                     if (order.shipping_status === 'pending') {
                         acceptButton.style.display = 'block';
                     } else if (order.shipping_status === 'processing') {
                         shipButton.style.display = 'block';
+                    } else if (order.shipping_status === 'shipped') {
+                        deliveredButton.style.display = 'block';
                     } else {
                         acceptButton.style.display = 'none';
                         shipButton.style.display = 'none';
@@ -260,7 +267,7 @@
         async function updateUserOrderStatus(status) {
             try {
                 if (!currentOrderId) {
-                    alert("No order selected");
+                    Toast.show("No order selected", 'error');
                     return;
                 }
     
@@ -278,11 +285,12 @@
                 const result = await response.json();
     
                 if (result.success) {
-                    alert(result.message);
                     modal.style.display = "none";
-                    window.location.reload();
+                    Toast.show(result.message, 'success', () => {
+                        window.location.reload();
+                    }) ;
                 } else {
-                    alert(result.error || "Error updating order status");
+                    Toast.show(result.error, 'error');
                 }
             } catch (error) {
                 console.error('Error updating order status:', error);

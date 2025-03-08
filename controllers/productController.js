@@ -13,6 +13,7 @@ class ProductController {
             p.image_url, 
             p.description, 
             pc.name AS category_name, 
+            p.is_deleted,
             p.total_stock,
             (SELECT pw.price 
                 FROM product_weight pw 
@@ -26,7 +27,8 @@ class ProductController {
                 'price', pw.price, 
                 'stock', pw.stock,
                 'weight_id', pw.weight_id
-            )) AS weight_variants
+            ) SEPARATOR ','
+        ) AS weight_variants
         FROM product p
         JOIN product_category pc ON p.category_id = pc.id
         LEFT JOIN product_weight pw ON p.id = pw.product_id

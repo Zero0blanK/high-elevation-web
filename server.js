@@ -48,11 +48,8 @@ app.use('/', dashboardRoutes);
 const cartRoutes = require('./routes/cartRoutes');
 app.use('/', cartRoutes);
 
-// ✅ Home route (renders index.ejs)
-app.get('/', (req, res) => {
-    res.render('index', { 
-      title: 'Welcome to High Elevation Web' });
-});
+const indexRoutes = require('./routes/indexRoutes');
+app.use('/', indexRoutes);
 
 // Route for Menu Page
 app.get('/menu', (req, res) => {
