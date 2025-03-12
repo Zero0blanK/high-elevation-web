@@ -81,6 +81,37 @@ body {
     border-bottom: none;
 }
 
+/* Set specific widths for each column to maintain consistency */
+.address-table th:nth-child(1),
+.address-table td:nth-child(1) {
+  width: 15%;
+}
+
+.address-table th:nth-child(2),
+.address-table td:nth-child(2) {
+  width: 20%;
+}
+
+.address-table th:nth-child(3),
+.address-table td:nth-child(3) {
+  width: 12%;
+}
+
+.address-table th:nth-child(4),
+.address-table td:nth-child(4) {
+  width: 15%;
+}
+
+.address-table th:nth-child(5),
+.address-table td:nth-child(5) {
+  width: 15%;
+}
+
+.address-table th:nth-child(6),
+.address-table td:nth-child(6) {
+  width: 23%;
+}
+
 .default-label {
     display: inline-block;
     background-color: rgba(67, 97, 238, 0.1);
@@ -110,7 +141,7 @@ body {
 
 .delete-btn, .cancel-btn {
     background-color: #ec4141;
-    color: var(--text-color);
+    color: var(--background-color);
     border: none;
     border-radius: 6px;
     padding: 8px 16px;
@@ -125,8 +156,19 @@ body {
     color: white;
 }
 
+.del-btn{
+    width: 24px;
+    height: auto;
+    background-color: var(--bg-color);
+    border: none;
+    cursor: pointer;
+    align-self: center;
+    justify-self: center;
+}
+
 .cancel-btn:hover {
-    background-color: #d1d5db;
+    background-color: #dc2626;
+    color: white;
 }
 
 .add-address-btn {

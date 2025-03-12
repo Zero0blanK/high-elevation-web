@@ -101,17 +101,23 @@ class CartController {
     const { product_id, weight_id } = req.body;
     const user_id = req.session.userId;
 
+    const connection = await db.getConnection();
     try {
-      await db.query('DELETE FROM cart WHERE user_id = ? AND product_id = ? AND weight_id = ?', [
+      connection.beginTransaction();
+      await connection.query('DELETE FROM cart WHERE user_id = ? AND product_id = ? AND weight_id = ?', [
         user_id, product_id, weight_id
       ]);
+      await connection.commit();
       res.json({ 
         success: true, 
         message: 'Product added to cart successfully!' 
       });
     } catch (err) {
+      await connection.rollback();
       console.error('Error removing from cart:', err.message);
       res.status(500).json({ error: 'Error removing item from cart' });
+    } finally {
+      connection.release();
     }
   }
 
@@ -129,7 +135,7 @@ class CartController {
         [quantity, user_id, product_id, weight_id]
       );
 
-      await connection.commit(); // �� Commit transaction
+      await connection.commit();
       return res.json({ success: true, message: 'Quantity updated successfully' });
 
     } catch (err) {

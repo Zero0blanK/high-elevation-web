@@ -2,22 +2,28 @@ function showNewAddressRow() {
     const tbody = document.querySelector('.address-table tbody');
     const template = `
         <tr id="newAddressRow">
-            <td class="add-mode"><input type="text" value="${document.getElementById('userName').value}" readonly></td>
+            <td class="add-mode"><input type="text" id="new-fullname" value="${document.getElementById('userName').value}" readonly></td>
             <td class="add-mode">
-                <input type="text" name="street_address" placeholder="Street Address" required>
-                <input type="text" name="apartment" placeholder="Apartment (optional)">
-                <input type="text" name="city" placeholder="City" required>
+                <input type="text" id="new-street-address" name="new_street_address" placeholder="Street Address" required>
+                <input type="text" id="new-apartment" name="new_apartment" placeholder="Apartment (optional)">
+                <input type="text" id="new-city" name="new_city" placeholder="City" required>
             </td>
-            <td class="add-mode"><input type="text" name="zip_code" placeholder="Postal Code" required></td>
-            <td class="add-mode"><input type="text" value="${document.getElementById('userPhone').value}" readonly></td>
+            <td class="add-mode"><input type="text" id="new-zip-code" name="new_zip_code" placeholder="Postal Code" required></td>
+            <td class="add-mode"><input type="text" id="new-phone" value="${document.getElementById('userPhone').value}" readonly></td>
             <td class="add-mode">
                 <label>
-                    <input type="checkbox" name="is_default"> Set as default
+                    <input type="checkbox" id="new-is-default" name="new_is_default"> Set as default
                 </label>
             </td>
             <td class="add-mode">
-                <button type="button" onclick="showConfirmationModal('add')" class="save-btn">Save</button>
-                <button type="button" onclick="hideNewAddressRow()" class="cancel-btn">Cancel</button>
+                <div class="button-container" style="display: flex; gap: 8px;">
+                    <button type="button" onclick="showConfirmationModal('add')" class="save-btn">
+                        <i class="fas fa-save" style="margin-right: 4px;"></i> Save
+                    </button>
+                    <button type="button" onclick="hideNewAddressRow()" class="cancel-btn">
+                        <i class="fas fa-times" style="margin-right: 4px;"></i> Cancel
+                    </button>
+                </div>
             </td>
         </tr>
     `;
@@ -48,7 +54,7 @@ function toggleEditMode(addressId) {
     viewFields.forEach(field => {
         field.style.display = field.style.display === 'none' ? '' : 'none';
     });
-    
+
     editFields.forEach(field => {
         field.style.display = field.style.display === 'none' ? '' : 'none';
     });
@@ -63,11 +69,11 @@ function showConfirmation(type, addressId = null) {
     if (type === 'edit') {
         title.textContent = 'Confirm Edit Address';
         message.textContent = 'Are you sure you want to save these changes?';
-        confirmBtn.onclick = () => submitEditAddress(addressId);
+        confirmBtn.setAttribute('onclick', `submitEditAddress('${addressId}')`);
     } else {
         title.textContent = 'Confirm New Address';
         message.textContent = 'Are you sure you want to add this address?';
-        confirmBtn.onclick = submitNewAddress;
+        confirmBtn.setAttribute('onclick', 'submitNewAddress()');
     }
     
     modal.style.display = 'block';
@@ -97,34 +103,25 @@ function hideConfirmation() {
 
 function submitNewAddress() {
     // Get form elements first
-    const streetAddress = document.querySelector('[name="street_address"]');
-    const apartment = document.querySelector('[name="apartment"]');
-    const city = document.querySelector('[name="city"]');
-    const zipCode = document.querySelector('[name="zip_code"]');
-    const isDefault = document.querySelector('[name="is_default"]');
+    const streetAddress = document.getElementById('new-street-address');
+    const apartment = document.getElementById('new-apartment');
+    const city = document.getElementById('new-city');
+    const zipCode = document.getElementById('new-zip-code');
+    const isDefault = document.getElementById('new-is-default');
 
-    // Log values for debugging
-    console.log('Form Values:', {
-        street: streetAddress.value,
-        apartment: apartment.value,
-        city: city.value,
-        zip_code: zipCode.value,
-        isDefault: isDefault.checked
-    });
-
+    // Validate required fields
+    if (!streetAddress.value || !city.value || !zipCode.value) {
+        Toast.show('Please fill in all required fields', 'error');
+        return;
+    }
+    
     const formData = {
         street_address: streetAddress.value,
         apartment: apartment.value || '',
         city: city.value,
-        zip_code: zipCode.value,  // Make sure this matches the backend field name
+        zip_code: zipCode.value,
         is_default: isDefault.checked
     };
-    
-    // Validate required fields
-    if (!streetAddress.value || !city.value || !zipCode.value) {
-        alert('Please fill in all required fields');
-        return;
-    }
 
     fetch('/profile/address/add', {
         method: 'POST',
@@ -142,7 +139,7 @@ function submitNewAddress() {
     })
     .catch(error => {
         console.error('Error:', error);
-        alert('Failed to add address. Please try again.');
+        Toast.show('Failed to add address. Please try again.');
     });
 }
 

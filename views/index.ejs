@@ -16,7 +16,7 @@
     <!-- Hero Section -->
     <div class="bg"></div>
     <section class="hero-section">
-        <div class="container">
+        <div class="container hero-wrapper">
             <div class="hero-content">
                 <h1>Start A Day With Coffee</h1>
                 <h3>COFFEE REDUCES THE RISK OF HEART DISEASE</h3>
@@ -51,44 +51,46 @@
             </div>
             <div class="product-grid">
                 <% product.forEach(product => { %>
-                    <div class="product-card" data-category="<%= product.category_name || 'coffee' %>">
-                        <div class="card-inner">
-                            <div class="card-badges">
-                                <% if (product.isNew) { %>
-                                    <span class="badge new">New</span>
-                                <% } %>
-                            </div>
-                            
-                            <a href="/product/overview/<%= encodeURIComponent(product.name) %>" class="product-link">
-                                <div class="product-image">
-                                    <img src="<%= product.image_url %>" alt="<%= product.name %>">
+                    <% if (product.is_deleted !== 1) { %>
+                        <div class="product-card" data-category="<%= product.category_name || 'coffee' %>">
+                            <div class="card-inner">
+                                <div class="card-badges">
+                                    <% if (product.isNew) { %>
+                                        <span class="badge new">New</span>
+                                    <% } %>
                                 </div>
                                 
-                                <div class="product-info">
-                                    <h3 class="product-title"><%= product.name %></h3>
-                                    <div class="product-price">
-                                        <% if (product.original_price && product.original_price > product.lowest_price) { %>
-                                            <span class="original-price">₱<%= product.original_price %></span>
-                                        <% } %>
-                                        <span class="current-price">₱<%= product.lowest_price %></span>
+                                <a href="/product/overview/<%= encodeURIComponent(product.name) %>" class="product-link">
+                                    <div class="product-image">
+                                        <img src="<%= product.image_url %>" alt="<%= product.name %>">
                                     </div>
-                                </div>
-                            </a>
-                            
-                            <div class="product-actions">
-                                <div class="available-sizes">
-                                    <% if (product.weight_variants) { %>
-                                        <div class="size-variants">
-                                            <% let weightVariants = JSON.parse('[' + product.weight_variants + ']'); %>
-                                            <% weightVariants.forEach((variant) => { %>
-                                                <span class="size-chip"><%= variant.weight %><%= variant.unit %></span>
-                                            <% }); %>
+                                    
+                                    <div class="product-info">
+                                        <h3 class="product-title"><%= product.name %></h3>
+                                        <div class="product-price">
+                                            <% if (product.original_price && product.original_price > product.lowest_price) { %>
+                                                <span class="original-price">₱<%= product.original_price %></span>
+                                            <% } %>
+                                            <span class="current-price">₱<%= product.lowest_price %></span>
                                         </div>
-                                    <% } %>
+                                    </div>
+                                </a>
+                                
+                                <div class="product-actions">
+                                    <div class="available-sizes">
+                                        <% if (product.weight_variants) { %>
+                                            <div class="size-variants">
+                                                <% let weightVariants = JSON.parse('[' + product.weight_variants + ']'); %>
+                                                <% weightVariants.forEach((variant) => { %>
+                                                    <span class="size-chip"><%= variant.weight %><%= variant.unit %></span>
+                                                <% }); %>
+                                            </div>
+                                        <% } %>
+                                    </div>
                                 </div>
                             </div>
                         </div>
-                    </div>
+                        <% } %>
                 <% }) %>
             </div>
             <div class="view-all">

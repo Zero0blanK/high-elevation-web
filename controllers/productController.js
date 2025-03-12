@@ -106,43 +106,61 @@ class ProductController {
   }
 
   async addReview(req, res) {
-    try {
-      const user_id = req.session.userId;
-      const product_id = req.body.product_id;
-      const rating = parseInt(req.body.rating);
-      const review_title = req.body.title;
-      const review_text = req.body.content;
+    const user_id = req.session.userId;
+    const product_id = req.body.product_id;
+    const rating = parseInt(req.body.rating);
+    const review_title = req.body.title;
+    const review_text = req.body.content;
 
-      if (!user_id) {
-        req.flash('error', 'Please login to write a review');
-        return res.redirect('back');
-      }
-
-      if (isNaN(rating) || rating < 1 || rating > 5) {
-        req.flash('error', 'Invalid rating. Please select a rating between 1 and 5.');
-        return res.redirect('back');
-      }
-
-      if (!review_title || !review_text) {
-        req.flash('error', 'Title and review content are required.');
-        return res.redirect('back');
+    if (!user_id) {
+      req.flash('error', 'Please login to write a review');
+      return res.redirect('back');
     }
 
+    if (isNaN(rating) || rating < 1 || rating > 5) {
+      req.flash('error', 'Invalid rating. Please select a rating between 1 and 5.');
+      return res.redirect('back');
+    }
+
+    if (!review_title || !review_text) {
+      req.flash('error', 'Title and review content are required.');
+      return res.redirect('back');
+    }
+
+    // Check if the user has already reviewed this product
+    const [reviewExists] = await db.query(
+      'SELECT 1 FROM review WHERE user_id =? AND product_id =?',
+      [user_id, product_id]
+    );
+
+    if (reviewExists.length > 0) {
+      req.flash('error', 'You have already reviewed this product.');
+      return res.redirect('back');
+    }
+
+    const connection = await db.getConnection();
+
+    try {
+      connection.beginTransaction();
       const query = `
         INSERT INTO review (user_id, product_id, rating, review_title, review_text)
         VALUES (?, ?, ?, ?, ?)
       `;
 
       const productQuery = `SELECT name FROM product WHERE id = ?`;
-      const [productRows] = await db.query(productQuery, [product_id]);
+      const [productRows] = await connection.query(productQuery, [product_id]);
 
-      await db.query(query, [user_id, product_id, rating, review_title, review_text]);
+      await connection.query(query, [user_id, product_id, rating, review_title, review_text]);
       req.flash('success', 'Review added successfully!');
+      await connection.commit();
       res.redirect(`/product/overview/${encodeURIComponent(productRows[0].name)}`);
     } catch (error) {
+      await connection.rollback();
       console.error('Error adding review:', error);
       req.flash('error', 'Error adding review. Please try again.');
       res.redirect('back');
+    } finally {
+      connection.release();
     }
 }
 

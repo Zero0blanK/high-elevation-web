@@ -5,143 +5,90 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
     <link rel="stylesheet" href="/css/components/dashboard.css">
+    <link rel="stylesheet" href="/css/components/toast.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.0/chart.min.js"></script>
+    <script src="/javaScript/toast.js" defer></script>
 </head>
 <body>
     <div class="container">
         <!-- Sidebar -->
         <%- include('./partials/sidebar'); %>
-
+        <%- include('./partials/toast'); %>
         <!-- Main Content -->
         <main class="main-content">
             <div class="settings-grid">
                 <!-- Profile Management -->
                 <div class="settings-card">
                     <h3>Profile Management</h3>
-                    <form>
+                    <form action="/dashboard/profile/update" method="POST">
                         <div class="form-group">
                             <label for="fullName">Full Name</label>
-                            <input type="text" id="fullName" class="form-control" value="<%= locals.user.full_name %>">
+                            <input type="hidden" id="first_name" name="first_name" value="<%= locals.user.first_name %>">
+                            <input type="hidden" id="last_name" name="last_name" value="<%= locals.user.last_name %>">
+                            <input type="text" id="fullName" class="form-control" value="<%= locals.user.full_name %>" readonly>
                         </div>
                         <div class="form-group">
                             <label for="email">Email Address</label>
-                            <input type="email" id="email" class="form-control" value="<%= locals.user.email %>">
+                            <input type="email" id="email" name="email" class="form-control" value="<%= locals.user.email %>" readonly>
                         </div>
                         <div class="form-group">
                             <label for="phone">Phone Number</label>
-                            <input type="tel" id="phone" class="form-control" value="<%= locals.user.contact_number %>">
+                            <input type="tel" id="phone" name="contact_number" class="form-control" value="<%= locals.user.contact_number %>">
                         </div>
+                        <div class="form-group">
+                            <label for="password">Password</label>
+                            <input type="password" id="password" name="password" class="form-control" placeholder="Enter new password">
+                        </div>
+
                         <button type="submit" class="btn btn-primary">Update Profile</button>
                     </form>
                 </div>
-
-                <!-- System Preferences -->
-                <!-- <div class="settings-card">
-                    <h3>System Preferences</h3>
-                    <div class="switch-container">
-                        <span>Dark Mode</span>
-                        <label class="switch">
-                            <input type="checkbox">
-                            <span class="slider"></span>
-                        </label>
-                    </div>
-                    <div class="switch-container">
-                        <span>Auto-refresh Dashboard</span>
-                        <label class="switch">
-                            <input type="checkbox" checked>
-                            <span class="slider"></span>
-                        </label>
-                    </div>
-                    <div class="form-group">
-                        <label for="language">Language</label>
-                        <select id="language" class="form-control">
-                            <option value="en">English</option>
-                            <option value="es">Español</option>
-                            <option value="fr">Français</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label for="timezone">Timezone</label>
-                        <select id="timezone" class="form-control">
-                            <option value="UTC">UTC</option>
-                            <option value="EST">Eastern Time</option>
-                            <option value="PST">Pacific Time</option>
-                        </select>
-                    </div>
-                </div> -->
-
-                <!-- Notification Settings -->
-                <!-- <div class="settings-card">
-                    <h3>Notification Settings</h3>
-                    <div class="notification-preference">
-                        <div class="switch-container">
-                            <span>Email Notifications</span>
-                            <label class="switch">
-                                <input type="checkbox" checked>
-                                <span class="slider"></span>
-                            </label>
-                        </div>
-                    </div>
-                    <div class="notification-preference">
-                        <div class="switch-container">
-                            <span>Order Updates</span>
-                            <label class="switch">
-                                <input type="checkbox" checked>
-                                <span class="slider"></span>
-                            </label>
-                        </div>
-                    </div>
-                    <div class="notification-preference">
-                        <div class="switch-container">
-                            <span>Low Stock Alerts</span>
-                            <label class="switch">
-                                <input type="checkbox" checked>
-                                <span class="slider"></span>
-                            </label>
-                        </div>
-                    </div>
-                    <div class="notification-preference">
-                        <div class="switch-container">
-                            <span>Marketing Updates</span>
-                            <label class="switch">
-                                <input type="checkbox">
-                                <span class="slider"></span>
-                            </label>
-                        </div>
-                    </div>
-                </div> -->
-
-                <!-- Account Security -->
-                <!-- <div class="settings-card">
-                    <h3>Account Security</h3>
-                    <div class="security-action">
-                        <div>
-                            <h4>Change Password</h4>
-                            <p class="text-sm text-gray-500">Last changed 30 days ago</p>
-                        </div>
-                        <button class="btn btn-primary">Update</button>
-                    </div>
-                    <div class="security-action">
-                        <div>
-                            <h4>Two-Factor Authentication</h4>
-                            <p class="text-sm text-gray-500">Currently enabled</p>
-                        </div>
-                        <label class="switch">
-                            <input type="checkbox" checked>
-                            <span class="slider"></span>
-                        </label>
-                    </div>
-                    <div class="security-action">
-                        <div>
-                            <h4>Active Sessions</h4>
-                            <p class="text-sm text-gray-500">2 active sessions</p>
-                        </div>
-                        <button class="btn btn-danger">End All</button>
-                    </div>
-                </div> -->
             </div>
         </main>
     </div>
+    <script>
+        // Handle form submission with AJAX
+        const profileForm = document.querySelector('form[action="/dashboard/profile/update"]');
+
+        if (profileForm) {
+            profileForm.addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                // Create FormData object from the form
+                const formData = new FormData(this);
+                
+                // Convert FormData to JSON for sending
+                const formDataObject = {};
+                    formData.forEach((value, key) => {
+                    formDataObject[key] = value;
+                });
+                
+                // Add values from disabled fields
+                formDataObject.email = document.getElementById('email').value;
+                
+                fetch('/dashboard/profile/update', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-Requested-With': 'XMLHttpRequest'
+                },
+                body: JSON.stringify(formDataObject)
+                })
+                .then(response => response.json())
+                .then(data => {
+                if (data.success) {
+                    Toast.show(data.message || 'Profile updated successfully', 'success');
+                } else {
+                    Toast.show(data.message || 'Failed to update profile', 'error');
+                }
+                })
+                .catch(error => {
+                console.error('Error:', error);
+                Toast.show('An unexpected error occurred', 'error');
+                });
+            });
+        }
+    </script>
 </body>
 </html>

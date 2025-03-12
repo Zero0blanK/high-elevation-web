@@ -35,63 +35,76 @@
             <!-- Sidebar with filters -->
             <aside>
                 <div class="aside-container">
-                    <div class="search">
-                        <h3>Search</h3>
-                        <div class="search-input-wrapper">
-                            <input class="search-bar" type="search" name="product_search" id="productSearch" placeholder="Search products...">
-                            <button class="search-button"><i class="fas fa-search"></i></button>
-                        </div>
-                    </div>
-                    
-                    <div class="filter-section categories">
-                        <h3>Categories</h3>
-                        <ul class="filter-list">
-                            <li>
-                                <input type="checkbox" id="cat-arabica" name="category" value="arabica">
-                                <label for="cat-arabica">Arabica</label>
-                            </li>
-                            <li>
-                                <input type="checkbox" id="cat-robusta" name="category" value="robusta">
-                                <label for="cat-robusta">Robusta</label>
-                            </li>
-                        </ul>
-                    </div>
-                    
-                    <div class="filter-section sizes">
-                        <h3>Sizes</h3>
-                        <ul class="filter-list">
-                            <li>
-                                <input type="checkbox" id="size-100g" name="size" value="100g">
-                                <label for="size-100g">100g</label>
-                            </li>
-                            <li>
-                                <input type="checkbox" id="size-250g" name="size" value="250g">
-                                <label for="size-250g">250g</label>
-                            </li>
-                            <li>
-                                <input type="checkbox" id="size-1000g" name="size" value="1000g">
-                                <label for="size-1000g">1kg</label>
-                            </li>
-                            <li>
-                                <input type="checkbox" id="size-2000g" name="size" value="2000g">
-                                <label for="size-2000g">2kg</label>
-                            </li>
-                        </ul>
-                    </div>
-                    
-                    <div class="filter-section price-range">
-                        <h3>Price Range</h3>
-                        <div class="range-slider">
-                            <input type="range" min="0" max="2000" value="2000" class="price-slider" id="priceRange">
-                            <div class="price-labels">
-                                <span>₱0</span>
-                                <span id="priceValue">₱2000+</span>
+                    <form action="/product" method="GET" id="filterForm">
+                        <div class="search">
+                            <h3>Search</h3>
+                            <div class="search-input-wrapper">
+                                <input class="search-bar" type="search" name="search" id="productSearch" 
+                                    placeholder="Search products..." value="<%= filters.search %>">
+                                <button type="submit" class="search-button"><i class="fas fa-search"></i></button>
                             </div>
                         </div>
-                    </div>
-                    
-                    <button class="filter-button" id="applyFilters">Apply Filters</button>
-                    <button class="clear-button" id="clearFilters">Clear All</button>
+                        
+                        <div class="filter-section categories">
+                            <h3>Categories</h3>
+                            <ul class="filter-list">
+                                <li>
+                                    <input type="checkbox" id="cat-arabica" name="category" value="arabica"
+                                    <%= (filters.category.includes('arabica')) ? 'checked' : '' %>>
+                                    <label for="cat-arabica">Arabica</label>
+                                </li>
+                                <li>
+                                    <input type="checkbox" id="cat-robusta" name="category" value="robusta"
+                                    <%= (filters.category.includes('robusta')) ? 'checked' : '' %>>
+                                    <label for="cat-robusta">Robusta</label>
+                                </li>
+                            </ul>
+                        </div>
+                        
+                        <div class="filter-section sizes">
+                            <h3>Sizes</h3>
+                            <ul class="filter-list">
+                                <li>
+                                    <input type="checkbox" id="size-100g" name="size" value="100g"
+                                    <%= (filters.size.includes('100g')) ? 'checked' : '' %>>
+                                    <label for="size-100g">100g</label>
+                                </li>
+                                <li>
+                                    <input type="checkbox" id="size-250g" name="size" value="250g"
+                                    <%= (filters.size.includes('250g')) ? 'checked' : '' %>>
+                                    <label for="size-250g">250g</label>
+                                </li>
+                                <li>
+                                    <input type="checkbox" id="size-1000g" name="size" value="1000g"
+                                    <%= (filters.size.includes('1000g')) ? 'checked' : '' %>>
+                                    <label for="size-1000g">1kg</label>
+                                </li>
+                                <li>
+                                    <input type="checkbox" id="size-2000g" name="size" value="2000g"
+                                    <%= (filters.size.includes('2000g')) ? 'checked' : '' %>>
+                                    <label for="size-2000g">2kg</label>
+                                </li>
+                            </ul>
+                        </div>
+                        
+                        <div class="filter-section price-range">
+                            <h3>Price Range</h3>
+                            <div class="range-slider">
+                                <input type="range" min="0" max="2000" value="<%= filters.maxPrice %>" 
+                                    class="price-slider" id="priceRange" name="maxPrice">
+                                <div class="price-labels">
+                                    <span>₱0</span>
+                                    <span id="priceValue">₱<%= filters.maxPrice %><%= filters.maxPrice == 2000 ? '+' : '' %></span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Current page to maintain pagination when sorting changes -->
+                        <input type="hidden" name="page" value="1">
+                        
+                        <button type="submit" class="filter-button" id="applyFilters">Apply Filters</button>
+                        <button type="button" class="clear-button" id="clearFilters">Clear All</button>
+                    </form>
                 </div>
             </aside>
 
@@ -102,11 +115,24 @@
                         <p><span id="productCount"><%= product.length %></span> Products</p>
                     </div>
                     <div class="sort-options">
-                        <label for="sortBy">Sort by:</label>
-                        <select name="sortBy" id="sortBy">
-                            <option value="price-low">Price: Low to High</option>
-                            <option value="price-high">Price: High to Low</option>
-                        </select>
+                        <form id="sortForm" action="/product" method="GET">
+                            <!-- Copy hidden inputs from filter form to maintain state -->
+                            <input type="hidden" name="search" value="<%= filters.search %>">
+                            <% filters.category.forEach(function(cat) { %>
+                                <input type="hidden" name="category" value="<%= cat %>">
+                            <% }); %>
+                            <% filters.size.forEach(function(sz) { %>
+                                <input type="hidden" name="size" value="<%= sz %>">
+                            <% }); %>
+                            <input type="hidden" name="maxPrice" value="<%= filters.maxPrice %>">
+                            <input type="hidden" name="page" value="<%= pagination.currentPage %>">
+                            
+                            <label for="sortBy">Sort by:</label>
+                            <select name="sortBy" id="sortBy" onchange="this.form.submit()">
+                                <option value="price-low" <%= (filters.sortBy === 'price-low') ? 'selected' : '' %>>Price: Low to High</option>
+                                <option value="price-high" <%= (filters.sortBy === 'price-high') ? 'selected' : '' %>>Price: High to Low</option>
+                            </select>
+                        </form>
                     </div>
                 </div>
 
@@ -129,9 +155,6 @@
                                         <div class="product-info">
                                             <h3 class="product-title"><%= product.name %></h3>
                                             <div class="product-price">
-                                                <% if (product.original_price && product.original_price > product.lowest_price) { %>
-                                                    <span class="original-price">₱<%= product.original_price %></span>
-                                                <% } %>
                                                 <span class="current-price">₱<%= product.lowest_price %></span>
                                             </div>
                                         </div>
@@ -156,33 +179,36 @@
                 </div>
                 
                 <div class="pagination">
-                    <button class="pagination-btn prev" disabled><i class="fas fa-chevron-left"></i> Previous</button>
+                    <% if (pagination.hasPrevPage) { %>
+                        <a href="/product?page=<%= pagination.currentPage - 1 %>&search=<%= filters.search %>&sortBy=<%= filters.sortBy %>&maxPrice=<%= filters.maxPrice %><% filters.category.forEach(function(cat) { %>&category=<%= cat %><% }); %><% filters.size.forEach(function(sz) { %>&size=<%= sz %><% }); %>" class="pagination-btn prev">
+                            <i class="fas fa-chevron-left"></i> Previous
+                        </a>
+                    <% } else { %>
+                        <button class="pagination-btn prev" disabled><i class="fas fa-chevron-left"></i> Previous</button>
+                    <% } %>
+                    
                     <div class="page-numbers">
-                        <span class="page-number active">1</span>
-                        <span class="page-number">2</span>
-                        <span class="page-number">3</span>
+                        <% for(let i = 1; i <= pagination.totalPages; i++) { %>
+                            <% if (i === pagination.currentPage) { %>
+                                <span class="page-number active"><%= i %></span>
+                            <% } else { %>
+                                <a href="/product?page=<%= i %>&search=<%= filters.search %>&sortBy=<%= filters.sortBy %>&maxPrice=<%= filters.maxPrice %><% filters.category.forEach(function(cat) { %>&category=<%= cat %><% }); %><% filters.size.forEach(function(sz) { %>&size=<%= sz %><% }); %>" class="page-number"><%= i %></a>
+                            <% } %>
+                        <% } %>
                     </div>
-                    <button class="pagination-btn next">Next <i class="fas fa-chevron-right"></i></button>
+                    
+                    <% if (pagination.hasNextPage) { %>
+                        <a href="/product?page=<%= pagination.currentPage + 1 %>&search=<%= filters.search %>&sortBy=<%= filters.sortBy %>&maxPrice=<%= filters.maxPrice %><% filters.category.forEach(function(cat) { %>&category=<%= cat %><% }); %><% filters.size.forEach(function(sz) { %>&size=<%= sz %><% }); %>" class="pagination-btn next">
+                            Next <i class="fas fa-chevron-right"></i>
+                        </a>
+                    <% } else { %>
+                        <button class="pagination-btn next" disabled>Next <i class="fas fa-chevron-right"></i></button>
+                    <% } %>
                 </div>
             </div>
         </section>
     </div>
 
     <%- include('./partials/footer'); %>
-
-    
-    <script>
-        // Basic client-side filtering (you'll need to expand this)
-        document.addEventListener('DOMContentLoaded', function() {
-            const priceRange = document.getElementById('priceRange');
-            const priceValue = document.getElementById('priceValue');
-            
-            priceRange.addEventListener('input', function() {
-                priceValue.textContent = `₱${this.value}${this.value == 2000 ? '+' : ''}`;
-            });
-            
-            // Add more client-side functionality as needed
-        });
-    </script>
 </body>
 </html>

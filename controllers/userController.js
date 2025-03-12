@@ -12,12 +12,17 @@ class UserController {
 
       const isMatch = await bcrypt.compare(password, user[0].password);
 
-      // Check if user exists and password is correct
-      if (user.length === 0 && (!isMatch || password === user[0].password)) {
-        req.flash('error', 'Invalid email and password. Please try again.');
+      // Check if user exists
+      if (user.length === 0) {
+        req.flash('error', 'Invalid email or password. Please try again.');
         return res.redirect('/login');
       }
-      
+
+      if (!isMatch) {
+      req.flash('error', 'Invalid email or password. Please try again.');
+      return res.redirect('/login');
+      }
+
       // Set session variables for the logged-in user
       req.session.userId = user[0].id;
       req.session.username = user[0].username;
@@ -44,23 +49,36 @@ class UserController {
       return res.redirect('/register');
     }
 
-    try {
-      const [existingUser] = await db.query('SELECT * FROM user WHERE email = ?', [email]);
-      if (existingUser.length > 0) {
-        req.flash('error', 'This email is already registered.');
-        return res.redirect('/register');
-      }
+    if (password && password.length < 8) {
+      req.flash('error', 'Password must be at least 8 characters long');
+      return res.redirect('/register');
+    }
 
+    const [existingUser] = await db.query('SELECT * FROM user WHERE email = ?', [email]);
+    if (existingUser.length > 0) {
+      req.flash('error', 'This email is already registered.');
+      return res.redirect('/register');
+    }
+
+    const connection = await db.getConnection();
+
+    try {
+      await connection.beginTransaction();
       // Hash the password before saving it
       const hashedPassword = await bcrypt.hash(password, 10);
 
-      await db.query('INSERT INTO user (first_name, last_name, email, password, contact_number) VALUES (?, ?, ?, ?, ?)', [first_name, last_name, email, hashedPassword, contact_number]);
+      await connection.query('INSERT INTO user (first_name, last_name, email, password, contact_number) VALUES (?, ?, ?, ?, ?)', [first_name, last_name, email, hashedPassword, contact_number]);
+      
       req.flash('success', `Welcome, ${first_name}! Your account has been created. You can now log in.`);
+      await connection.commit();
       res.redirect('/login');
     } catch (err) {
+      await connection.rollback();
       console.log('Error registering user:', err);
       req.flash('error', 'An unexpected error occurred while registering. Please try again later.');
       res.status(500).redirect('/register');
+    } finally {
+      connection.release();
     }
   }
 

@@ -78,7 +78,7 @@ img {
 /* Hero Section */
 
 .hero-section {
-    padding: 260px 0 180px;
+    height: 94vh;
     background: linear-gradient(rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.5)), url('/assets/image/coffee-bg.jpg');
     background-size: cover;
     background-position: center;
@@ -105,6 +105,12 @@ img {
     margin-bottom: 2rem;
     opacity: 0.9;
     letter-spacing: 2px;
+}
+
+.hero-wrapper{
+    display: flex;
+    align-items: center;
+    height: 100%;
 }
 
 /* About Section */

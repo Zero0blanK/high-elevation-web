@@ -9,13 +9,16 @@
     <link rel="stylesheet" href="/css/components/navbar.css">
     <link rel="stylesheet" href="/css/components/footer.css">
     <link rel="stylesheet" href="/css/components/profile-sidebar.css">
+    <link rel="stylesheet" href="/css/components/toast.css">
     <script src="/javaScript/navbar/navToggle.js" defer></script>
     <script src="/javaScript/navbar/profile-icon-dropdown.js" defer></script>
     <script src="/javaScript/profileAddress.js" defer></script>
+    <script src="/javaScript/toast.js" defer></script>
 
 </head>
 <body>
     <%- include('./partials/navbar') %>
+    <%- include('./partials/toast') %>
 
     <div class="main-container">
         <aside class="sidebar">
@@ -89,10 +92,8 @@
                                         <i class="fas fa-edit" style="margin-right: 4px;"></i> Edit
                                     </button>
                                     <% if (!address.is_default) { %>
-                                        <form action="/profile/address/delete/<%= address.id %>" method="POST" class="delete-form" style="display: inline;">
-                                            <button type="submit" class="delete-btn">
-                                                <i class="fas fa-trash-alt" style="margin-right: 4px;"></i> Delete
-                                            </button>
+                                        <form action="/profile/address/delete/<%= address.id %>" method="POST" class="delete-form" style="display: inline-block; position:absolute; margin: 5px 0 0 5px;">
+                                            <button type="submit" class="del-btn"><img src="/assets/icons/delete.svg" alt=""></button>
                                         </form>
                                     <% } %>
                                 </td>

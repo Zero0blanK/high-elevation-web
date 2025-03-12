@@ -1,7 +1,7 @@
 const Product = require('../models/Product');
 const User_Order = require('../models/User_Order');
 const moment = require('moment');
-
+const bcrypt = require('bcryptjs');
 const db = require('../config/db');
 
 const getLastSixMonths = () => {
@@ -238,9 +238,10 @@ class DashboardController {
   async deleteProductById(req, res) {
     const { productId } = req.params; // Get productId from the URL parameter
 
+    const connection = await db.getConnection();
     try {
       // First, check if product exists
-      const product = await db.query("SELECT * FROM product WHERE id = ?", [productId]);
+      const product = await connection.query("SELECT * FROM product WHERE id = ?", [productId]);
       if (product.length === 0) {
         return res.json({ message: 'Product not found' });
       }
@@ -249,38 +250,46 @@ class DashboardController {
       // await db.query("DELETE FROM product_weight WHERE product_id = ?", [productId]);
 
       // Soft delete from product_weight table first
-      await db.query("UPDATE product_weight SET is_deleted = 1 WHERE product_id = ?", [productId]);
+      await connection.query("UPDATE product_weight SET is_deleted = 1 WHERE product_id = ?", [productId]);
 
       // Now delete the product from the product table
       // await db.query("DELETE FROM product WHERE id = ?", [productId]);
 
-      await db.query("UPDATE product SET is_deleted = 1 WHERE id = ?", [productId]);
-
+      await connection.query("UPDATE product SET is_deleted = 1 WHERE id = ?", [productId]);
+      await connection.commit();
       res.status(200).json({success: true, message: 'Product deleted successfully' });
     } catch (err) {
+      await connection.rollback();
       console.error("Error deleting product:", err);
       res.status(500).json({success: false, message: 'Error deleting product' });
+    } finally {
+      connection.release();
     }
   }
 
   async returnProductById(req, res) {
     const { productId } = req.params; // Get productId from the URL parameter
 
+    const connection = await db.getConnection();
     try {
       // First, check if product exists
-      const product = await db.query("SELECT * FROM product WHERE id = ?", [productId]);
+      const product = await connection.query("SELECT * FROM product WHERE id = ?", [productId]);
       if (product.length === 0) {
         return res.json({ message: 'Product not found' });
       }
 
-      await db.query("UPDATE product_weight SET is_deleted = 0 WHERE product_id = ?", [productId]);
+      await connection.query("UPDATE product_weight SET is_deleted = 0 WHERE product_id = ?", [productId]);
 
-      await db.query("UPDATE product SET is_deleted = 0 WHERE id = ?", [productId]);
+      await connection.query("UPDATE product SET is_deleted = 0 WHERE id = ?", [productId]);
 
+      await connection.commit();
       res.status(200).json({success: true});
     } catch (err) {
+      await connection.rollback();
       console.error("Error deleting product:", err);
       res.status(500).json({success: false});
+    } finally {
+      connection.release();
     }
   }
 
@@ -487,13 +496,18 @@ class DashboardController {
           return res.status(400).json({ error: "Invalid status" });
       }
 
+      const connection = await db.getConnection();
       const query = `UPDATE user_order SET shipping_status = ? WHERE id = ?`;
       try {
-          await db.query(query, [status, orderId]);
+          await connection.query(query, [status, orderId]);
+          await connection.commit();
           res.json({ message: "Order status updated successfully" });
       } catch (error) {
+          await connection.rollback();
           console.error("Error updating order status:", error);
           res.status(500).json({ error: "Internal server error" });
+      } finally {
+        connection.release();
       }
   };
 
@@ -1281,7 +1295,101 @@ class DashboardController {
     }
   }
 
+  async updateProfile(req, res) {
+    const userId = req.session.userId;
+    const { first_name, last_name, contact_number, password, email } = req.body;
 
+    if (!contact_number) {
+      return res.json({
+        success: false,
+        message: 'Phone number is required'
+      });
+    }
+  
+    if (password && password.length < 8) {
+      return res.json({
+        success: false,
+        message: 'Password must be at least 8 characters long'
+      });
+    }
+  
+    // Hash the password before saving it
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const connection = await db.getConnection();
+    try {
+      await connection.beginTransaction();
+
+      const updatePassword = password && password.trim() !== '';
+      
+      let updateQuery, queryParams;
+      
+      if (updatePassword) {
+        // Hash password if needed
+        // const hashedPassword = await bcrypt.hash(password, 10);
+        
+        updateQuery = `
+          UPDATE user 
+          SET contact_number = ?
+              ${first_name ? ', first_name = ?' : ''}
+              ${last_name ? ', last_name = ?' : ''}
+              ${email ? ', email = ?' : ''}
+              , password = ?
+          WHERE id = ?`;
+        
+        queryParams = [
+          contact_number,
+          ...(first_name ? [first_name] : []),
+          ...(last_name ? [last_name] : []),
+          ...(email ? [email] : []),
+          hashedPassword, // Replace with hashedPassword when implemented
+          userId
+        ];
+      } else {
+        updateQuery = `
+          UPDATE user 
+          SET contact_number = ?
+              ${first_name ? ', first_name = ?' : ''}
+              ${last_name ? ', last_name = ?' : ''}
+              ${email ? ', email = ?' : ''}
+          WHERE id = ?`;
+        
+        queryParams = [
+          contact_number,
+          ...(first_name ? [first_name] : []),
+          ...(last_name ? [last_name] : []),
+          ...(email ? [email] : []),
+          userId
+        ];
+      }
+  
+      const [result] = await connection.execute(updateQuery, queryParams);
+  
+      if (result.affectedRows === 0) {
+        await connection.rollback();
+        return res.json({
+          success: false,
+          message: 'No changes were made. User may not exist.'
+        });
+      }
+  
+      await connection.commit();
+      res.json({ 
+        success: true, 
+        message: 'Profile updated successfully',
+      });
+  
+    } catch (error) {
+      await connection.rollback();
+      res.status(500).json({ 
+        success: false, 
+        message: 'Failed to update profile',
+        error: error.message
+      });
+    } finally {
+      connection.release();
+    }
+  }
 
   
 }

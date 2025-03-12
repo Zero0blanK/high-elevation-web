@@ -181,6 +181,8 @@ router.post('/dashboard/edit-product', upload.single('image'), deleteImg, async 
     }
 });
 
+router.post('/dashboard/profile/update', dashboardController.updateProfile);
+
 router.delete('/dashboard/products/:productId', dashboardController.deleteProductById);
 router.post('/dashboard/products/:productId/return', dashboardController.returnProductById);
 
