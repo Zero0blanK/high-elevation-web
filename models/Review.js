@@ -11,8 +11,10 @@ class Review {
             id INT PRIMARY KEY AUTO_INCREMENT,
             product_id INT NOT NULL,
             user_id INT NOT NULL,
-            rating INT CHECK (rating BETWEEN 1 AND 5),
-            review_text TEXT,
+            rating INT CHECK (rating BETWEEN 1 AND 5) NOT NULL,
+            review_text TEXT NOT NULL,
+            review_title VARCHAR(100) NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (product_id) REFERENCES product(id) ON DELETE CASCADE,
             FOREIGN KEY (user_id) REFERENCES user(id) ON DELETE CASCADE
         )

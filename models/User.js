@@ -15,7 +15,8 @@ class User {
             last_name VARCHAR(50) NOT NULL,
             role ENUM('admin', 'user') DEFAULT 'user',
             contact_number VARCHAR(20),
-            profile_pic_url VARCHAR(255)
+            profile_pic_url VARCHAR(255),
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
         )
         `;
         try {

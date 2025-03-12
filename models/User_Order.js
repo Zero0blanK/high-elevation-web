@@ -10,9 +10,9 @@ class User_Order {
             id INTEGER PRIMARY KEY AUTO_INCREMENT,
             user_id INT NOT NULL,
             address_id INT NOT NULL,
-            shipping_status ENUM('pending', 'shipped', 'delivered') DEFAULT 'pending',
+            shipping_status ENUM('pending', 'processing', 'shipped', 'delivered', 'cancelled') DEFAULT 'pending',
             total_amount DECIMAL(10, 2) NOT NULL,
-            order_status ENUM('pending', 'confirmed', 'cancelled') DEFAULT 'pending',
+            order_status ENUM('pending', 'processing', 'shipped', 'delivered, 'cancelled', 'returned') DEFAULT 'pending',
             order_date DATETIME DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (user_id) REFERENCES user(id) ON DELETE CASCADE,
             FOREIGN KEY (address_id) REFERENCES user_address(id) ON DELETE CASCADE

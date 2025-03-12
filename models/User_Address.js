@@ -10,7 +10,11 @@ class User_Address {
         CREATE TABLE IF NOT EXISTS user_address (
             id INT PRIMARY KEY AUTO_INCREMENT,
             user_id INT NOT NULL,
-            address VARCHAR(255) NOT NULL,
+            street_address VARCHAR(255) NOT NULL,
+            apartment VARCHAR(100),
+            city VARCHAR(50) NOT NULL,
+            zip_code VARCHAR(10) NOT NULL,
+            is_default TINYINT NOT NULL DEFAULT 0,
             FOREIGN KEY (user_id) REFERENCES user(id) ON DELETE CASCADE
         )
         `;

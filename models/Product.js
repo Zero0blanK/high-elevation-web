@@ -11,10 +11,10 @@ class Product {
             id INTEGER PRIMARY KEY AUTO_INCREMENT,
             name VARCHAR(255) NOT NULL,
             description TEXT NOT NULL,
-            price DECIMAL(6,2) NOT NULL,
             image_url VARCHAR(255) NOT NULL,
             category_id INTEGER NOT NULL,
-            stock INTEGER NOT NULL,
+            total_stock INTEGER NOT NULL,
+            is_deleted TINYINT NOT NULL DEFAULT 0,
             FOREIGN KEY (category_id) REFERENCES product_category(id) ON DELETE CASCADE
         )
         `;

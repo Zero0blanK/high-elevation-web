@@ -10,10 +10,12 @@ class Cart {
             id INTEGER PRIMARY KEY AUTO_INCREMENT,
             user_id INT NOT NULL,
             product_id INT NOT NULL,
+            weight_id INT NOT NULL,
             quantity INT NOT NULL CHECK(quantity > 0),
             added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY (user_id) REFERENCES user(id) ON DELETE CASCADE,
-            FOREIGN KEY (product_id) REFERENCES product(id) ON DELETE CASCADE
+            FOREIGN KEY (product_id) REFERENCES product(id) ON DELETE CASCADE,
+            FOREIGN KEY (weight_id) REFERENCES weight(id) ON DELETE CASCADE
         )
         `;
         try {

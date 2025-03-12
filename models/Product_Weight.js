@@ -12,6 +12,7 @@ class Product_Weight {
             weight_id INT NOT NULL,
             price DECIMAL(6,2) NOT NULL,
             stock INT NOT NULL,
+            is_deleted TINYINT NOT NULL DEFAULT 0,
             FOREIGN KEY (product_id) REFERENCES product(id) ON DELETE CASCADE,
             FOREIGN KEY (weight_id) REFERENCES weight(id) ON DELETE CASCADE
         )
