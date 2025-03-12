@@ -9,6 +9,7 @@ require('./migrations/createPaymentTable');
 require('./migrations/createReviewTable');
 require('./migrations/createWeightTable');
 require('./migrations/createProductWeightTable');
+require('./migrations/createInventoryLogTable')
 
 
 console.log("All migrations have been run successfully.");
