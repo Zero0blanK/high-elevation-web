@@ -317,6 +317,16 @@ body {
 }
 
 /* Enhanced Product List */
+.input-error {
+    border: 1px solid red;
+}
+
+.error-message {
+    color: red;
+    font-size: 12px;
+    margin-top: 4px;
+}
+
 .product-list {
     list-style: none;
     display: flex;
@@ -433,7 +443,7 @@ body {
 }
 
 .status-badge {
-    padding: 6px 12px;
+    padding: 6px 0;
     border-radius: var(--radius-lg);
     font-size: 0.75rem;
     font-weight: 500;
@@ -444,6 +454,16 @@ body {
 .status-delivered {
     background: #d1fae5;
     color: #065f46;
+}
+
+.status-active {
+    background: #d1fae5;
+    color: #065f46;
+    padding: 6px 12px;
+}
+.status-inactive {
+    background: #c7c7c796;
+    padding: 6px 12px;
 }
 
 .status-pending {

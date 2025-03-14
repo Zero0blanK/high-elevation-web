@@ -548,7 +548,7 @@
   .rating-input label {
     cursor: pointer;
     font-size: 30px;
-    color: #ddd;
+    color: #0000006b;
     margin: 0 2px;
     transition: var(--transition);
   }

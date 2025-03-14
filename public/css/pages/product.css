@@ -203,7 +203,7 @@
   }
   
   .filter-button:hover {
-    background-color: var(--primary-light);
+    background-color: var(--secondary-color);
   }
   
   .clear-button {

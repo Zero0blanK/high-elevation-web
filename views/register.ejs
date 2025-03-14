@@ -5,6 +5,28 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><% title %></title>
     <link rel="stylesheet" href="css/pages/register.css">
+    <style>
+        .error-message {
+            color: #ff3333;
+            font-size: 0.8rem;
+            margin-top: 4px;
+            display: none;
+        }
+        
+        input.error {
+            border-color: #ff3333;
+        }
+        
+        .form-error {
+            color: #ff3333;
+            font-size: 0.9rem;
+            padding: 10px;
+            margin-bottom: 15px;
+            background-color: rgba(255, 51, 51, 0.1);
+            border-radius: 4px;
+            display: none;
+        }
+    </style>
 </head>
 <body>
     <div class="container">
@@ -24,28 +46,34 @@
             <h2>Join High Elevation</h2>
             <p>Create your account</p>
         </div>
-        <form action="/register" method="POST">
+        <div id="form-error" class="form-error"></div>
+        <form action="/register" method="POST" id="registerForm">
             <div class="name-fields">
                 <div class="form-group">
                     <label for="first_name">First Name:</label>
                     <input type="text" id="first_name" name="first_name" placeholder="First Name" required>
+                    <span class="error-message" id="first_name_error">Please enter a valid first name</span>
                 </div>
                 <div class="form-group">
                     <label for="last_name">Last Name:</label>
                     <input type="text" id="last_name" name="last_name" placeholder="Last Name" required>
+                    <span class="error-message" id="last_name_error">Please enter a valid last name</span>
                 </div>
             </div>
             <div class="form-group">
                 <label for="email">Email:</label>
                 <input type="email" id="email" name="email" placeholder="Email" required>
+                <span class="error-message" id="email_error">Please enter a valid email address</span>
             </div>
             <div class="form-group">
                 <label for="contact_number">Phone Number:</label>
-                <input type="number" id="contact_number" name="contact_number" placeholder="Phone Number" required>
+                <input type="tel" id="contact_number" name="contact_number" placeholder="Phone Number" required>
+                <span class="error-message" id="contact_number_error">Please enter a valid phone number starting with 09 (11 digits)</span>
             </div>
             <div class="form-group">
                 <label for="password">Password:</label>
                 <input type="password" id="password" name="password" placeholder="Password" required>
+                <span class="error-message" id="password_error">Password must be at least 8 characters</span>
             </div>
             <div class="form-group">
                 <button type="submit" class="btn">Register</button>
@@ -55,5 +83,106 @@
             Already a member? <a href="/login">Login here</a>
         </div>
     </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const form = document.getElementById('registerForm');
+            const formError = document.getElementById('form-error');
+            
+            // Form validation
+            form.addEventListener('submit', async function(event) {
+                event.preventDefault();
+                
+                // Reset previous errors
+                formError.style.display = 'none';
+                formError.textContent = '';
+                
+                const inputs = form.querySelectorAll('input');
+                inputs.forEach(input => {
+                    input.classList.remove('error');
+                    const errorMsg = document.getElementById(`${input.id}_error`);
+                    if (errorMsg) errorMsg.style.display = 'none';
+                });
+                
+                // Get form data
+                const formData = new FormData(form);
+                const data = Object.fromEntries(formData.entries());
+                
+                // Validate form inputs
+                let isValid = true;
+                
+                // First name validation
+                if (!data.first_name || data.first_name.length < 2) {
+                    showError('first_name', 'First name must be at least 2 characters');
+                    isValid = false;
+                }
+                
+                // Last name validation
+                if (!data.last_name || data.last_name.length < 2) {
+                    showError('last_name', 'Last name must be at least 2 characters');
+                    isValid = false;
+                }
+                
+                // Email validation
+                const emailRegex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+                if (!emailRegex.test(data.email)) {
+                    showError('email', 'Please enter a valid email address');
+                    isValid = false;
+                }
+                
+                // Phone number validation
+                if (!data.contact_number || !data.contact_number.startsWith('09') || data.contact_number.length !== 11) {
+                    showError('contact_number', 'Phone number must start with 09 and be 11 digits');
+                    isValid = false;
+                }
+                
+                // Password validation
+                if (!data.password || data.password.length < 8) {
+                    showError('password', 'Password must be at least 8 characters');
+                    isValid = false;
+                }
+                
+                if (!isValid) {
+                    return;
+                }
+                
+                form.submit();
+            });
+            
+            // Special handling for phone number
+            const phoneInput = document.getElementById('contact_number');
+            phoneInput.addEventListener('input', function(e) {
+                // Allow only digits and ensure it starts with 09
+                let value = this.value.replace(/\D/g, '');
+                
+                
+                // Limit to 11 digits
+                if (value.length > 11) {
+                    value = value.slice(0, 11);
+                }
+                
+                this.value = value;
+            });
+            
+            // Function to show error for a specific field
+            function showError(fieldId, message) {
+                const field = document.getElementById(fieldId);
+                const errorMsg = document.getElementById(`${fieldId}_error`);
+                
+                field.classList.add('error');
+                if (errorMsg) {
+                    errorMsg.textContent = message;
+                    errorMsg.style.display = 'block';
+                }
+            }
+            
+            // Function to show general form error
+            function showFormError(message) {
+                formError.textContent = message;
+                formError.style.display = 'block';
+                formError.scrollIntoView({ behavior: 'smooth' });
+            }
+        });
+    </script>
 </body>
 </html>

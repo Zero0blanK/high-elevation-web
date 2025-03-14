@@ -28,8 +28,8 @@
                     <option value="stock-in" <%= actionFilter === 'stock-in' ? 'selected' : '' %>>Stock In</option>
                     <option value="stock-out" <%= actionFilter === 'stock-out' ? 'selected' : '' %>>Stock Out</option>
                     <option value="add-product" <%= actionFilter === 'add-product' ? 'selected' : '' %>>Add Product</option>
-                    <option value="update-product" <%= actionFilter === 'update-product' ? 'selected' : '' %>>Update Product</option>
-                    <option value="delete-product" <%= actionFilter === 'delete-product' ? 'selected' : '' %>>Delete Product</option>
+                    <option value="update" <%= actionFilter === 'update' ? 'selected' : '' %>>Update Product</option>
+                    <option value="delete" <%= actionFilter === 'delete' ? 'selected' : '' %>>Delete Product</option>
                 </select>
                 <select class="filter-select" name="sort" onchange="this.form.submit()">
                     <option value="newest" <%= sortOption === 'newest' ? 'selected' : '' %>>Newest First</option>
@@ -58,7 +58,7 @@
                                     <td>
                                         <div class="inventory-info">
                                             <img src="<%= log.image_url %>" alt="<%= log.product_name %>" class="product-thumbnail">
-                                            <span><%= log.product_name %></span>
+                                            <span><%= log.product_name.length > 30 ? log.product_name.slice(0, 30) + '...' : log.product_name %></span>
                                         </div>
                                     </td>
                                     <td>

@@ -34,7 +34,7 @@ editButton.addEventListener('click', function() {
 function enableEditMode() {
     inputs.forEach(input => {
         if (input.id !== 'email') { // Keep email disabled
-            input.disabled = false;
+            input.readOnly = false;
         }
     });
 
@@ -47,7 +47,7 @@ function enableEditMode() {
 
 function disableEditMode() {
     inputs.forEach(input => {
-        input.disabled = true;
+        input.readOnly = true;
     });
 
     profileUpload.disabled = true;
@@ -84,12 +84,12 @@ function submitForm() {
             disableEditMode();
             Toast.show('Profile updated successfully!');
         } else {
-            Toast.show('Failed to update profile', 'error');
+            Toast.show(data.message, 'error');
         }
     })
     .catch(error => {
         console.error('Update error:', error);
-        alert('Failed to update profile: ' + error.message);
+        Toast.show('Failed to update profile. Please try again.', 'error');
     });
 }
 

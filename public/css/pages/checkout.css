@@ -30,7 +30,6 @@ body {
 h2 {
     font-size: 24px;
     margin: 0 0 24px 0;
-    color: #333;
 }
 
 .form-group {
@@ -150,7 +149,7 @@ input[type="text"]:focus, select:focus {
 }
 
 .shipping-notice {
-    color: var(--text-color);
+    color: #fff;
     padding: 12px;
     background-color: rgba(65, 65, 65, 0.8);
     border-radius: 4px;

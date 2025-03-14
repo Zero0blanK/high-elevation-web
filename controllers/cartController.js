@@ -149,39 +149,87 @@ class CartController {
   async cartItemPayment(req, res){
     const user_id = req.session.userId;
     const {address_id, payment_method} = req.body;
+    const {product_id, weight_id, quantity} = req.query;
+    const isBuyNow = req.query.buyNow === "true";
+
 
     if (!user_id || !address_id || !payment_method) {
-      return res.status(400).send("Invalid payment. Address and payment method are required.");
+      return res.status(400).json({
+        success: false,
+        error: "Invalid payment. Address and payment method are required."
+      });
     }
 
     const connection = await db.getConnection();
 
     try {
       await connection.beginTransaction(); // 🛠 Start transaction
-
-      // Get cart items
-      const [cartItems] = await connection.execute(`
-          SELECT c.product_id, c.weight_id, c.quantity, pw.price, pw.stock
-          FROM cart c
-          JOIN product_weight pw ON c.product_id = pw.product_id AND c.weight_id = pw.weight_id
-          WHERE c.user_id = ?`,
-          [user_id]
-      );
-
-      if (cartItems.length === 0) {
-          await connection.rollback(); // 🛠 Rollback on error
-          return;
-      }
-
-      for (let item of cartItems) {
-          if (item.quantity > item.stock) {
-              await connection.rollback(); // 🛠 Rollback on stock issue
-              return;
+        let cartItems = [];
+        if (isBuyNow) {
+          // Process Buy Now: Get COMPLETE product details from the database
+          const [product] = await connection.execute(`
+              SELECT p.id AS product_id, p.name, p.image_url, pw.price, pw.stock,
+                     w.value AS weight, w.unit, pc.name AS category_name
+              FROM product_weight pw
+              JOIN product p ON pw.product_id = p.id
+              JOIN weight w ON pw.weight_id = w.id
+              JOIN product_category pc ON p.category_id = pc.id
+              WHERE pw.product_id = ? AND pw.weight_id = ?`,
+              [product_id, weight_id]
+          );
+      
+          if (product.length === 0) {
+              await connection.rollback();
+              return res.status(400).send("Invalid product selection.");
           }
-      }
+      
+          const item = {
+              product_id,
+              weight_id,
+              quantity: parseInt(quantity),
+              price: parseFloat(product[0].price),
+              stock: parseInt(product[0].stock),
+              product: product[0] // Add the full product object
+          };
+          if (item.quantity > item.stock) {
+            await connection.rollback();
+            return res.status(400).json({
+              success: false,
+              error: "Insufficient stock."
+            });
+          }
+      
+          cartItems.push(item);
+      } else {
+            // Process Cart Checkout
+            [cartItems] = await connection.execute(`
+                SELECT c.product_id, c.weight_id, c.quantity, pw.price, pw.stock
+                FROM cart c
+                JOIN product_weight pw ON c.product_id = pw.product_id AND c.weight_id = pw.weight_id
+                WHERE c.user_id = ?`,
+                [user_id]
+            );
 
+            if (cartItems.length === 0) {
+                await connection.rollback();
+                return res.status(400).send("Cart is empty.");
+            }
+
+            for (let item of cartItems) {
+                if (item.quantity > item.stock) {
+                    await connection.rollback();
+                    return res.status(400).json({
+                      success: false,
+                      error: "Insufficient stock."
+                    });
+                }
+            }
+        }
+
+      const shippingRate = 5 / 100;
       let totalAmount = cartItems.reduce((sum, item) => sum + item.quantity * parseFloat(item.price), 0);
-
+      totalAmount += totalAmount * shippingRate;
+      
       const [orderResult] = await connection.execute(`
           INSERT INTO user_order (user_id, address_id, total_amount, order_date)
           VALUES (?, ?, ?, NOW())`,
@@ -218,9 +266,9 @@ class CartController {
           [userOrderId, payment_method]
       );
 
-      if (!req.body.isBuyNow) {
+      if (!isBuyNow) {
         await connection.execute('DELETE FROM cart WHERE user_id = ?', [user_id]);
-    }
+      }
 
       await connection.commit(); // ✅ Commit transaction
 

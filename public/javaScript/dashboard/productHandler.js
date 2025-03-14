@@ -1,16 +1,27 @@
 // Enable/disable variant inputs based on checkbox
-document.querySelectorAll('input[type="checkbox"][name="weights"]').forEach(checkbox => {
-    checkbox.addEventListener('change', function () {
-        const variantCard = this.closest('.variant-card');
-        const inputs = variantCard.querySelectorAll('input[type="number"]');
-        inputs.forEach(input => {
-            input.disabled = !this.checked;
-            if (!this.checked) {
-                input.value = '';
+function handleCheckboxToggle(modalSelector) {
+    document.querySelectorAll(`${modalSelector} .variant-card input[type="checkbox"]`).forEach(checkbox => {
+        checkbox.addEventListener("change", function () {
+            let priceInput = this.closest(".variant-card").querySelector("input[type='number']");
+            let stockInput = this.closest(".variant-card").querySelector("input[type='hidden']");
+
+            if (this.checked) {
+                priceInput.removeAttribute("disabled");
+                stockInput.removeAttribute("disabled");
+            } else {
+                if (modalSelector === "#addProductModal") { // Reset only in Add Modal
+                    priceInput.value = "";
+                    stockInput.value = "0";
+                }
+                priceInput.setAttribute("disabled", "true");
+                stockInput.setAttribute("disabled", "true");
             }
         });
     });
-});
+}
+
+handleCheckboxToggle("#addProductModal");
+handleCheckboxToggle("#editProductModal");
 
 document.querySelector('.cat-filter').addEventListener('change', function () {
     let selectedCategory = this.value.toLowerCase();
@@ -75,16 +86,6 @@ document.querySelector('.add-order-btn').addEventListener('click', () => {
     showModal('addProductModal');
 });
 
-const addProductBtn = document.querySelector(".add-order-btn");
-
-if (addProductBtn) {
-    addProductBtn.addEventListener("click", (event) => {
-        event.preventDefault(); // Prevent unintended modal behavior
-        window.location.href = "/dashboard/products/add";
-    });
-}
-
-
 // Function to handle the "Edit Product" functionality
 document.querySelectorAll('.edit-product').forEach(button => {
     button.addEventListener('click', function () {
@@ -139,9 +140,136 @@ document.querySelectorAll('.edit-product').forEach(button => {
     });
 });
 
+function showError(input, message) {
+    let errorMessage = input.parentElement.querySelector('.error-message');
+    if (!errorMessage) {
+        errorMessage = document.createElement('small');
+        errorMessage.classList.add('error-message');
+        input.parentElement.appendChild(errorMessage);
+    }
+    errorMessage.textContent = message;
+    input.classList.add('input-error');
+}
+
+function clearError(input) {
+    const errorMessage = input.parentElement.querySelector('.error-message');
+    if (errorMessage) {
+        errorMessage.textContent = '';
+    }
+    input.classList.remove('input-error');
+}
+
+function validateInput(input, message, maxLength = null) {
+    if (input.value.trim() === '') {
+        showError(input, message);
+        return false;
+    } 
+    if (maxLength && input.value.length > maxLength) {
+        showError(input, `Maximum ${maxLength} characters allowed.`);
+        return false;
+    }
+    clearError(input);
+    return true;
+}
+
+function validateWeightVariants() {
+    const variantCards = document.querySelectorAll('.variant-card');
+    let isChecked = false; // Flag to check if at least one checkbox is selected
+    let hasValidPrice = true; // Flag to check if selected weights have valid prices
+
+    variantCards.forEach(variant => {
+        const checkbox = variant.querySelector('input[type="checkbox"]');
+        const priceInput = variant.querySelector('input[name^="price_"]');
+
+        if (checkbox.checked) {
+            isChecked = true; // At least one checkbox is checked
+            if (!priceInput.value || parseFloat(priceInput.value) <= 0) {
+                showError(priceInput, 'Enter a valid price.');
+                hasValidPrice = false;
+            } else {
+                clearError(priceInput);
+            }
+        } else {
+            clearError(priceInput); // Clear error if unchecked
+        }
+    });
+
+    const errorContainer = document.querySelector('.weight-variants .error-message');
+
+    if (!isChecked) {
+        errorContainer.textContent = 'Select at least one weight variant.';
+        return false;
+    } else if (!hasValidPrice) {
+        errorContainer.textContent = 'Ensure selected variants have valid prices.';
+        return false;
+    } else {
+        errorContainer.textContent = ''; // Clear error when at least one valid variant is selected
+        return true;
+    }
+}
+
+
+const nameInput = document.querySelector('#editProductName');
+const createNameInput = document.querySelector('#productName');
+nameInput.addEventListener('input', () => validateInput(nameInput, 'Product name is required.', 70));
+createNameInput.addEventListener('input', () => validateInput(createNameInput, 'Product name is required.', 70));
+
+const descriptionInput = document.querySelector('#editProductDescription');
+const createDescriptionInput = document.querySelector('#productDescription');
+descriptionInput.addEventListener('input', () => validateInput(descriptionInput, 'Description is required.', 2000));
+createDescriptionInput.addEventListener('input', () => validateInput(createDescriptionInput, 'Description is required.', 2000));
+
+const categoryInput = document.querySelector('#editProductCategory');
+const createCategoryInput = document.querySelector('#productCategory');
+categoryInput.addEventListener('change', () => validateInput(categoryInput, 'Please select a category.'));
+createCategoryInput.addEventListener('change', () => validateInput(createCategoryInput, 'Please select a category.'));
+
+// Validate price fields for checked weight variants
+document.querySelectorAll('.variant-card').forEach(variant => {
+    const checkbox = variant.querySelector('input[type="checkbox"]');
+    const priceInput = variant.querySelector('input[name^="price_"]');
+
+    priceInput.addEventListener('input', () => {
+        if (checkbox.checked) {
+            if (!priceInput.value || parseFloat(priceInput.value) <= 0) {
+                showError(priceInput, 'Enter a valid price.');
+            } else {
+                clearError(priceInput);
+            }
+        } else{
+            validateWeightVariants();
+        }
+    });
+    // Remove error when checkbox is unchecked
+    checkbox.addEventListener('change', () => {
+        if (!checkbox.checked) {
+            clearError(priceInput);
+        }
+    });
+});
+
 // Function to handle the form submission for editing a product
-document.querySelector('.edit-form').addEventListener('submit', function (event) {
-    event.preventDefault();
+document.querySelector('.edit-form').addEventListener('submit', function (e) {
+    e.preventDefault();
+    let isValid = true;
+
+    if (!validateInput(nameInput, 'Product name is required.', 70)) isValid = false;
+    if (!validateInput(descriptionInput, 'Description is required.', 2000)) isValid = false;
+    if (!validateInput(categoryInput, 'Please select a category.')) isValid = false;
+    if (!validateWeightVariants()) isValid = false;
+    document.querySelectorAll('.variant-card').forEach(variant => {
+        const checkbox = variant.querySelector('input[type="checkbox"]');
+        const priceInput = variant.querySelector('input[name^="price_"]');
+
+        if (checkbox.checked) {
+            if (!priceInput.value || parseFloat(priceInput.value) <= 0) {
+                showError(priceInput, 'Enter a valid price.');
+                isValid = false;
+            }
+        }
+    });
+
+    if (!isValid) return;
 
     const formData = new FormData(this);
     const weights = [];
@@ -164,20 +292,74 @@ document.querySelector('.edit-form').addEventListener('submit', function (event)
         method: 'POST',
         body: formData
     })
-    .then(response => {
-        if (!response.ok) {
-            throw new Error('Network response was not ok');
-        }
-        return response.json();
-    })
+    .then(response => response.json())
     .then(data => {
         if (data.success) {
-            location.reload();
+            hideModal('editProductModal');
+            Toast.show(data.message,'success');
         } else {
-            alert('Failed to update product. Please try again.');
+            Toast.show('Error updating product. Please try again.', 'error');
         }
     })
     .catch(error => console.error('Error updating product:', error));
+});
+
+
+// Function to handle the form submission for adding a product
+document.querySelector('.add-form').addEventListener('submit', function (e) {
+    e.preventDefault();
+    let isValid = true;
+
+    if (!validateInput(createNameInput, 'Product name is required.', 70)) isValid = false;
+    if (!validateInput(createDescriptionInput, 'Description is required.', 2000)) isValid = false;
+    if (!validateInput(createCategoryInput, 'Please select a category.')) isValid = false;
+    if (!validateWeightVariants()) isValid = false;
+    document.querySelectorAll('.variant-card').forEach(variant => {
+        const checkbox = variant.querySelector('input[type="checkbox"]');
+        const priceInput = variant.querySelector('input[name^="price_"]');
+
+        if (checkbox.checked) {
+            if (!priceInput.value || parseFloat(priceInput.value) <= 0) {
+                showError(priceInput, 'Enter a valid price.');
+                isValid = false;
+            }
+        }
+    });
+    if (!isValid) return;
+    console.error(isValid);
+
+    const formData = new FormData(this);
+    const weights = [];
+
+    document.querySelectorAll('.variant-card').forEach(card => {
+        const checkbox = card.querySelector('input[type="checkbox"]');
+        if (checkbox.checked) {
+            const weight = {
+                weight_id: checkbox.value,
+                price: card.querySelector(`input[name="price_${checkbox.value}"]`).value,
+                stock: card.querySelector(`input[name="stock_${checkbox.value}"]`).value
+            };
+            weights.push(weight);
+        }
+    });
+    
+    formData.delete("weights"); // Ensure no duplicate
+    formData.append('weights', JSON.stringify(weights));
+    
+    fetch('/dashboard/products/add', {
+        method: 'POST',
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            hideModal('addProductModal');
+            Toast.show(data.message,'success');
+        } else {
+            Toast.show('Error adding product. Please try again.', 'error');
+        }
+    })
+    .catch(error => console.error('Error adding product:', error));
 });
 
 // Delete confirmation
@@ -186,27 +368,49 @@ document.querySelector('#deleteModal .delete-btn').addEventListener('click', () 
     showNotification();
 });
 
+
+let lastSelectedFile = null;
+const errorContainer = document.querySelector('#imageError');
+errorContainer.textContent = "Product image is required.";
 // Function to show the preview of the selected image
 function previewImage(event) {
     const file = event.target.files[0];
+    const input = event.target;
     const previewContainer = document.getElementById('imagePreviewContainer');
     const imagePreview = document.getElementById('imagePreview');
 
-    // Only proceed if a file is selected and it is an image
-    if (file && file.type.startsWith('image/')) {
-        const reader = new FileReader();
-
-        reader.onload = function (e) {
-            imagePreview.src = e.target.result; // Set the source of the image preview
-            previewContainer.style.display = 'block'; // Show the preview container
-        };
-
-        reader.readAsDataURL(file); // Read the selected file as a data URL
-    } else {
-        // Hide the preview container if the file is not an image
-        previewContainer.style.display = 'none';
+    if (!file) {
+        if (lastSelectedFile) {
+            input.files = lastSelectedFile; // Restore the previous file
+        }
+        return;
     }
+
+    const validTypes = ['image/jpeg', 'image/png', 'image/webp'];
+    if (!validTypes.includes(file.type)) {
+        if (errorContainer) errorContainer.textContent = "Invalid file type. Allowed: JPG, PNG, WEBP.";
+        input.value = ''; // Clear input field
+        previewContainer.style.display = 'none';
+        return;
+    }
+
+    if (errorContainer) errorContainer.textContent = ""; // Clear error when valid
+
+    // Show image preview
+    const reader = new FileReader();
+    reader.onload = function (e) {
+        imagePreview.src = e.target.result;
+        previewContainer.style.display = 'block';
+    };
+    reader.readAsDataURL(file);
 }
+
+// Attach event listener to file input
+const imageInput = document.getElementById("productImage");
+if (imageInput) {
+    imageInput.addEventListener("change", previewImage);
+}
+
 
 // Delete confirmation
 document.querySelectorAll('.delete-product').forEach(button => {

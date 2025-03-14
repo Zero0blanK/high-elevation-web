@@ -78,7 +78,7 @@
                         <% if (locals.user) {%> 
                             value="<%= locals.user.first_name %>" 
                         <%}  %>
-                            disabled/>
+                            readonly/>
                     </div>
                     <div class="form-group">
                         <label for="last-name">Last Name</label>
@@ -86,14 +86,14 @@
                         <% if (locals.user) {%> 
                             value="<%= locals.user.last_name %>" 
                         <%}  %>
-                        disabled/>
+                            readonly/>
                     </div>
                     <div class="form-group">
                         <label for="email">Email</label>
                         <input type="email" id="email" 
                         <% if (locals.user) {%>
                             value="<%= locals.user.email %>"
-                            disabled
+                            readonly
                         <% } %>
                         >
                     </div>
@@ -102,7 +102,7 @@
                         <input type="text" id="phone"  
                         <% if (locals.user.contact_number !== null) {%>
                             value="<%= locals.user.contact_number %>"
-                            disabled
+                            readonly
                         <%} %>
                         >
                     </div>
@@ -111,8 +111,7 @@
                         <div class="password-field">
                             <input type="password" id="password" 
                             <% if (locals.user) {%>
-                                value="<%= locals.user.password %>" 
-                                disabled
+                                readonly
                             <% } %>
                             >
                             <button type="button" class="toggle-password" style="display: none;">

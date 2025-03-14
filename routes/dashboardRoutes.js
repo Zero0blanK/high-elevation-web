@@ -150,18 +150,36 @@ router.post('/dashboard/orders/update-status', async (req, res) => {
 });
 
 router.post('/dashboard/products/add', upload.single("image"), async (req, res) => {
+    const { name, description, category } = req.body;
+    const user_id = req.session.userId;
+    const weights = req.body.weights || [];
+
+    
+    const productData = {
+        user_id,
+        name,
+        description,
+        category,
+        weights,
+        image: req.file ? `/assets/product-image/${req.file.filename}` : (req.body.image || null),
+        ...req.body // Include price and stock for each weight
+    };
+
     try {
-        await dashboardController.addProduct(req, res);
+        await dashboardController.addProduct(productData);
+        res.json({ success: true, message: 'Product added successfully' });
     } catch (error) {
         console.error('Error adding product:', error);
-        res.status(500).json({ error: 'Failed to add product' });
+            // Send JSON error response
+        res.status(500).json({ success: false, message: 'Error adding product', error: error.message });
     }
 });
 router.post('/dashboard/edit-product', upload.single('image'), deleteImg, async (req, res) => {
     const { id, name, description, category } = req.body;
     const weights = req.body.weights || [];
-
+    const user_id = req.session.userId;
     const productData = {
+        user_id,
         id,
         name,
         description,
@@ -170,12 +188,9 @@ router.post('/dashboard/edit-product', upload.single('image'), deleteImg, async 
         image: req.file ?  `/assets/product-image/${req.file.filename}` : (req.newImage || req.body.image || null),
         ...req.body // Include price and stock for each weight
     };
-
-    console.log("Final productData:", productData);
-
     try {
         await dashboardController.updateProduct(productData);
-        res.redirect('/dashboard/products');
+        res.json({ success: true, message: 'Product updated successfully' });
     } catch (error) {
         console.error('Error updating product:', error);
     }

@@ -21,8 +21,7 @@
                     <span class="stat-title">Revenue Growth</span>
                     <i class="fas fa-chart-line stat-icon" style="color: #10b981;"></i>
                 </div>
-                <div class="stat-value"><%= analytics.revenueGrowth.growth %>%</div>
-                <div class="stat-trend <%= parseInt(analytics.revenueGrowth.growth) > 0 ? 'trend-up' : 'trend-down' %>">vs last quarter</div>
+                <div class="stat-value <% if (analytics.revenueGrowth.growth > 0) { %>trend-up<% } else { %>trend-down<% } %>"><%= analytics.revenueGrowth.growth %>%</div>
             </div>
             <div class="stat-card">
                 <div class="stat-header">
@@ -30,7 +29,6 @@
                     <i class="fas fa-user-tag stat-icon" style="color: #3b82f6;"></i>
                 </div>
                 <div class="stat-value"><%= analytics.customerLifetimeValue.value %></div>
-                <div class="stat-trend trend-up"><%= analytics.customerLifetimeValue.change %>% from last year</div>
             </div>
         </div>
     

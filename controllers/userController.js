@@ -43,42 +43,90 @@ class UserController {
 
   static async register(req, res) {
     const { first_name, last_name, email, password, contact_number } = req.body;
-
+    
+    // Determine if this is an AJAX request
+    const isAjaxRequest = req.headers['content-type'] === 'application/json';
+    
+    // Validation checks
     if (!first_name || !last_name || !email || !password || !contact_number) {
-      req.flash('error', 'All fields are required.');
-      return res.redirect('/register');
+      if (isAjaxRequest) {
+        return res.status(400).json({ error: 'All fields are required.' });
+      } else {
+        req.flash('error', 'All fields are required.');
+        return res.redirect('/register');
+      }
     }
-
+    
     if (password && password.length < 8) {
-      req.flash('error', 'Password must be at least 8 characters long');
-      return res.redirect('/register');
+      if (isAjaxRequest) {
+        return res.status(400).json({ error: 'Password must be at least 8 characters long' });
+      } else {
+        req.flash('error', 'Password must be at least 8 characters long');
+        return res.redirect('/register');
+      }
     }
-
-    const [existingUser] = await db.query('SELECT * FROM user WHERE email = ?', [email]);
-    if (existingUser.length > 0) {
-      req.flash('error', 'This email is already registered.');
-      return res.redirect('/register');
+    
+    if (typeof contact_number !== 'string' || !contact_number.startsWith('09') || contact_number.length !== 11) {
+      if (isAjaxRequest) {
+        return res.status(400).json({ error: 'Invalid phone number' });
+      } else {
+        req.flash('error', 'Invalid phone number');
+        return res.redirect('/register');
+      }
     }
-
-    const connection = await db.getConnection();
-
+    
     try {
-      await connection.beginTransaction();
-      // Hash the password before saving it
-      const hashedPassword = await bcrypt.hash(password, 10);
-
-      await connection.query('INSERT INTO user (first_name, last_name, email, password, contact_number) VALUES (?, ?, ?, ?, ?)', [first_name, last_name, email, hashedPassword, contact_number]);
+      // Check if user already exists
+      const [existingUser] = await db.query('SELECT * FROM user WHERE email = ?', [email]);
+      if (existingUser.length > 0) {
+        if (isAjaxRequest) {
+          return res.status(400).json({ error: 'This email is already registered.' });
+        } else {
+          req.flash('error', 'This email is already registered.');
+          return res.redirect('/register');
+        }
+      }
       
-      req.flash('success', `Welcome, ${first_name}! Your account has been created. You can now log in.`);
-      await connection.commit();
-      res.redirect('/login');
+      const connection = await db.getConnection();
+      
+      try {
+        await connection.beginTransaction();
+        // Hash the password before saving it
+        const hashedPassword = await bcrypt.hash(password, 10);
+        
+        await connection.query('INSERT INTO user (first_name, last_name, email, password, contact_number) VALUES (?, ?, ?, ?, ?)', 
+          [first_name, last_name, email, hashedPassword, contact_number]);
+        
+        await connection.commit();
+        
+        if (isAjaxRequest) {
+          return res.status(200).json({ success: true, message: `Welcome, ${first_name}! Your account has been created.` });
+        } else {
+          req.flash('success', `Welcome, ${first_name}! Your account has been created. You can now log in.`);
+          return res.redirect('/login');
+        }
+      } catch (err) {
+        await connection.rollback();
+        console.log('Error registering user:', err);
+        
+        if (isAjaxRequest) {
+          return res.status(500).json({ error: 'An unexpected error occurred while registering. Please try again later.' });
+        } else {
+          req.flash('error', 'An unexpected error occurred while registering. Please try again later.');
+          return res.status(500).redirect('/register');
+        }
+      } finally {
+        connection.release();
+      }
     } catch (err) {
-      await connection.rollback();
-      console.log('Error registering user:', err);
-      req.flash('error', 'An unexpected error occurred while registering. Please try again later.');
-      res.status(500).redirect('/register');
-    } finally {
-      connection.release();
+      console.log('Database error:', err);
+      
+      if (isAjaxRequest) {
+        return res.status(500).json({ error: 'An unexpected error occurred. Please try again later.' });
+      } else {
+        req.flash('error', 'An unexpected error occurred. Please try again later.');
+        return res.status(500).redirect('/register');
+      }
     }
   }
 
@@ -110,7 +158,7 @@ class UserController {
         FROM user_order uo
         JOIN order_detail od ON uo.id = od.user_order_id
         JOIN product p ON od.product_id = p.id
-        JOIN product_weight pw ON od.weight_id = pw.weight_id
+        JOIN product_weight pw ON od.product_id = pw.product_id AND od.weight_id = pw.weight_id
         JOIN weight w ON pw.weight_id = w.id
         JOIN product_category pc ON p.category_id = pc.id
         WHERE uo.user_id = ?
@@ -225,8 +273,6 @@ class UserController {
             );
         }
 
-        console.log('Adding address:', addressData);
-
         const query = `
             INSERT INTO user_address 
             (user_id, street_address, apartment, city, zip_code, is_default)
@@ -234,10 +280,10 @@ class UserController {
         
         await connection.query(query, [
             userId,
-            addressData.street_address,
-            addressData.apartment,
-            addressData.city,
-            addressData.zip_code,
+            addressData.street_address.trim(),
+            addressData.apartment.trim(),
+            addressData.city.trim(),
+            addressData.zip_code.trim(),
             addressData.is_default ? 1 : 0
         ]);
 
@@ -300,6 +346,15 @@ class UserController {
   static async updateProfile(req, res) {
     const userId = req.session.userId;
     const { first_name, last_name, contact_number, password } = req.body;
+
+    // Ensure required fields are present
+    if (!first_name || !last_name || !contact_number) {
+        return res.json({ success: false, message: 'All fields are required' });
+    }
+
+    if (typeof contact_number !== 'string' || !contact_number.startsWith('09') || contact_number.length !== 11) {
+        return res.json({ success: false, message: 'Invalid phone number' });
+    }
     
     const connection = await db.getConnection();
     try {

@@ -7,9 +7,11 @@
     <link rel="stylesheet" href="/css/components/navbar.css">
     <link rel="stylesheet" href="/css/pages/checkout.css">
     <link rel="stylesheet" href="/css/components/footer.css">
+    <link rel="stylesheet" href="/css/components/toast.css">
     <script src="/javaScript/navbar/navToggle.js" defer></script>
     <script src="/javaScript/navbar/profile-icon-dropdown.js" defer></script>
     <script src="/javaScript/checkout/orderSuccess.js" defer></script>
+    <script src="/javaScript/toast.js" defer></script>
 </head>
 <body>
     <%- include('./partials/navbar'); %>
@@ -26,7 +28,7 @@
                             <div class="address-item">
                                 <input type="radio" name="address_id" id="address<%= address.id %>" value="<%= address.id %>" <%= address.is_default ? 'checked' : '' %>>
                                 <label for="address<%= address.id %>">
-                                    <%= address.apartment !== null ? address.street_address + ', ' + address.apartment + ', ' + address.city + ', ' + address.zip_code : address.full_address %>
+                                    <%= address.apartment !== '' ? address.street_address + ', ' + address.apartment + ', ' + address.city + ', ' + address.zip_code : address.full_address %>
                                 </label>
                             </div>
                         <% }); %>
@@ -92,15 +94,18 @@
 
             <div class="right-container">
                 <% cartItems.forEach(item => { %>
-                    <% if (isBuyNow) { %>
+                    <% if (isBuyNow) { %> <!-- Correct boolean check -->
                     <div class="cart-item">
                         <div class="thumbnail-wrap">
-                            <div class="quantity-badge"><%= item.quantity%></div>
+                            <div class="quantity-badge"><%= item.quantity %></div>
                             <img src="<%= item.product.image_url %>" alt="<%= item.product.name %>" class="item-image">
                         </div>
                         <div class="item-details">
                             <div class="item-name"><%= item.product.name %></div>
-                            <div class="item-description"><%= item.product.category_name.charAt(0).toUpperCase() + item.product.category_name.slice(1) %> | <%= item.product.weight %><%= item.product.unit %></div>
+                            <div class="item-description">
+                                <%= item.product.category_name.charAt(0).toUpperCase() + item.product.category_name.slice(1) %> 
+                                | <%= item.product.weight %><%= item.product.unit %>
+                            </div>
                         </div>
                         <div class="item-price">₱<%= parseFloat(item.product.price).toFixed(2) %></div>
                     </div>
@@ -112,13 +117,16 @@
                         </div>
                         <div class="item-details">
                             <div class="item-name"><%= item.name %></div>
-                            <div class="item-description"><%= item.category_name.charAt(0).toUpperCase() + item.category_name.slice(1) %> | <%= item.weight %><%= item.unit %></div>
+                            <div class="item-description">
+                                <%= item.category_name.charAt(0).toUpperCase() + item.category_name.slice(1) %> 
+                                | <%= item.weight %><%= item.unit %>
+                            </div>
                         </div>
                         <div class="item-price">₱<%= parseFloat(item.price).toFixed(2) %></div>
                     </div>
                     <% } %>
                 <% }); %>
-        
+            
                 <div class="cart-summary">
                     <div class="subtotal-row">
                         <div>Subtotal : <%= totalItems %> items</div>
@@ -128,7 +136,7 @@
                         <div>Shipping : </div>
                         <div>₱<%= shipping.toFixed(2) %></div>
                     </div>
-        
+            
                     <div class="total-row">
                         <div>Total</div>
                         <div>₱<%= total.toFixed(2) %> PHP</div>
@@ -187,49 +195,119 @@
                 showNewAddressForm.style.display = 'block';
             });
 
-        // Update the payment form event listener in your script section
-        paymentForm.addEventListener('submit', async function(event) {
-            event.preventDefault(); // Prevent default form submission
+            // Update the payment form event listener in your script section
+            paymentForm.addEventListener('submit', async function(event) {
+                event.preventDefault(); // Prevent default form submission
 
-            const selectedAddress = document.querySelector('input[name="address_id"]:checked');
-            const selectedPayment = document.querySelector('input[name="payment_method"]:checked');
+                const selectedAddress = document.querySelector('input[name="address_id"]:checked');
+                const selectedPayment = document.querySelector('input[name="payment_method"]:checked');
 
-            if (!selectedAddress) {
-                Toast.show("Please select a delivery address.", "error");
-                return;
-            }
-
-            if (!selectedPayment) {
-                Toast.show("Please select a payment method.", "error");
-                return;
-            }
-
-            selectedAddressInput.value = selectedAddress.value;
-            selectedPaymentInput.value = selectedPayment.value;
-
-            try {
-                const formData = new FormData(paymentForm);
-                const response = await fetch('/cart/paynow', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify(Object.fromEntries(formData))
-                });
-
-                const result = await response.json();
-
-                if (result.success) {
-                    showOrderSuccessModal(result.orderId);
-                } else {
-                    Toast.show(result.error || 'Error processing payment', 'error');
+                if (!selectedAddress) {
+                    Toast.show("Please select a delivery address.", "error");
+                    return;
                 }
-            } catch (error) {
-                console.error('Payment error:', error);
-                Toast.show('Error processing payment', 'error');
-            }
-        });
 
+                if (!selectedPayment) {
+                    Toast.show("Please select a payment method.", "error");
+                    return;
+                }
+
+                selectedAddressInput.value = selectedAddress.value;
+                selectedPaymentInput.value = selectedPayment.value;
+
+                try {
+                    // Get form data 
+                    const formData = new FormData(paymentForm);
+                    const jsonData = Object.fromEntries(formData);
+                    
+                    // Check if this is a "Buy Now" checkout
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const isBuyNow = urlParams.get('buyNow') === 'true';
+                    
+                    let url = '/cart/paynow';
+                    
+                    // If it's a Buy Now checkout, include the necessary query parameters
+                    if (isBuyNow) {
+                        const productId = urlParams.get('product_id');
+                        const weightId = urlParams.get('weight_id');
+                        const quantity = urlParams.get('quantity');
+                        
+                        url += `?product_id=${productId}&weight_id=${weightId}&quantity=${quantity}&buyNow=true`;
+                    }
+                    
+                    // Show loading state if you have one
+                    // toggleLoadingState(true);
+                    
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(jsonData)
+                    });
+
+                    const result = await response.json();
+
+                    if (result.success) {
+                        showOrderSuccessModal(result.orderId);
+                    } else {
+                        Toast.show(result.error || 'Error processing payment', 'error');
+                    }
+                } catch (error) {
+                    console.error('Payment error:', error);
+                    Toast.show('Error processing payment', 'error');
+                } finally {
+                    // Hide loading state if you have one
+                    // toggleLoadingState(false);
+                }
+            });
+
+            // Get the form element
+            const addressForm = document.querySelector('.new-address-form form');
+
+            // Add event listener for form submission
+            addressForm.addEventListener('submit', async function(event) {
+                event.preventDefault(); // Prevent default form submission
+                
+                try {
+                    // Get form data
+                    const formData = new FormData(this);
+                    const jsonData = Object.fromEntries(formData);
+                    
+                    // Submit the form data via fetch
+                    const response = await fetch('/add-address', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify(jsonData)
+                    });
+                    
+                    const result = await response.json();
+                    
+                    if (result.success) {
+                        // Show success toast
+                        Toast.show(result.message, "success");
+                        
+                        // Reset form and hide it
+                        addressForm.reset();
+                        newAddressForm.classList.remove('active');
+                        showNewAddressForm.style.display = 'block';
+                        
+                        // Reload the page to show the new address in the list
+                        // Or you could dynamically add the new address to the DOM
+                        setTimeout(() => {
+                            window.location.reload();
+                        }, 1500);
+                    } else {
+                        // Show error toast
+                        Toast.show(result.message || 'Error adding address', "error");
+                    }
+                } catch (error) {
+                    console.error('Error adding address:', error);
+                    Toast.show('Error adding address', "error");
+                }
+            });
 
     </script>
 

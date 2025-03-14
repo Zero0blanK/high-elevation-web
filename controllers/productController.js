@@ -153,7 +153,6 @@ class ProductController {
       await connection.query(query, [user_id, product_id, rating, review_title, review_text]);
       req.flash('success', 'Review added successfully!');
       await connection.commit();
-      res.redirect(`/product/overview/${encodeURIComponent(productRows[0].name)}`);
     } catch (error) {
       await connection.rollback();
       console.error('Error adding review:', error);

@@ -141,43 +141,46 @@
                             <% } %>
                         </div>
                     </div>
-                    <button class="write-review-btn">Write a Review</button>
 
-                    <div class="review-form" style="display: none;">
-                        <% if (messages.error && messages.error.length > 0) { %>
+                    <% if (locals.user || '') { %>  
+                        <button 
+                            style="<%= (hasPurchased && orderDelivered === 'delivered' && !hasReviewed) ? 'display: block;' : 'display: none;' %>" 
+                            class="write-review-btn">
+                            Write a Review
+                        </button>
+                    
+                        <!-- Check if user has already reviewed this product -->
+                        <% if (hasReviewed) { %>
                             <div class="alert alert-danger">
-                                <%= messages.error %>
+                                <%= "You have already reviewed this product." %>
+                            </div>
+                        <% } else { %>
+                            <!-- The review form should follow the same conditional logic as the button -->
+                            <div class="review-form" style="display: none;">
+                                <form action="/reviews/add" method="POST">
+                                    <input type="hidden" name="product_id" value="<%= product.id %>">
+                                    <div class="rating-input">
+                                        <label class="rating-label" for="star">Your Rating</label>
+                                        <div class="stars">
+                                            <% for(let i = 5; i >= 1; i--) { %>
+                                                <input type="radio" id="star<%= i %>" name="rating" value="<%= i %>">
+                                                <label for="star<%= i %>">★</label>
+                                            <% } %>
+                                        </div>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="review-title">Title</label>
+                                        <input type="text" id="review-title" name="title" required>
+                                    </div>
+                                    <div class="form-group">
+                                        <label for="review-content">Review</label>
+                                        <textarea id="review-content" name="content" required></textarea>
+                                    </div>
+                                    <button type="submit">Submit Review</button>
+                                </form>
                             </div>
                         <% } %>
-                        <% if (messages.success && messages.success.length > 0) { %>
-                            <div class="alert alert-success">
-                                <%= messages.success %>
-                            </div>
-                        <% } %>
-                        <form action="/reviews/add" method="POST">
-                            <input type="hidden" name="product_id" value="<%= product.id %>">
-                            <div class="rating-input">
-                                <label class="rating-label" for="star">Your Rating</label>
-                                <div class="stars">
-                                    <% for(let i = 5; i >= 1; i--) { %>
-                                        <input type="radio" id="star<%= i %>" name="rating" value="<%= i %>">
-                                        <label for="star<%= i %>">★</label>
-                                    <% } %>
-                                </div>
-                            </div>
-                            <div class="form-group">
-                                <label for="review-title">Title</label>
-                                <input type="text" id="review-title" name="title" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="review-content">Review</label>
-                                <textarea id="review-content" name="content" required></textarea>
-                            </div>
-                            <button type="submit" <%= !locals.user ? 'disabled' : '' %>>
-                                <%= locals.user ? 'Submit Review' : 'Please Login to Review' %>
-                            </button>
-                        </form>
-                    </div>
+                    <% } %>
 
                     <div class="reviews-list">
                         <% if (reviews && reviews.length > 0) { %>
@@ -374,6 +377,123 @@
                 Toast.show('Error adding product to cart', 'error');
             }
         });
+
+        // Get form elements
+        const reviewForms = document.querySelector('.review-form form');
+        const titleInput = document.getElementById('review-title');
+        const contentInput = document.getElementById('review-content');
+        const submitButton = reviewForms?.querySelector('button[type="submit"]');
+        const starInputs = document.querySelectorAll('input[name="rating"]');
+
+        // Create error message elements
+        const titleError = document.createElement('div');
+        titleError.className = 'validation-error';
+        titleError.style.color = 'red';
+        titleError.style.fontSize = '0.8rem';
+        titleError.style.marginTop = '4px';
+        titleError.style.display = 'none';
+
+        const contentError = document.createElement('div');
+        contentError.className = 'validation-error';
+        contentError.style.color = 'red';
+        contentError.style.fontSize = '0.8rem';
+        contentError.style.marginTop = '4px';
+        contentError.style.display = 'none';
+
+        const ratingError = document.createElement('div');
+        ratingError.className = 'validation-error';
+        ratingError.style.color = 'red';
+        ratingError.style.fontSize = '0.8rem';
+        ratingError.style.marginTop = '4px';
+        ratingError.style.display = 'none';
+
+        const ratingInputContainer = document.querySelector('.rating-input');
+        // Insert error messages directly after inputs
+        titleInput?.parentNode.insertBefore(titleError, titleInput.nextSibling);
+        contentInput?.parentNode.insertBefore(contentError, contentInput.nextSibling);
+        ratingInputContainer?.appendChild(ratingError);starInputs[starInputs.length - 1]?.ratingInputContainer?.appendChild(ratingError); // Append rating error after stars
+
+        // Set validation constants
+        const TITLE_MAX_LENGTH = 50;
+        const CONTENT_MAX_LENGTH = 1000;
+
+        // Function to enforce max length
+        function enforceMaxLength(input, maxLength, errorElement) {
+            if (input.value.length > maxLength) {
+                input.value = input.value.slice(0, maxLength); // Trim excess input
+            }
+            if (input.value.length === maxLength) {
+                errorElement.textContent = `Max limit reached (${maxLength} characters).`;
+                errorElement.style.display = 'block';
+            } else {
+                errorElement.style.display = 'none';
+            }
+        }
+
+        // Validate star rating
+        function validateStarRating() {
+            let starSelected = false;
+            starInputs.forEach(input => {
+                if (input.checked) {
+                    starSelected = true;
+                }
+            });
+
+            if (!starSelected) {
+                ratingError.textContent = 'Please select a star rating';
+                ratingError.style.display = 'block';
+            } else {
+                ratingError.style.display = 'none';
+            }
+
+            return starSelected;
+        }
+
+        // Main validation function
+        function validateForm() {
+            let isValid = true;
+
+            // Validate title length
+            if (titleInput.value.length > TITLE_MAX_LENGTH) {
+                titleError.textContent = `Max limit reached (${TITLE_MAX_LENGTH} characters).`;
+                titleError.style.display = 'block';
+                isValid = false;
+            } else {
+                titleError.style.display = 'none';
+            }
+
+            // Validate content length
+            if (contentInput.value.length > CONTENT_MAX_LENGTH) {
+                contentError.textContent = `Max limit reached (${CONTENT_MAX_LENGTH} characters).`;
+                contentError.style.display = 'block';
+                isValid = false;
+            } else {
+                contentError.style.display = 'none';
+            }
+
+            // Validate star rating (prevents focus issue)
+            if (!validateStarRating()) {
+                isValid = false;
+                starInputs[0]?.focus(); // Ensure one star is focused if error exists
+            }
+
+            return isValid;
+        }
+
+        // Event listeners for real-time validation
+        titleInput?.addEventListener('input', () => enforceMaxLength(titleInput, TITLE_MAX_LENGTH, titleError));
+        contentInput?.addEventListener('input', () => enforceMaxLength(contentInput, CONTENT_MAX_LENGTH, contentError));
+        starInputs.forEach(input => input.addEventListener('change', validateStarRating));
+
+        // Validate on form submission
+        reviewForms?.addEventListener('submit', function(event) {
+            if (!validateForm()) {
+                event.preventDefault();
+                Toast.show('Please fix the validation errors before submitting', 'error');
+            }
+            Toast.show('Review submitted successfully!', 'success', () => window.location.reload());
+        });
+
 
     </script>
 

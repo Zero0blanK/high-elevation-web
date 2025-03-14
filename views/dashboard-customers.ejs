@@ -23,9 +23,6 @@
                         <i class="fas fa-users stat-icon" style="color: #8b5cf6;"></i>
                     </div>
                     <div class="stat-value"><%= stats.totalCustomers.value %></div>
-                    <div class="stat-trend trend-<%= stats.totalCustomers.trend %>">
-                        <%= stats.totalCustomers.growth >= 0 ? '+' : '' %><%= stats.totalCustomers.growth %>% from last month
-                    </div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-header">
@@ -33,9 +30,6 @@
                         <i class="fas fa-user-check stat-icon" style="color: #10b981;"></i>
                     </div>
                     <div class="stat-value"><%= stats.activeCustomers.value %></div>
-                    <div class="stat-trend trend-<%= stats.activeCustomers.trend %>">
-                        <%= stats.activeCustomers.growth >= 0 ? '+' : '' %><%= stats.activeCustomers.growth %>% from last month
-                    </div>
                 </div>
                 <div class="stat-card">
                     <div class="stat-header">
@@ -43,9 +37,6 @@
                         <i class="fas fa-user-shield stat-icon" style="color: #3b82f6;"></i>
                     </div>
                     <div class="stat-value"><%= stats.retention.value %></div>
-                    <div class="stat-trend trend-<%= stats.retention.trend %>">
-                        <%= stats.retention.growth >= 0 ? '+' : '' %><%= stats.retention.growth %>% from last month
-                    </div>
                 </div>
             </div>
 
@@ -72,9 +63,8 @@
                                 <td><%= customer.totalSpent %></td>
                                 <td><%= customer.lastOrder %></td>
                                 <td>
-                                    <% let statusClass = 'status-delivered'; %>
-                                    <% if (customer.status === 'New') statusClass = 'status-processing'; %>
-                                    <% if (customer.status === 'Inactive') statusClass = 'status-cancelled'; %>
+                                    <% let statusClass = 'status-active'; %>
+                                    <% if (customer.status === 'Inactive') statusClass = 'status-inactive'; %>
                                     <span class="status-badge <%= statusClass %>"><%= customer.status %></span>
                                 </td>
                             </tr>

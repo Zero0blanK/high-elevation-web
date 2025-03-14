@@ -99,79 +99,71 @@ class DashboardController {
     return rows.length > 0 ? rows[0].id : null;
   }
 
-  async addProduct(req, res) {
-    const { name, description, category } = req.body;
+  async addProduct(productData) {
+    const { user_id, name, description, category, weights, image } = productData;
+    // Set default image if none is provided
+    const image_url = image || "/assets/product-image/default.jpg";
 
-    // Normalize weights to always be an array
-    const weights = Array.isArray(req.body.weights) ? req.body.weights : (req.body.weights ? [req.body.weights] : []);
+    // Get category ID
+    const [categoryRows] = await db.query('SELECT id FROM product_category WHERE name = ?', [category]);
 
-    // Validate required fields
-    if (!weights.length) {
-        return res.status(400).json({ error: 'At least one weight is required.' });
+    let parsedWeights = [];
+    try {
+      parsedWeights = JSON.parse(weights); // Correctly parse weights as an array
+      if (!Array.isArray(parsedWeights)) {
+          throw new Error("Parsed weights is not an array");
+      }
+    } catch (error) {
+        console.error("Error parsing weights:", error);
+        throw new Error("Invalid weights format");
     }
 
-    const category_id = await this.getCategoryId(category);
+    const category_id = categoryRows[0].id;
 
-    if (!category_id) {
-        return res.status(400).json({ error: 'Invalid category.' });
+    let totalStock = 0;
+    for (const weight of parsedWeights) {
+        totalStock += parseInt(weight.stock, 10) || 0;
     }
 
-    const image_url = req.file ? `/assets/product-image/${req.file.filename}` : "/assets/product-image/default.jpg";
     const connection = await db.getConnection();
     try {
-        const productWeights = [];
+        await connection.beginTransaction();
 
-        // Fetch weight IDs from `weight` table
-        const [weightRows] = await connection.query("SELECT id, value, unit FROM weight");
-        const weightMap = {};
-        weightRows.forEach(w => {
-            weightMap[`${w.value}${w.unit}`] = w.id; // Mapping weight value + unit to ID
-        });
-
-        weights.forEach(weight => {
-            const weightId = weightMap[weight];  // Corrected weight ID lookup
-            const price = req.body[`price_${weight}`];
-
-            console.log(`Weight: ${weight}, Price: ${price}, Weight ID: ${weightId}`);
-
-            if (weightId && price) {
-                productWeights.push([name, image_url, description, category_id, price, weightId]);
-            }
-        });
-
-        // Insert product into `product` table, ensuring total_stock is 0
+        // Insert product
         const [productResult] = await connection.query(
             "INSERT INTO product (name, image_url, description, category_id, total_stock) VALUES (?, ?, ?, ?, ?)",
-            [name, image_url, description, category_id, 0]
+            [name, image_url, description, category_id, totalStock]
         );
-
         const productId = productResult.insertId;
 
-        // Insert product_weight entries with stock set to 0
-        if (productWeights.length > 0) {
-            const productWeightValues = productWeights.map(item => [productId, item[5], item[4], 0]);
-            await connection.query(
-                "INSERT INTO product_weight (product_id, weight_id, price, stock) VALUES ?",
-                [productWeightValues]
-            );
+        // Insert weight variants
+        const insertWeightQuery = `
+            INSERT INTO product_weight (product_id, weight_id, price, stock)
+            VALUES (?, ?, ?, ?)
+            ON DUPLICATE KEY UPDATE price = VALUES(price), stock = VALUES(stock)
+        `;
+        console.log("Parsed Weights:", parsedWeights);
+        for (const weight of parsedWeights) {
+            const weightId = await this.getWeightId(weight.weight_id);
+            await connection.query(insertWeightQuery, [productId, weightId, weight.price, weight.stock]);
         }
 
-        // Create inventory log entries for product creation
+        // Insert inventory log
         await connection.query(
-          "INSERT INTO inventory_log (product_id, weight_id, user_id, action, quantity, details) VALUES (?, ?, ?, ?, ?, ?)",
-          [productId, null, req.session.userId, 'Add Product', 0, 'New product added']
+            "INSERT INTO inventory_log (product_id, weight_id, user_id, action, quantity, details) VALUES (?, ?, ?, ?, ?, ?)",
+            [productId, null, productData.user_id, 'Add Product', 0, 'New product added']
         );
 
         await connection.commit();
-        res.redirect("/dashboard/products");
-    } catch (err) {
-      await connection.rollback();
-      console.error("Error adding product:", err);
-      res.status(500).send("Error adding product");
+    } catch (error) {
+        await connection.rollback();
+        console.error("Error adding product:", error);
+        throw error;
     } finally {
-      connection.release();
+        connection.release();
     }
-};
+  }
+
 
 
   async getWeightId(weight) {
@@ -183,7 +175,7 @@ class DashboardController {
   }
 
   async updateProduct(productData) {
-    const { id, name, description, category, weights } = productData;
+    const { user_id, id, name, description, category, weights } = productData;
     const image = productData.image && productData.image !== '' ? productData.image : null;
 
     // Fetch the category_id based on the category name
@@ -194,35 +186,85 @@ class DashboardController {
     const category_id = categoryRows[0].id;
 
     const updateProductQuery = `
-        UPDATE product
-        SET name = ?, description = ?, category_id = ?, image_url = COALESCE(?, image_url), total_stock = ?
-        WHERE id = ?
+      UPDATE product
+      SET name = ?, description = ?, category_id = ?, image_url = COALESCE(?, image_url), total_stock = ?
+      WHERE id = ?
     `;
 
     const updateWeightQuery = `
-        INSERT INTO product_weight (product_id, weight_id, price, stock)
-        VALUES (?, ?, ?, ?)
-        ON DUPLICATE KEY UPDATE price = VALUES(price), stock = VALUES(stock)
+      INSERT INTO product_weight (product_id, weight_id, price, stock)
+      VALUES (?, ?, ?, ?)
+      ON DUPLICATE KEY UPDATE price = VALUES(price), stock = VALUES(stock)
+    `;
+
+    const insertInventoryLogQuery = `
+      INSERT INTO inventory_log (product_id, weight_id, user_id, action, details)
+      VALUES (?, ?, ?, ?, ?)
     `;
 
     const connection = await db.getConnection();
     try {
       await connection.beginTransaction();
 
+      // Fetch old product data for comparison
+      const [oldProductRows] = await connection.query(
+        'SELECT name, description, category_id, image_url FROM product WHERE id = ?',
+        [id]
+      );
+      const oldProduct = oldProductRows[0];
+
+      // Log changes to product details
+      if (oldProduct.name !== name) {
+        await connection.query(insertInventoryLogQuery, [id, null, user_id, 'Updated Product Name', `Changed from '${oldProduct.name}' to '${name}'`]);
+      }
+      if (oldProduct.description !== description) {
+          await connection.query(insertInventoryLogQuery, [id, null, user_id, 'Updated Description', 'Product description updated']);
+      }
+      if (oldProduct.category_id !== category_id) {
+          await connection.query(insertInventoryLogQuery, [id, null, user_id, 'Updated Category', 'Product category changed']);
+      }
+      if (oldProduct.image_url !== image) {
+          await connection.query(insertInventoryLogQuery, [id, null, user_id, 'Updated Image', 'Product image changed']);
+      }
+
+      let parsedWeights = [];
+      for (const weight of weights) {
+          try {
+              const json = JSON.parse(weight);
+              if (Array.isArray(json)) {
+                  parsedWeights = parsedWeights.concat(json.map(w => w.weight_id));
+              } else {
+                  parsedWeights.push(weight);
+              }
+          } catch (e) {
+              parsedWeights.push(weight);
+          }
+      }
       // Calculate total stock
       let totalStock = 0;
-      for (const weight of weights) {
-        const stock = parseInt(productData[`stock_${weight}`], 10);
+      for (const weight of parsedWeights) {
+        const stock = parseInt(productData[`stock_${weight}`], 10) || 0;
         totalStock += stock;
       }
 
       await connection.query(updateProductQuery, [name, description, category_id, image, totalStock, id]);
 
-      for (const weight of weights) {
+      for (const weight of parsedWeights) {
         const weightId = await this.getWeightId(weight);
-        const price = productData[`price_${weight}`];
-        const stock = productData[`stock_${weight}`];
-        await connection.query(updateWeightQuery, [id, weightId, price, stock]);
+        const newPrice = productData[`price_${weight}`] || 0;
+
+        const [oldPriceRow] = await connection.query(
+          "SELECT price FROM product_weight WHERE product_id = ? AND weight_id = ?",
+          [id, weightId]
+        );
+        const oldPrice = oldPriceRow.length > 0 ? oldPriceRow[0].price : null;
+
+        await connection.query(updateWeightQuery, [id, weightId, newPrice, 0]);
+
+        // Log price changes
+        if (oldPrice !== null && oldPrice != newPrice) {
+          await connection.query(insertInventoryLogQuery, [id, weightId, user_id, 'Updated Price', `Price changed from ${oldPrice} to ${newPrice}`]);
+        }
       }
 
       await connection.commit();
@@ -909,9 +951,9 @@ class DashboardController {
   
       // Calculate current quarter and previous quarter dates
       const currentDate = new Date();
-      const currentQuarterStart = new Date(currentDate.getFullYear(), Math.floor(currentDate.getMonth() / 3) * 3, 1);
+      const currentQuarterStart = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
       const previousQuarterStart = new Date(currentQuarterStart);
-      previousQuarterStart.setMonth(previousQuarterStart.getMonth() - 3);
+      previousQuarterStart.setMonth(previousQuarterStart.getMonth() - 1);
       
       // Format dates for MySQL queries
       const currentQuarterStartFormatted = currentQuarterStart.toISOString().split('T')[0];
@@ -931,7 +973,7 @@ class DashboardController {
       const previousRevenue = revenueResults[0].previous_revenue || 0;
       
       analytics.revenueGrowth.growth = previousRevenue > 0 
-        ? ((currentRevenue - previousRevenue) / previousRevenue) * 100 
+        ? parseFloat(((currentRevenue - previousRevenue) / previousRevenue) * 100).toFixed(2)
         : 0;
   
       // 2. Customer Lifetime Value

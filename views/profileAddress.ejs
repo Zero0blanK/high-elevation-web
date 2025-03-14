@@ -76,9 +76,7 @@
                             <tr data-address-id="<%= address.id %>">
                                 <td class="view-mode"><%= user.full_name %></td>
                                 <td class="view-mode">
-                                    <%= address.street_address %>
-                                    <% if (address.apartment) { %>, <%= address.apartment %><% } %>
-                                    , <%= address.city %>
+                                    <%= address.street_address %><% if (address.apartment) { %>, <%= address.apartment %><% } %>, <%= address.city %>
                                 </td>
                                 <td class="view-mode"><%= address.zip_code %></td>
                                 <td class="view-mode"><%= user.contact_number || '-' %></td>

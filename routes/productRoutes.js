@@ -120,6 +120,7 @@ router.post('/reviews/add', productController.addReview);
 // Route to handle individual product pages
 router.get('/product/overview/:product_name', async (req, res) => {
     const productName = req.params.product_name.replace(/%20/g, ' ');
+    const userId = req.session.userId;
 
     try {
         const query = `
@@ -157,6 +158,28 @@ router.get('/product/overview/:product_name', async (req, res) => {
         const averageRating = await productController.calculateAverageRating(productDetails);
         const distribution = await productController.getRatingDistribution(productDetails);
 
+        const [hasPurchased] = await db.query(`
+            SELECT COUNT(*) AS count FROM user_order
+            JOIN order_detail ON user_order.id = order_detail.user_order_id
+            WHERE user_order.user_id = ? AND order_detail.product_id = ?`,
+            [userId, rows[0].id]
+        );
+
+        const [orderDelivered] = await db.query(`
+            SELECT COUNT(*) AS count FROM user_order
+            JOIN order_detail ON user_order.id = order_detail.user_order_id
+            WHERE user_order.user_id = ? AND order_detail.product_id = ?
+            AND user_order.shipping_status = 'Delivered'`,
+            [userId, rows[0].id]
+        );
+        
+        // Check if user has already reviewed the product
+        const [hasReviewed] = await db.query(`
+            SELECT COUNT(*) AS count FROM review
+            WHERE user_id = ? AND product_id = ?`,
+            [userId, rows[0].id]
+        );
+
         if (rows.length > 0) {
             const product = rows[0];
 
@@ -166,7 +189,10 @@ router.get('/product/overview/:product_name', async (req, res) => {
             res.render('overview', {
                 product,
                 distribution,
-                userId: req.session.userId,
+                userId,
+                hasPurchased: hasPurchased[0].count > 0,
+                orderDelivered: orderDelivered[0].count > 0 ? 'delivered' : 'pending',
+                hasReviewed: hasReviewed[0].count > 0,
                 average: averageRating,
                 reviews: productDetails,
                 totalReviews: productDetails.length

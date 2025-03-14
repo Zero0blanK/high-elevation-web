@@ -6,13 +6,17 @@
     <title>Document</title>
     <link rel="stylesheet" href="/css/components/dashboard.css">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="/css/components/toast.css">
+    <script src="/javaScript/toast.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.7.0/chart.min.js"></script>
     <script src="/javaScript/dashboard/productHandler.js" defer></script>
+    
 </head>
 <body>
     <div class="container">
         <!-- Sidebar -->
         <%- include('./partials/sidebar'); %>
+        <%- include('./partials/toast'); %>
     
         <main class="main-content">
             <div class="orders-filters">
@@ -76,12 +80,13 @@
             <form action="/dashboard/products/add" method="POST" enctype="multipart/form-data" class="product-form add-form">
                 <div class="form-group">
                     <label for="productName">Product Name</label>
-                    <input type="text" id="productName" name="name" placeholder="Enter product name" required>
+                    <input type="text" id="productName" name="name" placeholder="Enter product name">
+                    <small class="error-message"></small>
                 </div>
                 <div class="form-group">
                     <label for="productDescription">Description</label>
-                    <textarea id="productDescription" name="description" rows="3" placeholder="Enter product description"
-                        required></textarea>
+                    <textarea id="productDescription" name="description" rows="3" placeholder="Enter product description" style="resize: none;"></textarea>
+                    <small class="error-message"></small>
                 </div>
                 <div class="form-group">
                     <label for="productCategory">Category</label>
@@ -90,8 +95,9 @@
                         <option value="arabica">Arabica</option>
                         <option value="robusta">Robusta</option>
                     </select>
+                    <small class="error-message"></small>
                 </div>
-
+                
                 <div class="weight-variants">
                     <h3>Weight Variants</h3>
                     <div class="variants-container">
@@ -163,21 +169,23 @@
                             </div>
                         </div>
                     </div>
+                    <small class="error-message"></small>
                 </div>
 
                 <div class="form-group">
-                    <label for="productImage">Product Image</label>
+                    <label for="imagePreviewContainer">Product Image</label>
                     <!-- This will show the image preview -->
                     <div id="imagePreviewContainer" style="display: none; margin-top: 10px; text-align:center;">
                         <img id="imagePreview" src="" alt="Image Preview" style="max-width: 200px; max-height: 200px; border: 1px solid var(--gray-500);">
                     </div>
                     <div class="image-upload-container">
-                        <input type="file" id="productImage" name="image" accept="image/*" required onchange="previewImage(event)">
+                        <input type="file" id="productImage" name="image" accept="image/*" onchange="previewImage(event)">
                         <label for="productImage" class="upload-label">
                             <i class="fas fa-cloud-upload-alt"></i>
                             <span>Click to upload image</span>
                         </label>
                     </div>
+                    <small class="error-message" id="imageError"></small>
                 </div>
 
                 <div class="form-actions">
@@ -199,11 +207,13 @@
                 <input type="hidden" id="editProductId" name="id">
                 <div class="form-group">
                     <label for="editProductName">Product Name</label>
-                    <input type="text" id="editProductName" name="name" required>
+                    <input type="text" id="editProductName" name="name">
+                    <small class="error-message"></small>
                 </div>
                 <div class="form-group">
                     <label for="editProductDescription">Description</label>
-                    <textarea id="editProductDescription" name="description" rows="3" placeholder="Enter product description" required></textarea>
+                    <textarea id="editProductDescription" name="description" rows="3" placeholder="Enter product description"></textarea>
+                    <small class="error-message"></small>
                 </div>
                 <div class="form-group">
                     <label for="editProductCategory">Category</label>
@@ -212,6 +222,7 @@
                         <option value="arabica">Arabica</option>
                         <option value="robusta">Robusta</option>
                     </select>
+                    <small class="error-message"></small>
                 </div>
                 <div class="weight-variants">
                     <h3>Weight Variants</h3>
