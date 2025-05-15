@@ -34,7 +34,7 @@
 - **EJS / HTML / CSS / JS** – Frontend rendering and UI
 - **XAMPP/WSL** – Local development environment
 - **Session/Auth** – User login and access control
-- 
+
 ---
 
 ## ⚙️ Getting Started
